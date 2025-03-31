@@ -52,10 +52,14 @@ func _on_tool_command() -> void:
 
 func set_type_split(type : int) -> bool:
 	var setup : bool = false
+
 	if type > 0 and type < 3:
 		setup = true
+	elif type == 0:
+		setup = false
 	else:
 		return false
+
 	_setup(setup)
 	if setup:
 		if is_instance_valid(_main):
