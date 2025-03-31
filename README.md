@@ -13,8 +13,11 @@ This addon allow split script window.
 # WIP
 * Split Three Window Horizontal.
 * Split Three Window Vertical.
-* SPlit Four Window Squared.
+* Split Four Window Squared.
 * Beta optimizations.
+  
+>[!NOTE]
+> For any other request of type window, create an Issue as a request.
 
 ### Preview
 ![image](https://github.com/user-attachments/assets/a6e1dea8-74cf-4fd9-b0b4-ec7d65ea3995)
