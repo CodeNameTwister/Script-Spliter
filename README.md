@@ -38,7 +38,7 @@ You can select split type and disabled, see the image.
 Once activated, you'll see a draggable line like the one in the image, indicating that the plugin is active.
 
 >[!IMPORTANT]
->This section will automatically expand when you open two scripts.**
+>This section will automatically expand when you open **two scripts**.
 
 The position of the line will vary depending on the selection of horizontal or vertical.
 
