@@ -345,14 +345,15 @@ class Rub extends Object:
 								child = _placeholder_edit
 						if is_instance_valid(_placeholder_edit):
 							_placeholder_edit.set_deferred(&"text", be.text)
+
+							for cr : int in be.get_sorted_carets(true):
+								_placeholder_edit.set_caret_column.call_deferred(be.get_caret_column(cr), true, cr)
+								_placeholder_edit.set_caret_line.call_deferred(be.get_caret_line(cr), true, true, be.get_caret_wrap_index(cr), cr)
+
 							_placeholder_edit.set_selection_origin_line.call_deferred(be.get_selection_origin_line())
 							_placeholder_edit.get_v_scroll_bar().set_deferred(&"value", be.get_v_scroll_bar().value)
 							_placeholder_edit.get_h_scroll_bar().set_deferred(&"value", be.get_h_scroll_bar().value)
 							_placeholder_edit.set_selection_origin_column.call_deferred(be.get_selection_origin_column())
-
-							#for cr : int in be.get_sorted_carets(true):
-								#_placeholder_edit.set_caret_column.call_deferred(be.get_caret_column(cr), true, cr)
-								#_placeholder_edit.set_caret_line.call_deferred(be.get_caret_line(cr), true, true, be.get_caret_wrap_index(cr), cr)
 
 						var root : Control = _slot.get_root()
 						if !child.gui_input.is_connected(root.on_gui):
@@ -438,26 +439,29 @@ class Rub extends Object:
 				current_ref = container.get_child(container.current_tab)
 			if current_ref != null:
 				var c : Node = current_ref.get_base_editor()
+
+				for cr : int in _placeholder_edit.get_sorted_carets(true):
+					c.set_caret_column.call_deferred(_placeholder_edit.get_caret_column(cr), true, cr)
+					c.set_caret_line.call_deferred(_placeholder_edit.get_caret_line(cr), true, true, _placeholder_edit.get_caret_wrap_index(cr), cr)
+
 				c.set_selection_origin_line.call_deferred(_placeholder_edit.get_selection_origin_line())
 				c.get_v_scroll_bar().set_deferred(&"value", _placeholder_edit.get_v_scroll_bar().value)
 				c.get_h_scroll_bar().set_deferred(&"value", _placeholder_edit.get_h_scroll_bar().value)
 				c.set_selection_origin_column.call_deferred(_placeholder_edit.get_selection_origin_column())
-
-				#for cr : int in _placeholder_edit.get_sorted_carets(true):
-					#c.set_caret_column.call_deferred(_placeholder_edit.get_caret_column(cr), true, cr)
-					#c.set_caret_line.call_deferred(_placeholder_edit.get_caret_line(cr), true, true, _placeholder_edit.get_caret_wrap_index(cr), cr)
 		else:
 			if current_ref == instance_ref and current_ref != null and _placeholder_edit:
 				var c : CodeEdit = current_ref.get_base_editor()
 				_placeholder_edit.set_deferred(&"text", c.text)
+
+				for cr : int in c.get_sorted_carets(true):
+					_placeholder_edit.set_caret_column.call_deferred(c.get_caret_column(cr), true, cr)
+					_placeholder_edit.set_caret_line.call_deferred(c.get_caret_line(cr), true, true, c.get_caret_wrap_index(cr), cr)
+
 				_placeholder_edit.set_selection_origin_line.call_deferred(c.get_selection_origin_line())
 				_placeholder_edit.set_selection_origin_column.call_deferred(c.get_selection_origin_column())
 				_placeholder_edit.get_v_scroll_bar().set_deferred(&"value", c.get_v_scroll_bar().value)
 				_placeholder_edit.get_h_scroll_bar().set_deferred(&"value", c.get_h_scroll_bar().value)
 
-				#for cr : int in c.get_sorted_carets(true):
-					#_placeholder_edit.set_caret_column.call_deferred(c.get_caret_column(cr), true, cr)
-					#_placeholder_edit.set_caret_line.call_deferred(c.get_caret_line(cr), true, true, c.get_caret_wrap_index(cr), cr)
 			instance_ref = current_ref
 
 
