@@ -23,8 +23,9 @@ This addon allow split script window.
 >For now support one split of two window in horizontal, see [WIP](WIP) section.
 
 ### Enable by shortcut
-* Press shortcut (**Ctrl + 0**) for disabled split.
-* Press shortcut (**Ctrl + 1**) for toggle between one split of two windows: Horizontal, Vertical.
+* Press shortcut (**Ctrl + 1**) for disabled split.
+* Press shortcut (**Ctrl + 2**) for toggle between one split of two windows: Horizontal.
+* Press shortcut (**Ctrl + 3**) for toggle between one split of two windows: Vertical.
 
 ### Enable by Tool Menu
 For enable the Script spliter menu go to **Project > Tools > Script Spliter**.
