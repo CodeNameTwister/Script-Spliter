@@ -12,8 +12,6 @@ const CRES : Resource = preload("res://addons/script_spliter/container.gd")
 
 const CMD_MENU_TOOL : String = "Script Spliter"
 
-# WIP: More Views/Shortcut
-
 var _main : Node = null
 var _is_enabled : bool = false
 var _menu_split_selector : Window = null
@@ -55,9 +53,7 @@ func set_type_split(type : int) -> bool:
 
 	if type > 0 and type < 3:
 		setup = true
-	elif type == 0:
-		setup = false
-	else:
+	elif type != 0:
 		return false
 
 	_setup(setup)
