@@ -1,0 +1,138 @@
+[gd_scene load_steps=12 format=3 uid="uid://csu7djr8m1mgb"]
+
+[ext_resource type="Script" uid="uid://4wllvh127dwh" path="res://addons/script_spliter/context/menu_tool.gd" id="1_00j1l"]
+[ext_resource type="Texture2D" uid="uid://c0rdtgdlxkw0w" path="res://addons/script_spliter/assets/placeholder.png" id="2_bi1if"]
+[ext_resource type="Texture2D" uid="uid://dmvcijsjhb5pc" path="res://addons/script_spliter/context/icons/sp_disable.png" id="2_le2a0"]
+[ext_resource type="Script" uid="uid://bobw4q6hrbbox" path="res://addons/script_spliter/context/button.gd" id="3_h7rbp"]
+[ext_resource type="Texture2D" uid="uid://c1kjfqirfexvp" path="res://addons/script_spliter/context/icons/sp_2H.png" id="3_o7fne"]
+[ext_resource type="Texture2D" uid="uid://d1r72ixdgbwl6" path="res://addons/script_spliter/context/icons/sp_2V.png" id="4_js2dr"]
+[ext_resource type="Texture2D" uid="uid://32xnl4cu46pj" path="res://addons/script_spliter/context/icons/sp_3H.png" id="5_h32ac"]
+[ext_resource type="Texture2D" uid="uid://b4cmfno0ixqnm" path="res://addons/script_spliter/context/icons/sp_3V.png" id="6_h7rbp"]
+[ext_resource type="Texture2D" uid="uid://bf2bjkoock7re" path="res://addons/script_spliter/context/icons/sp_4S.png" id="7_bi1if"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bi1if"]
+bg_color = Color(0.0392157, 0.0392157, 0.117647, 1)
+expand_margin_top = 40.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_00j1l"]
+font_size = 28
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
+[node name="MenuTool" type="Window" node_paths=PackedStringArray("_container")]
+title = "Script Splitter Menu"
+position = Vector2i(133, 83)
+size = Vector2i(512, 256)
+transient = true
+popup_window = true
+theme_override_styles/embedded_border = SubResource("StyleBoxFlat_bi1if")
+script = ExtResource("1_00j1l")
+_container = NodePath("MenContainer/Body")
+
+[node name="BG" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.117647, 0.196078, 0.392157, 1)
+
+[node name="BGTX" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.2)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bi1if")
+stretch_mode = 3
+
+[node name="MenContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer2" type="PanelContainer" parent="MenContainer"]
+layout_mode = 2
+
+[node name="Tittle" type="Label" parent="MenContainer/PanelContainer2"]
+layout_mode = 2
+text = "Select total split"
+label_settings = SubResource("LabelSettings_00j1l")
+horizontal_alignment = 1
+
+[node name="Body" type="GridContainer" parent="MenContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="splited_off" type="CheckBox" parent="MenContainer/Body"]
+layout_mode = 2
+tooltip_text = "Disabled Splited"
+button_pressed = true
+text = "Disabled"
+icon = ExtResource("2_le2a0")
+script = ExtResource("3_h7rbp")
+
+[node name="splited_two_horizontal" type="CheckBox" parent="MenContainer/Body"]
+layout_mode = 2
+tooltip_text = "Two Horizontal Splited"
+text = "Two Horizontal"
+icon = ExtResource("3_o7fne")
+script = ExtResource("3_h7rbp")
+
+[node name="splited_two_vertical" type="CheckBox" parent="MenContainer/Body"]
+layout_mode = 2
+tooltip_text = "Two Vertical Splited"
+text = "Two Vertical"
+icon = ExtResource("4_js2dr")
+script = ExtResource("3_h7rbp")
+
+[node name="splited_three_horizontal" type="CheckBox" parent="MenContainer/Body"]
+layout_mode = 2
+tooltip_text = "Three Horizontal Splited"
+disabled = true
+text = "Three Horizontal"
+icon = ExtResource("5_h32ac")
+script = ExtResource("3_h7rbp")
+
+[node name="splited_three_vertical" type="CheckBox" parent="MenContainer/Body"]
+layout_mode = 2
+tooltip_text = "Three Vertical Splited"
+disabled = true
+text = "Three Vertical"
+icon = ExtResource("6_h7rbp")
+script = ExtResource("3_h7rbp")
+
+[node name="splited_four_square" type="CheckBox" parent="MenContainer/Body"]
+layout_mode = 2
+tooltip_text = "Square Splited"
+disabled = true
+text = "Four Squared"
+icon = ExtResource("7_bi1if")
+script = ExtResource("3_h7rbp")
+
+[node name="Separator" type="HSeparator" parent="MenContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="Footer" type="HBoxContainer" parent="MenContainer"]
+layout_mode = 2
+
+[node name="OK" type="Button" parent="MenContainer/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Accept"
+
+[node name="Cancel" type="Button" parent="MenContainer/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Exit"
+
+[connection signal="pressed" from="MenContainer/Footer/OK" to="." method="_on_ok_pressed"]
+[connection signal="pressed" from="MenContainer/Footer/Cancel" to="." method="_on_cancel_pressed"]
