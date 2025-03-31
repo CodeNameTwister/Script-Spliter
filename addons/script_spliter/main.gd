@@ -350,9 +350,9 @@ class Rub extends Object:
 							_placeholder_edit.get_h_scroll_bar().set_deferred(&"value", be.get_h_scroll_bar().value)
 							_placeholder_edit.set_selection_origin_column.call_deferred(be.get_selection_origin_column())
 
-							for cr : int in be.get_sorted_carets(true):
-								_placeholder_edit.set_caret_column.call_deferred(be.get_caret_column(cr), true, cr)
-								_placeholder_edit.set_caret_line.call_deferred(be.get_caret_line(cr), true, true, be.get_caret_wrap_index(cr), cr)
+							#for cr : int in be.get_sorted_carets(true):
+								#_placeholder_edit.set_caret_column.call_deferred(be.get_caret_column(cr), true, cr)
+								#_placeholder_edit.set_caret_line.call_deferred(be.get_caret_line(cr), true, true, be.get_caret_wrap_index(cr), cr)
 
 						var root : Control = _slot.get_root()
 						if !child.gui_input.is_connected(root.on_gui):
@@ -443,9 +443,9 @@ class Rub extends Object:
 				c.get_h_scroll_bar().set_deferred(&"value", _placeholder_edit.get_h_scroll_bar().value)
 				c.set_selection_origin_column.call_deferred(_placeholder_edit.get_selection_origin_column())
 
-				for cr : int in _placeholder_edit.get_sorted_carets(true):
-					c.set_caret_column.call_deferred(_placeholder_edit.get_caret_column(cr), true, cr)
-					c.set_caret_line.call_deferred(_placeholder_edit.get_caret_line(cr), true, true, _placeholder_edit.get_caret_wrap_index(cr), cr)
+				#for cr : int in _placeholder_edit.get_sorted_carets(true):
+					#c.set_caret_column.call_deferred(_placeholder_edit.get_caret_column(cr), true, cr)
+					#c.set_caret_line.call_deferred(_placeholder_edit.get_caret_line(cr), true, true, _placeholder_edit.get_caret_wrap_index(cr), cr)
 		else:
 			if current_ref == instance_ref and current_ref != null and _placeholder_edit:
 				var c : CodeEdit = current_ref.get_base_editor()
@@ -455,9 +455,9 @@ class Rub extends Object:
 				_placeholder_edit.get_v_scroll_bar().set_deferred(&"value", c.get_v_scroll_bar().value)
 				_placeholder_edit.get_h_scroll_bar().set_deferred(&"value", c.get_h_scroll_bar().value)
 
-				for cr : int in c.get_sorted_carets(true):
-					_placeholder_edit.set_caret_column.call_deferred(c.get_caret_column(cr), true, cr)
-					_placeholder_edit.set_caret_line.call_deferred(c.get_caret_line(cr), true, true, c.get_caret_wrap_index(cr), cr)
+				#for cr : int in c.get_sorted_carets(true):
+					#_placeholder_edit.set_caret_column.call_deferred(c.get_caret_column(cr), true, cr)
+					#_placeholder_edit.set_caret_line.call_deferred(c.get_caret_line(cr), true, true, c.get_caret_wrap_index(cr), cr)
 			instance_ref = current_ref
 
 
@@ -704,11 +704,6 @@ func set_base(new_base : TabContainer) -> void:
 		_last_sc = new_base.get_child(i)
 
 	tab_changed(i)
-#
-#func _swap_code_edit(a : CodeEdit, b : CodeEdit) -> void:
-	#b.set_selection_origin_line(b.get_selection_origin_line())
-	#b.get_v_scroll_bar().value = a.get_v_scroll_bar().value
-	#b.get_h_scroll_bar().value = a.get_h_scroll_bar().value
 
 func set_split_type(type : int, as_toggle : bool) -> void:
 	if type == 0:
