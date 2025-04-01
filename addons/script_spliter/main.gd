@@ -510,8 +510,6 @@ class Slot extends Object:
 	var right : Rub = null
 	var next_rub : Rub = null
 
-	var labels : Array[Label] = []
-
 	func get_root() -> Control:
 		return _root
 
@@ -574,9 +572,6 @@ class Slot extends Object:
 		root.add_child(placeholder)
 
 		placeholder.owner = root
-
-		labels.append(label)
-
 		return placeholder
 
 	func _on_placeholder_enter(c : Control) -> void:
