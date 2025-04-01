@@ -1,5 +1,5 @@
 @tool
-extends Label
+extends Control
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #	Script Spliter
 #	https://github.com/CodeNameTwister/Script-Spliter
@@ -8,7 +8,12 @@ extends Label
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-const TIME : int = 12
+## Time tranasitions between colors.
+const  SPEED_TIME : float = 10.0
+## Flicker repetition time.
+const TIME : int = 1
+## Frame Color when set a new color!
+const COLOR_HIGH_LIGHT : Color = Color.YELLOW
 
 var _p : float = 0.0
 var _s : int = 0
@@ -22,12 +27,12 @@ func _init() -> void:
 func _ready() -> void:
 	set_process(false)
 
-func set_new_color(c : Color, focus : bool = false) -> void:
-	if focus:
+func set_color(c : Color, flicker : bool = true) -> void:
+	if flicker:
 		_e = c
 		_p = -0.2
 		_s = 0
-		_c = Color.YELLOW
+		_c = COLOR_HIGH_LIGHT
 		modulate = c
 		set_process(true)
 	else:
@@ -35,7 +40,7 @@ func set_new_color(c : Color, focus : bool = false) -> void:
 		set_process(false)
 
 func _process(delta: float) -> void:
-	_p += delta * 10.0
+	_p += delta * SPEED_TIME
 	if _p < 1.0:
 		modulate = lerp(modulate, _c, _p)
 		return

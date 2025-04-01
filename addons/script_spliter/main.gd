@@ -7,8 +7,9 @@ extends MarginContainer
 #	Script Spliter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-const ALPHA_TEXT_NAME : float = 0.55
+
 const LABEL_RES : Resource = preload("res://addons/script_spliter/label.gd")
+const FONT_RES : Resource = preload("res://addons/script_spliter/assets/style_label.tres")
 
 const PLACEHOLDER_IMAGE : Texture = preload("res://addons/script_spliter/assets/placeholder.png")
 const STYLE_SEPARATOR : StyleBox = preload("res://addons/script_spliter/assets/style_sep.tres")
@@ -20,7 +21,6 @@ var lbls : Array[Label] = []
 
 var base : TabContainer = null
 var _last_sc : Control = null
-var _flg_chg : bool = false
 
 var _current_type_split : int = 0
 
@@ -39,8 +39,6 @@ func on_exiting_tree() -> void:
 				base.tab_changed.disconnect(tab_changed)
 			if base.child_exiting_tree.is_connected(_on_tab_exit):
 				base.child_exiting_tree.disconnect(_on_tab_exit)
-			if base.item_rect_changed.is_connected(_on_update_rect):
-				base.item_rect_changed.disconnect(_on_update_rect)
 
 func _ready() -> void:
 	if !tree_exiting.is_connected(on_exiting_tree):
@@ -71,9 +69,8 @@ func _update_gui() -> void:
 							if _c < base.get_child_count() and _c > -1:
 								label.text = base.get_item_text(_c)
 					if is_current:
-						var _c : Color = Color.CYAN
-						_c.a =  min(ALPHA_TEXT_NAME + 0.25, 1.0)
-						label.set_new_color(_c, true)
+						var _c : Color = Color.WHITE
+						label.set_color(_c, true)
 
 						if USE_VISIBILITY_ON_WINDOWS:
 							r.get_base_control().get_parent().visible = true
@@ -103,9 +100,8 @@ func _update_gui() -> void:
 									bc.split_offset = 0
 						bc.clamp_split_offset()
 					else:
-						var _c : Color = Color.ORANGE
-						_c.a = ALPHA_TEXT_NAME
-						label.set_new_color(_c, false)
+						var _c : Color = Color.DARK_GRAY
+						label.set_color(_c, false)
 
 						if r.instance_ref == null:
 							if USE_VISIBILITY_ON_WINDOWS:
@@ -148,13 +144,17 @@ func _update_gui() -> void:
 				else:
 					sames[r.instance_ref] = r
 
-func tab_changed(tab: int) -> void:
-	if _flg_chg:return
-	_flg_chg = true
-	await get_tree().process_frame
+func tab_changed(_tab: int) -> void:
+	_update()
+
+func _update() -> void:
+	set_process(true)
+
+func _process(_delta: float) -> void:
+	set_process(false)
 	if !is_instance_valid(base):return
 
-	tab = base.current_tab
+	var tab : int = base.current_tab
 
 	for s : Slot in slots:
 		if !s.left.is_valid_reference():
@@ -187,7 +187,6 @@ func tab_changed(tab: int) -> void:
 					sp.set(&"split_offset", vsize)
 					sp.clamp_split_offset.call()
 					break
-		set_deferred(&"_flg_chg", false)
 		return
 
 	var nw : Control = base.get_child(tab)
@@ -250,7 +249,6 @@ func tab_changed(tab: int) -> void:
 				if is_instance_valid(nw):
 					base.tree_exited.connect(_last_know.on_exit_reference.bind(nw), CONNECT_ONE_SHOT)
 	_update_gui()
-	set_deferred(&"_flg_chg", false)
 
 class Rub extends Object:
 	var _slot : Slot = null
@@ -510,8 +508,9 @@ class Slot extends Object:
 	var _base : SplitContainer = null
 	var left : Rub = null
 	var right : Rub = null
-
 	var next_rub : Rub = null
+
+	var labels : Array[Label] = []
 
 	func get_root() -> Control:
 		return _root
@@ -532,13 +531,6 @@ class Slot extends Object:
 	func set_right_reference(tab : TabContainer) -> void:
 		right.set_reference(tab)
 
-	func _on_text_change(label : Label) -> void:
-		if is_instance_valid(label):
-			var _p : Control = label.get_parent()
-			label.visible = _p.size.y >= label.size.x + 4.0
-			label.position.y = (label.size.x * 0.5) + _p.size.y * 0.5
-
-
 	func _on_rect_change(pl : Control) -> void:
 		if pl.get_child_count() > 0:
 			var c : Control = pl.get_child(0)
@@ -547,30 +539,23 @@ class Slot extends Object:
 				c.custom_minimum_size = Vector2(_min, _min)
 
 	func create_container_placeholder() -> Control:
-		var root : Control = MarginContainer.new()
+		var root : Control = VBoxContainer.new()
 		var placeholder : Control = MarginContainer.new()
 
 		placeholder.item_rect_changed.connect(_on_rect_change.bind(placeholder))
 
-		var control : Control = Panel.new()
 		var label : Label = Label.new()
-
-		control.set("theme_override_styles/panel", StyleBoxEmpty.new())
+		label.label_settings = FONT_RES
 
 		label.set_script(LABEL_RES)
+		label.clip_text = true
 
-		label.rotation_degrees = -90.0
-
-		root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		control.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		label.size_flags_horizontal = Control.SIZE_SHRINK_END
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 
 
 		root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		label.name = &"sc_name"
 		root.clip_contents = true
@@ -582,17 +567,15 @@ class Slot extends Object:
 
 		label.set(&"theme_override_font_sizes/font_size", 12)
 		label.text = ""
-		label.position.y = label.size.x
-
-		label.item_rect_changed.connect(_on_text_change.bind(label))
 
 		placeholder.add_child(create_placeholder())
 
-		control.add_child(label)
+		root.add_child(label)
 		root.add_child(placeholder)
-		root.add_child(control)
 
 		placeholder.owner = root
+
+		labels.append(label)
 
 		return placeholder
 
@@ -673,12 +656,6 @@ func _notification(what: int) -> void:
 				s.free()
 		slots.clear()
 
-func _on_update_rect() -> void:
-	for s : Slot in slots:
-		var ctrl : Control = s.get_base_control()
-		for x : Node in ctrl.find_children("*", "Label", true, false):
-			x.position.y = (x.size.x * 0.5) + x.get_parent().size.y * 0.5
-
 func set_base(new_base : TabContainer) -> void:
 	if !is_instance_valid(new_base):
 		if base:
@@ -686,8 +663,6 @@ func set_base(new_base : TabContainer) -> void:
 				base.tab_changed.disconnect(tab_changed)
 			if base.child_exiting_tree.is_connected(_on_tab_exit):
 				base.child_exiting_tree.disconnect(_on_tab_exit)
-			if base.item_rect_changed.is_connected(_on_update_rect):
-				base.item_rect_changed.disconnect(_on_update_rect)
 		return
 	base = new_base
 	new_base.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -697,8 +672,6 @@ func set_base(new_base : TabContainer) -> void:
 		new_base.tab_changed.connect(tab_changed)
 	if !new_base.child_exiting_tree.is_connected(_on_tab_exit):
 		new_base.child_exiting_tree.connect(_on_tab_exit)
-	if !new_base.item_rect_changed.is_connected(_on_update_rect):
-		new_base.item_rect_changed.connect(_on_update_rect)
 
 	if slots.size() > 0:
 		slots[0].set_left_reference(new_base)
