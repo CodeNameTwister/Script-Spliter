@@ -17,7 +17,6 @@ const STYLE_SEPARATOR : StyleBox = preload("res://addons/script_spliter/assets/s
 const USE_VISIBILITY_ON_WINDOWS : bool = false
 
 var slots : Array[Slot] = []
-var lbls : Array[Label] = []
 
 var base : TabContainer = null
 var _last_sc : Control = null
@@ -260,6 +259,47 @@ class Rub extends Object:
 
 	var index : int = 0
 
+
+	func _pop_size(control : Control) -> void:
+		var edit : Control = control.get_base_editor()
+
+		if !is_instance_valid(edit):
+			return
+
+		var variant : Variant = edit.get(&"theme_override_font_sizes/font_size")
+		if variant == null:
+			return
+
+		var size : int = variant
+		if size < 1:
+			return
+
+		var val : int = int((floor((size / 9.0) * 100.0)))
+
+		var mbtn : Node = control
+		for x : int in [0, 0, 1, 5]:
+			if mbtn.get_child_count() > x + 1:
+				mbtn = mbtn.get_child(x)
+			else:
+				return
+
+		if mbtn is MenuButton:
+			var pop : PopupMenu = mbtn.get_popup()
+			var last_index : int = -1
+			for x : int in range(0, pop.item_count, 1):
+				var try_int : int = (pop.get_item_text(x).to_int())
+				if try_int > -1:
+					if try_int < val:
+						last_index = x
+					elif try_int == val:
+						last_index = x
+						break
+					else:
+						if last_index != -1:
+							break
+			if last_index != -1:
+				pop.id_pressed.emit(pop.get_item_id(last_index))
+
 	#region 0
 	func _init(slot : Slot, control : Control, set_index : int) -> void:
 		index = set_index
@@ -352,6 +392,8 @@ class Rub extends Object:
 							_placeholder_edit.get_v_scroll_bar().set_deferred(&"value", be.get_v_scroll_bar().value)
 							_placeholder_edit.get_h_scroll_bar().set_deferred(&"value", be.get_h_scroll_bar().value)
 							_placeholder_edit.set_selection_origin_column.call_deferred(be.get_selection_origin_column())
+
+							_placeholder_edit.set_deferred(&"theme_override_font_sizes/font_size", be.get(&"theme_override_font_sizes/font_size"))
 
 						var root : Control = _slot.get_root()
 						if !child.gui_input.is_connected(root.on_gui):
@@ -446,10 +488,14 @@ class Rub extends Object:
 				c.get_v_scroll_bar().set_deferred(&"value", _placeholder_edit.get_v_scroll_bar().value)
 				c.get_h_scroll_bar().set_deferred(&"value", _placeholder_edit.get_h_scroll_bar().value)
 				c.set_selection_origin_column.call_deferred(_placeholder_edit.get_selection_origin_column())
+				c.set_deferred(&"theme_override_font_sizes/font_size", _placeholder_edit.get(&"theme_override_font_sizes/font_size"))
+				_pop_size.call_deferred(current_ref)
 		else:
 			if current_ref == instance_ref and current_ref != null and _placeholder_edit:
 				var c : CodeEdit = current_ref.get_base_editor()
 				_placeholder_edit.set_deferred(&"text", c.text)
+				_placeholder_edit.set_deferred(&"theme_override_font_sizes/font_size", c.get(&"theme_override_font_sizes/font_size"))
+
 
 				for cr : int in c.get_sorted_carets(true):
 					_placeholder_edit.set_caret_column.call_deferred(c.get_caret_column(cr), true, cr)

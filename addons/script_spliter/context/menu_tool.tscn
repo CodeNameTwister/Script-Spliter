@@ -21,7 +21,7 @@ outline_color = Color(0, 0, 0, 1)
 
 [node name="MenuTool" type="Window" node_paths=PackedStringArray("_container")]
 title = "Script Splitter Menu"
-position = Vector2i(-255, -127)
+position = Vector2i(112, 178)
 size = Vector2i(512, 256)
 transient = true
 popup_window = true
