@@ -297,6 +297,7 @@ class Rub extends Object:
 					else:
 						if last_index != -1:
 							break
+						last_index = x
 			if last_index != -1:
 				pop.id_pressed.emit(pop.get_item_id(last_index))
 
@@ -383,6 +384,7 @@ class Rub extends Object:
 								child = _placeholder_edit
 						if is_instance_valid(_placeholder_edit):
 							_placeholder_edit.set_deferred(&"text", be.text)
+							_placeholder_edit.set_deferred(&"theme_override_font_sizes/font_size", be.get(&"theme_override_font_sizes/font_size"))
 
 							for cr : int in be.get_sorted_carets(true):
 								_placeholder_edit.set_caret_column.call_deferred(be.get_caret_column(cr), true, cr)
@@ -393,7 +395,6 @@ class Rub extends Object:
 							_placeholder_edit.get_h_scroll_bar().set_deferred(&"value", be.get_h_scroll_bar().value)
 							_placeholder_edit.set_selection_origin_column.call_deferred(be.get_selection_origin_column())
 
-							_placeholder_edit.set_deferred(&"theme_override_font_sizes/font_size", be.get(&"theme_override_font_sizes/font_size"))
 
 						var root : Control = _slot.get_root()
 						if !child.gui_input.is_connected(root.on_gui):
@@ -479,6 +480,8 @@ class Rub extends Object:
 				current_ref = container.get_child(container.current_tab)
 			if current_ref != null:
 				var c : Node = current_ref.get_base_editor()
+				c.set_deferred(&"theme_override_font_sizes/font_size", _placeholder_edit.get(&"theme_override_font_sizes/font_size"))
+				_pop_size.call_deferred(current_ref)
 
 				for cr : int in _placeholder_edit.get_sorted_carets(true):
 					c.set_caret_column.call_deferred(_placeholder_edit.get_caret_column(cr), true, cr)
@@ -488,8 +491,7 @@ class Rub extends Object:
 				c.get_v_scroll_bar().set_deferred(&"value", _placeholder_edit.get_v_scroll_bar().value)
 				c.get_h_scroll_bar().set_deferred(&"value", _placeholder_edit.get_h_scroll_bar().value)
 				c.set_selection_origin_column.call_deferred(_placeholder_edit.get_selection_origin_column())
-				c.set_deferred(&"theme_override_font_sizes/font_size", _placeholder_edit.get(&"theme_override_font_sizes/font_size"))
-				_pop_size.call_deferred(current_ref)
+
 		else:
 			if current_ref == instance_ref and current_ref != null and _placeholder_edit:
 				var c : CodeEdit = current_ref.get_base_editor()
