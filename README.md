@@ -8,7 +8,7 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 # Preview
 
 ### V0.2 Video Preview
-[![video preview](https://github.com/user-attachments/assets/636cddf4-815e-4bf3-acab-13c26ff21318)](https://youtu.be/SVDmrdTR_NQ)
+[![video preview](https://github.com/user-attachments/assets/636cddf4-815e-4bf3-acab-13c26ff21318)](https://youtu.be/ISSu45qzWWw)
 
 ### V0.1 Image Preview
 ![image](https://github.com/user-attachments/assets/a6e1dea8-74cf-4fd9-b0b4-ec7d65ea3995)
