@@ -9,52 +9,74 @@ extends Window
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 @export var _container : Node
+@export var _custom_options : Control
 
 var _plugin : Object = null
-var _selected : int = 0
 
-func _init() -> void:
-	visibility_changed.connect(_on_visibility_change)
+func _init_1() -> void:
+	if _container and _plugin:
+		var columns : int = _plugin.call(&"get_split_columns")
+		var rows : int  = _plugin.call(&"get_split_rows")
+		set_split_value(columns, rows)
+
+func _ready() -> void:
+	if _custom_options:
+		_custom_options.visible = false
+		
+	if !visibility_changed.is_connected(_on_visibility_change):
+		visibility_changed.connect(_on_visibility_change)
+
+	_init_1()
 
 func set_plugin(current_plugin : Object) -> void:
-	assert(current_plugin.has_method(&"get_type_split"))
-
 	_plugin = current_plugin
-	_selected = _plugin.call(&"get_type_split")
 
 func _on_visibility_change() -> void:
 	if !visible: return
 	if !_plugin:
-		push_warning("Not plugin degifed!")
 		return
-	_selected = _plugin.call(&"get_type_split")
 
-func _ready() -> void:
-	await get_tree().process_frame
-	popup_centered()
+	_init_1()
+	
+func enable_options() -> void:
+	var custom : CheckBox = _container.get_child(_container.get_child_count() - 1)
+	for c : Node in _container.get_children():
+		if c is CheckBox:
+			c.button_pressed = false
+			
+	_custom_options.visible = true
+	custom.button_pressed = true
 
-func _update_gui() -> void:
-	for x : Node in _container.get_children():
-		if x is CheckBox:
-			x.button_pressed = false
-	if _selected < _container.get_child_count():
-		var node : Node = _container.get_child(_selected)
-		if node is CheckBox:
-			node.button_pressed = true
-		return
-	push_error("[PLUGIN] Error!, this version is outdate!")
-
-func selected(index :int) -> void:
-	_selected = index
-	_update_gui()
+func set_split_value(columns : int, rows : int) -> void:
+	var current : Node = null
+	var custom : CheckBox = _container.get_child(_container.get_child_count() - 1)
+	for c : Node in _container.get_children():
+		if c is CheckBox:
+			if c.columns == columns and c.rows == rows:
+				current = c
+				c.button_pressed = true
+				continue
+			c.button_pressed = false
+			
+	if columns < 2 and rows < 2:
+		current = _container.get_child(0)
+		if current is CheckBox:
+			current.button_pressed = true
+		else:
+			current = null
+			
+	_custom_options.visible = current == null
+	custom.button_pressed = _custom_options.visible
+	_custom_options.set_values(columns, rows)
 
 func _on_ok_pressed() -> void:
-	_update_gui()
-	if !_plugin.call(&"set_type_split", _selected):
+	var columns : int = _custom_options.get_columns_value()
+	var rows : int = _custom_options.get_rows_value()
+	if !_plugin:
 		push_error("[ERROR] Can not set split type!")
 	else:
-		hide()
-
+		_plugin.call(&"set_type_split", columns, rows)
+	hide()
 
 func _on_cancel_pressed() -> void:
 	hide()
