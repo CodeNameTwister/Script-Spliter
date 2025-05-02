@@ -36,7 +36,9 @@ differences with version 0.1:
 
 # ROADMAP
 * Version > 0.2.x: Flying scripts; Allow split in separate windows.
-* Version >= 0.3: Using tabs for drag and drop between windows. *(WARNING! : Some features offered in previous versions may change)*
+* Version >= 0.3:
+  * Change logo/colors: Currently the pet I use on github is placed and it is planned to change it to one more suitable for the plugin. 
+  * Using tabs for drag and drop between windows. *(WARNING! : Some features offered in previous versions may change)*
 
 # How Work
   
