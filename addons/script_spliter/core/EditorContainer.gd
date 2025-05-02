@@ -12,7 +12,7 @@ extends "res://addons/script_spliter/core/ui/multi_split_container.gd"
 const PREVIEW : PackedScene = preload("res://addons/script_spliter/context/panel_preview.tscn")
 
 var preview : Control = null
-var _last_container_dd : Control = null
+#var _last_container_dd : Control = null
 
 func get_total_containers() -> int:
 	var total : int = 0
@@ -31,8 +31,9 @@ func make_split_container_item() -> SplitContainerItem:
 	var x : SplitContainerItem = SplitContainerItem.new()
 	x.size_flags_horizontal = Control.SIZE_FILL
 	x.size_flags_vertical = Control.SIZE_FILL
-	x.clip_contents = true
 	x.custom_minimum_size = Vector2.ZERO
+	x.clip_contents = true
+	x.visible = false
 	return x
 
 # v3
@@ -45,16 +46,16 @@ func make_split_container_item() -> SplitContainerItem:
 	#for x : Node in get_children():
 		#x.set(&"focus_handler", enable)
 
-func in_focus(node : Node) -> void:
+func in_focus(_node : Node) -> void:
 	return
-	if _last_container_dd != node:
-		node = _last_container_dd
-		var parent : Node = preview.get_parent()
-		if parent != node:
-			if is_instance_valid(parent):
-				parent.remove_child(preview)
-			node.add_child(preview)
-		preview.visible = true
+	#if _last_container_dd != node:
+		#node = _last_container_dd
+		#var parent : Node = preview.get_parent()
+		#if parent != node:
+			#if is_instance_valid(parent):
+				#parent.remove_child(preview)
+			#node.add_child(preview)
+		#preview.visible = true
 
 func has_items() -> bool:
 	return get_child_count() > 0

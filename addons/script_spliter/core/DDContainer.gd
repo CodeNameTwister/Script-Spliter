@@ -8,6 +8,7 @@ extends TabContainer
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+@warning_ignore("unused_signal")
 signal on_dragging(e : Control)
 
 # V3

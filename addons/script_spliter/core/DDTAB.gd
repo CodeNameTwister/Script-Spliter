@@ -24,7 +24,7 @@ func _init() -> void:
 func _ready() -> void:
 	set_process(false)
 
-func make_preview(from : Control) -> Control:
+func make_preview() -> Control:
 	var tab : TabContainer = (get_parent() as TabContainer)
 	var preview : Control = PREVIEW.instantiate()
 	var label : Label = preview.get_node("Label")
@@ -42,7 +42,7 @@ func _process(delta: float) -> void:
 	if _fms > 0.24:
 		force_drag(
 			get_parent()
-		,make_preview(self)
+		,make_preview()
 		)
 		on_start_drag.emit(self)
 		set_process(false)

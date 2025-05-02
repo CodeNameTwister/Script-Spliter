@@ -10,13 +10,15 @@ extends Object
 
 const EditorContainer : Script = preload("res://addons/script_spliter/core/EditorContainer.gd")
 const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
+const ETAB : Script = preload("res://addons/script_spliter/core/ETab.gd")
 
 var _plugin : Node = null
 
 var _root : Node = null
-var _editor : TabContainer = null
 var _main : EditorContainer = null
 var _container : Root = null
+var _editor : TabContainer = null
+var _editor_min_size : Vector2 = Vector2.ZERO
 
 var _code_editors : Array[Mickeytools] = []
 var _last_tool : Mickeytools = null
@@ -97,7 +99,7 @@ func init_1() -> void:
 	})
 #endregion
 
-func update_config(request : bool = false) -> void:
+func update_config() -> void:
 	var settings : EditorSettings = EditorInterface.get_editor_settings()
 	var changes : PackedStringArray = settings.get_changed_settings()
 
@@ -145,7 +147,11 @@ func init_0() -> void:
 
 		if is_instance_valid(_editor):
 			_setup(_editor, false)
-			_editor.visible = true
+			if _editor.get_script() == ETAB:
+				_editor.setup(0)
+				_editor.set_script(null)
+			_editor.custom_minimum_size = _editor_min_size
+			_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 
 func _clear() -> void:
@@ -432,7 +438,7 @@ func _out_it(node : Node, with_signals : bool = false) -> void:
 
 func _setup(editor : TabContainer, setup : bool) -> void:
 	const INIT_2 : Array[StringName] = [&"connect", &"disconnect"]
-	const INIT_3 : Array[Array] = [[&"tab_changed", &"update_queue"],[&"child_entered_tree", &"_on_it"], [&"child_exiting_tree", &"_out_it"]]
+	const INIT_3 : Array[Array] = [[&"tab_changed", &"process_update_queue"],[&"child_entered_tree", &"_on_it"], [&"child_exiting_tree", &"_out_it"]]
 	var _2 : StringName = INIT_2[int(!setup)]
 	for _3 : Array in INIT_3:
 		var _0 : StringName = _3[0]
@@ -579,6 +585,8 @@ func update() -> void:
 				_last_tool = z
 				break
 			_code_editors.erase(z)
+			
+	_editor.set_deferred(&"visible", true)
 					
 
 func is_visible_minimap_required() -> bool:
@@ -644,7 +652,6 @@ func update_queue(__ : int = 0) -> void:
 		_plugin.set_process(true)
 	if _main and _container:
 		_main.size = _container.size
-		_main.item_rect_changed.emit()
 		_main.update()
 
 #region callback
@@ -701,9 +708,9 @@ func _get_unused_editor_control() -> Array[Node]:
 func _free_editor_container(control : Control) -> bool:
 	if control.get_parent() == _main:
 		for c : Mickeytools in _code_editors:
-			var a : Node = c.get_control().get_parent()
+			var _a : Node = c.get_control().get_parent()
 			var b : Node = control
-			if a == b or a.get_parent() == b:
+			if _a == b or _a.get_parent() == b:
 				c.reset()
 				_code_editors.erase(c)
 				c.free()
@@ -741,7 +748,10 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 	if !is_instance_valid(_main):
 		_main = _get_container()
 
-	_editor.visible = false
+	_editor_min_size = _editor.custom_minimum_size
+	_editor.custom_minimum_size = Vector2.ZERO
+	_editor.size_flags_vertical = Control.SIZE_FILL
+	_editor.set_script(ETAB)
 
 	root = _container.get_parent()
 
@@ -794,7 +804,7 @@ func can_remove_split(node : Node) -> bool:
 					return true
 	return false
 
-func can_add_split(node : Node) -> bool:
+func can_add_split(_node : Node) -> bool:
 	if !is_instance_valid(_main):
 		return false
 	var unused : Array[Node] =_get_unused_editor_control()
@@ -842,6 +852,7 @@ func get_current_columns_and_rows() -> Array[int]:
 		var columns : int = _main.max_columns
 		var container : int = _main.get_child_count()
 		if container > 0 and columns > 0:
+			@warning_ignore("integer_division")
 			container = int(container / columns)
 		out[0] = columns
 		out[1] = container
@@ -875,6 +886,6 @@ func update_build(columns : int, rows : int) -> void:
 	
 	process_update_queue()
 
-func process_update_queue() -> void:
-	update_queue(0)
-	update_queue.call_deferred(0)
+func process_update_queue(__ : int = 0) -> void:
+	update_queue(__)
+	update_queue.call_deferred(__)
