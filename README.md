@@ -33,10 +33,11 @@ differences with version 0.1:
 * Split Four Window Squared.
 * Split Custom Window defined by you.
 * Plugins Setting in Editor Settings. *(In the section Plugin, you can see with advance option enabled!)*
-* V0.2.2 Refresh Warnings changes on save in all opened windows (Errors/Warning Script) *(Experimental: This option can be disabled on Editor Settings)*
+* Refresh Warnings changes on project save in all opened windows (Errors/Warning Script) *(Experimental: This option can be disabled on Editor Settings)*
+* Pop Script (Make Floating Script in Separate Window using RMB context menu)
 
 # ROADMAP
-* Version > 0.2.x: Flying scripts; Allow split in separate windows.
+* Version >= 0.2.3: ~Flying scripts; Allow split in separate windows.~
 * Version >= 0.3:
   * Change logo/colors: Currently the pet I use on github is placed and it is planned to change it to one more suitable for the plugin. 
   * Using tabs for drag and drop between windows. *(WARNING! : Some features offered in previous versions may change)*
