@@ -31,10 +31,13 @@ differences with version 0.1:
 * Split Two Window Horizontal/Vertical.
 * Split Three Window Horizontal/Vertical.
 * Split Four Window Squared.
-* Split Custom Window defined by you.
+* Split Custom Window defined by you. *(using RMB context menu or Tool Menu)*
 * Plugins Setting in Editor Settings. *(In the section Plugin, you can see with advance option enabled!)*
-* Refresh Warnings changes on project save in all opened windows (Errors/Warning Script) *(Experimental: This option can be disabled on Editor Settings)*
-* Pop Script (Make Floating Script in Separate Window using RMB context menu)
+* Pop Script: Make Floating Script in Separate Window using RMB context menu.
+* Refresh Warnings: changes on project save in all opened windows *(Errors/Warning Script)*
+>[!WARNING]
+>Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
+
 
 # ROADMAP
 * Version >= 0.2.3: ~Flying scripts; Allow split in separate windows.~
