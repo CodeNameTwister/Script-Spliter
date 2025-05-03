@@ -33,6 +33,7 @@ differences with version 0.1:
 * Split Four Window Squared.
 * Split Custom Window defined by you.
 * Plugins Setting in Editor Settings. *(In the section Plugin, you can see with advance option enabled!)*
+* V0.2.2 Refresh Warnings changes on save in all opened windows (Errors/Warning Script) *(Experimental: This options can be disabled on Editor Settings)*
 
 # ROADMAP
 * Version > 0.2.x: Flying scripts; Allow split in separate windows.
