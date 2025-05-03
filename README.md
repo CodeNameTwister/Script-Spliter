@@ -25,6 +25,7 @@ differences with version 0.1:
 * Allows you to zoom in on all windows.
 * You may have a separate script documentation help window.
 * Some visual aspects and configurable parameters in Editor Settings.
+* More Features and Split Options.
 
 # Features
 * Split Window of Document Files Like Script/Document Helper Window.
