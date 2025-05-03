@@ -27,7 +27,7 @@ func _notification(what: int) -> void:
 		if is_instance_valid(preview) and !preview.is_queued_for_deletion():
 			preview.queue_free()
 
-func make_split_container_item() -> SplitContainerItem:
+func make_split_container_item() -> Control:
 	var x : SplitContainerItem = SplitContainerItem.new()
 	x.size_flags_horizontal = Control.SIZE_FILL
 	x.size_flags_vertical = Control.SIZE_FILL
@@ -59,3 +59,7 @@ func in_focus(_node : Node) -> void:
 
 func has_items() -> bool:
 	return get_child_count() > 0
+
+func is_split_container_item(x : Object) -> bool:
+	return x is SplitContainerItem
+	

@@ -27,13 +27,17 @@ var _rmb_editor_code_remove_split : EditorContextMenuPlugin = null
 var _menu_split_selector : Window = null
 var _builder : Object = null
 
-# BUFFERED CONFIG
+var _daemon_chaser : Node = null
+
+#region _USER_BUFFER_
 var _rows : int = 0:
 	set(e):
 		_rows = maxi(e, 0)
 var _columns : int = 0:
 	set(e):
 		_columns = maxi(e, 0)
+var _refresh_warnings_on_save : bool = true
+#endregion
 
 var _frm : int = 0
 
@@ -51,6 +55,16 @@ func get_split_rows() -> int:
 
 func get_split_columns() -> int:
 	return _columns
+	
+func _save_external_data() -> void:
+	if _refresh_warnings_on_save and is_instance_valid(_builder):
+		if _daemon_chaser == null:
+			_daemon_chaser = ResourceLoader.load("res://addons/script_spliter/core/DaemonChaser.gd").new()
+			add_child(_daemon_chaser)
+		_daemon_chaser.set_current_index(_builder.get_current_focus_index())
+		_daemon_chaser.buffer = _builder.get_focus_config()
+		_builder.enable_focus_highlight(false)
+		_daemon_chaser.run(_builder.focus_by_index, _builder.set_focus_config)
 
 func _process(__: float) -> void:
 	if _frm < 2:
@@ -64,6 +78,11 @@ func _process(__: float) -> void:
 func _on_change_settings() -> void:
 	if is_instance_valid(_builder):
 		_builder.update_config()
+		var settings : EditorSettings = EditorInterface.get_editor_settings()
+		var changes : PackedStringArray = settings.get_changed_settings()
+		
+		if &"plugin/script_spliter/behaviour/refresh_warnings_on_save" in changes:
+			_refresh_warnings_on_save = settings.get_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save")
 
 func _run() -> void:
 	if is_instance_valid(_builder):
@@ -112,6 +131,9 @@ func _exit_tree() -> void:
 	var settings : EditorSettings = EditorInterface.get_editor_settings()
 	if settings.settings_changed.is_connected(_on_change_settings):
 		settings.settings_changed.disconnect(_on_change_settings)
+		
+	if is_instance_valid(_daemon_chaser) and !_daemon_chaser.is_queued_for_deletion():
+		_daemon_chaser.queue_free()
 
 func _get_translated_text(text : String) -> String:
 	# TODO: Translation
@@ -147,6 +169,10 @@ func _setup(input : int) -> void:
 			_columns = settings.get_setting(&"plugin/script_spliter/columns")
 		if !settings.has_setting(&"plugin/script_spliter/save_rows_columns_count_on_exit"):
 			settings.set_setting(&"plugin/script_spliter/save_rows_columns_count_on_exit", false)
+		if !settings.has_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save"):
+			settings.set_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save", _refresh_warnings_on_save)
+		else:
+			_refresh_warnings_on_save = settings.get_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save")
 	else:
 		if is_instance_valid(_rmb_editor_add_split):
 			remove_context_menu_plugin(_rmb_editor_add_split)

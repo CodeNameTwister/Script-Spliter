@@ -10,7 +10,6 @@ extends Object
 
 const EditorContainer : Script = preload("res://addons/script_spliter/core/EditorContainer.gd")
 const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
-const ETAB : Script = preload("res://addons/script_spliter/core/ETab.gd")
 
 var _plugin : Node = null
 
@@ -147,11 +146,7 @@ func init_0() -> void:
 
 		if is_instance_valid(_editor):
 			_setup(_editor, false)
-			if _editor.get_script() == ETAB:
-				_editor.setup(0)
-				_editor.set_script(null)
-			_editor.custom_minimum_size = _editor_min_size
-			_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			_editor.visible = true
 
 
 func _clear() -> void:
@@ -161,28 +156,28 @@ func _clear() -> void:
 		for e : Node in _editor.get_children():
 			if x.is_equal(e):
 				dirty = true
+				break
 		if !dirty:
 			_code_editors[z].reset()
 			_code_editors.remove_at(z)
 
 	for x : Node in _main.get_children():
 		if x is TabContainer:continue
-		if x.get_child_count() > 0:
-			for y : Node in x.get_children():
-				for z : Node in y.get_children():
-					var dirty : bool = false
-					for t : Mickeytools in _code_editors:
-						if t.get_control() == z:
+		for y : Node in x.get_children():
+			for z : Node in y.get_children():
+				var dirty : bool = false
+				for t : Mickeytools in _code_editors:
+					if t.get_control() == z:
+						dirty = true
+				if !dirty:
+					for zx : Node in _editor.get_children():
+						if z == zx:
 							dirty = true
-					if !dirty:
-						for zx : Node in _editor.get_children():
-							if z == zx:
-								dirty = true
-								break
-						if dirty:
-							z.queue_free.call_deferred()
-						else:
-							y.remove_child(z)
+							break
+					if dirty:
+						z.queue_free.call_deferred()
+					else:
+						y.remove_child(z)
 
 func _get_editor_root() -> Node:
 	var aviable : Node = get_aviable()
@@ -222,7 +217,12 @@ class Mickeytools extends Object:
 						root.current_tab = index
 					break
 		if is_instance_valid(_gui) and _gui.is_inside_tree():
-			(_gui as Control).grab_focus()
+			var control : Control = _gui
+			if control.focus_mode != Control.FOCUS_NONE:
+				control.grab_focus()
+			
+	func get_origin() -> Node:
+		return _parent
 
 	func get_control() -> Node:
 		return _control
@@ -291,6 +291,9 @@ class Mickeytools extends Object:
 						if line > -1:
 							sc.goto_line(line)
 			_control = _gui.get_parent()
+			var __parent : Node = _control.get_parent()
+			if __parent is VSplitContainer:
+				_control = __parent
 		else:
 			for x : Node in control.get_children():
 				if x is RichTextLabel:
@@ -320,7 +323,8 @@ class Mickeytools extends Object:
 			if !_gui.is_node_ready():
 				await _gui.ready
 			if is_instance_valid(_gui):
-				_gui.grab_focus()
+				if _gui.focus_mode != Control.FOCUS_NONE:
+					_gui.grab_focus()
 
 	func update() -> void:
 		if is_instance_valid(_control) and is_instance_valid(_reference):
@@ -454,10 +458,20 @@ func _on_sub_change(__ : int, tab : TabContainer) -> void:
 		if control.get_child_count() > 0:
 			for x : Node in control.get_children():
 				if x is Control:
-					x.grab_focus()
+					if control is VSplitContainer and control.get_child_count() > 0:
+						var node : Control = control.get_child(0)
+						if node.focus_mode != Control.FOCUS_NONE:
+							node.grab_focus()
+					elif control.focus_mode != Control.FOCUS_NONE:
+						control.grab_focus()
 					break
 		else:
-			control.grab_focus()
+			if control is VSplitContainer and control.get_child_count() > 0:
+				var node : Control = control.get_child(0)
+				if node.focus_mode != Control.FOCUS_NONE:
+					node.grab_focus()
+			elif control.focus_mode != Control.FOCUS_NONE:
+				control.grab_focus()
 
 func _on_tab_rmb(itab : int, tab : TabContainer) -> void:
 	if tab.get_child_count() > itab and itab > -1:
@@ -558,8 +572,8 @@ func _get_container_edit() -> Control:
 	rtab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rtab.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	return rtab
-
+	return rtab			
+			
 func update() -> void:
 	_clear()
 	if _editor.get_child_count() > 0:
@@ -578,15 +592,13 @@ func update() -> void:
 							for z : Node in _editor.get_children():
 								if create_code_editor(y, z):
 									break
-	
+									
 	if !is_instance_valid(_last_tool) or _last_tool.is_queued_for_deletion():
 		for z : Mickeytools in _code_editors:
 			if is_instance_valid(z):
 				_last_tool = z
 				break
 			_code_editors.erase(z)
-			
-	_editor.set_deferred(&"visible", true)
 					
 
 func is_visible_minimap_required() -> bool:
@@ -613,24 +625,32 @@ func get_aviable() -> Node:
 func is_node_valid(root : Node) -> bool:
 	return is_instance_valid(root) and root.is_inside_tree()
 
-func create_code_editor(root : Node, editor : Node) -> bool:
+func create_code_editor(root : Node, editor : Node, fallback : bool = true) -> bool:
 	if !is_node_valid(root) or !is_node_valid(editor):
 		return false
 
-	if !editor.is_node_ready() or editor.get_child_count() == 0:
+	if !editor.is_node_ready():
 		return false
-
+	
 	for x : Mickeytools in _code_editors:
 		if x.is_equal(editor):
 			return false
-
+			
+	if editor.get_child_count() == 0:
+		if fallback:
+			var index : int = editor.get_index()
+			if _item_list.item_count > index:
+				_item_list.item_selected.emit(index)
+				create_code_editor(root, editor, false)
+		return false
+	
 	var tool : Mickeytools = null
 	var childs : Array[Node] = root.get_children()
 
 	if _code_editors.size() > 0 and childs.size() > 0:
 		for m : Mickeytools in _code_editors:
-			var o : Node = m.get_gui()
-			if o in childs or o.get_parent() in childs:
+			var o : Node = m.get_control()
+			if o in childs or m.get_gui() in childs:
 				tool = m
 				break
 
@@ -698,7 +718,7 @@ func _get_unused_editor_control() -> Array[Node]:
 	for x : Node in _editor.get_children():
 		var exist : bool = false
 		for m : Mickeytools in _code_editors:
-			if m.get_reference() == x:
+			if m.is_equal(x):
 				exist = true
 				break
 		if !exist:
@@ -748,10 +768,7 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 	if !is_instance_valid(_main):
 		_main = _get_container()
 
-	_editor_min_size = _editor.custom_minimum_size
-	_editor.custom_minimum_size = Vector2.ZERO
-	_editor.size_flags_vertical = Control.SIZE_FILL
-	_editor.set_script(ETAB)
+	_editor.visible = false
 
 	root = _container.get_parent()
 
@@ -885,6 +902,42 @@ func update_build(columns : int, rows : int) -> void:
 		aviable = get_aviable()
 	
 	process_update_queue()
+	
+
+#region _CHASER_	
+func get_current_focus_index() -> int:
+	var arr : PackedInt32Array = _item_list.get_selected_items()
+	if arr.size() > 0:
+		return _item_list.get_selected_items()[0]
+	return 0
+	
+func focus_by_index(index : int) -> bool:
+	if _code_editors.size() > index:
+		var cd : Mickeytools  = _code_editors[index]
+		var control : Node = cd.get_root()
+		if is_instance_valid(control):
+			if control is TabContainer:
+				var current : Node = control.get_current_tab_control()
+				var gui : Node = cd.get_gui()
+				if current == gui or cd.get_control() == current:
+					_on_focus(cd)
+		return true
+	return false
+
+func get_focus_config() -> Dictionary:
+	return {
+		"highlight_selected" : _SPLIT_USE_HIGHLIGHT_SELECTED
+		,"behaviour_expand_on_focus" : _main.behaviour_expand_on_focus
+	}
+
+func set_focus_config(d : Dictionary) -> void:
+	_SPLIT_USE_HIGHLIGHT_SELECTED = d["highlight_selected"]
+	_main.behaviour_expand_on_focus = d["behaviour_expand_on_focus"]
+
+func enable_focus_highlight(enable : bool) -> void:
+	_SPLIT_USE_HIGHLIGHT_SELECTED = enable
+	_main.behaviour_expand_on_focus = enable
+#endregion
 
 func process_update_queue(__ : int = 0) -> void:
 	update_queue(__)
