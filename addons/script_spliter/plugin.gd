@@ -18,11 +18,14 @@ const ICON_ADD_COLUMN : Texture = preload("res://addons/script_spliter/context/i
 const ICON_REMOVE_COLUMN : Texture = preload("res://addons/script_spliter/context/icons/split_cminus.svg")
 const ICON_ADD_ROW : Texture = preload("res://addons/script_spliter/context/icons/split_rplus.svg")
 const ICON_REMOVE_ROW : Texture = preload("res://addons/script_spliter/context/icons/split_rminus.svg")
+const ICON_FLOATING : Texture = preload("res://addons/script_spliter/context/icons/atop.png")
 
 var _rmb_editor_add_split : EditorContextMenuPlugin = null
 var _rmb_editor_remove_split: EditorContextMenuPlugin = null
 var _rmb_editor_code_add_split : EditorContextMenuPlugin = null
 var _rmb_editor_code_remove_split : EditorContextMenuPlugin = null
+var _rmb_editor_pop_script : EditorContextMenuPlugin = null
+var _rmb_editor_code_pop_script : EditorContextMenuPlugin = null
 
 var _menu_split_selector : Window = null
 var _builder : Object = null
@@ -145,6 +148,7 @@ func _setup(input : int) -> void:
 	if input != 0:
 		var ctx_add_column : String = _get_translated_text("ADD_SPLIT").capitalize()
 		var ctx_remove_split : String = _get_translated_text("REMOVE_SPLIT").capitalize()
+		var ctx_pop_script : String = _get_translated_text("MAKE_FLOATING_SCRIPT").capitalize()
 
 		#SETUP
 		_rmb_editor_add_split = CONTEXT.new(ctx_add_column, _add_window_split, _can_add_split, ICON_ADD_COLUMN)
@@ -153,11 +157,17 @@ func _setup(input : int) -> void:
 		_rmb_editor_code_add_split = CONTEXT.new(ctx_add_column, _add_window_split, _can_add_split, ICON_ADD_COLUMN)
 		_rmb_editor_code_remove_split = CONTEXT.new(ctx_remove_split, _remove_window_split, _can_remove_split, ICON_REMOVE_COLUMN)
 
+		_rmb_editor_pop_script = CONTEXT.new(ctx_pop_script, _make_pop_script, _can_make_pop_script, ICON_FLOATING)
+		_rmb_editor_code_pop_script = CONTEXT.new(ctx_pop_script, _make_pop_script, _can_make_pop_script, ICON_FLOATING)
+
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_editor_add_split)
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_editor_remove_split)
 
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR_CODE, _rmb_editor_code_add_split)
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR_CODE, _rmb_editor_code_remove_split)
+		
+		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_editor_pop_script)
+		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR_CODE, _rmb_editor_code_pop_script)
 
 		if !settings.has_setting(&"plugin/script_spliter/rows"):
 			settings.set_setting(&"plugin/script_spliter/rows", _rows)
@@ -182,6 +192,11 @@ func _setup(input : int) -> void:
 			remove_context_menu_plugin(_rmb_editor_code_add_split)
 		if is_instance_valid(_rmb_editor_code_remove_split):
 			remove_context_menu_plugin(_rmb_editor_code_remove_split)
+		if is_instance_valid(_rmb_editor_pop_script):
+			remove_context_menu_plugin(_rmb_editor_pop_script)
+		if is_instance_valid(_rmb_editor_code_pop_script):
+			remove_context_menu_plugin(_rmb_editor_code_pop_script)
+
 
 		if settings.has_setting(&"plugin/script_spliter/save_rows_columns_count_on_exit"):
 			if settings.get_setting(&"plugin/script_spliter/save_rows_columns_count_on_exit") == true:
@@ -246,6 +261,31 @@ func _remove_window_split(variant : Variant) -> void:
 		control = variant
 	if is_instance_valid(control):
 		_builder.remove_split(control)
+
+func _make_pop_script(variant : Variant) -> void:
+	var control : Control = null
+	if variant is Script:
+		var sc : ScriptEditor = EditorInterface.get_script_editor()
+		var arr : Array[ScriptEditorBase] = sc.get_open_script_editors()
+		var scs : Array[Script] = sc.get_open_scripts()
+		if arr.size() == scs.size():
+			for y : int in range(0, scs.size(), 1):
+				if scs[y] == variant:
+					control = arr[y].get_base_editor()
+					break
+	if variant is CodeEdit:
+		control = variant
+	if is_instance_valid(control):
+		_builder.make_pop_script(control)
+
+func _can_make_pop_script(path : PackedStringArray) -> bool:
+	if !is_instance_valid(_builder):
+		return false
+	for x : String in path:
+		var node : Node = get_node_or_null(x)
+		if node:
+			return !_builder.is_pop_script(node)
+	return false
 
 func _enter_tree() -> void:
 	_setup(1)
