@@ -3,8 +3,6 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 
 [![Godot Engine 4.3](https://img.shields.io/badge/Godot_Engine-4.x-blue)](https://godotengine.org/) ![ToolHack](https://img.shields.io/badge/Tool-Addon-green) ![Copyrights License](https://img.shields.io/badge/License-MIT-blue)
 
-
-
 # Preview
 
 ### V0.2 Video Preview
@@ -14,6 +12,10 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 ![image](https://github.com/user-attachments/assets/a6e1dea8-74cf-4fd9-b0b4-ec7d65ea3995)
 
 # NEWS
+<p align="center">
+  <img width="128" height="128" src="addons/script_spliter/assets/github_CodeNameTwister.png">
+</p>
+
 ### V0.2
 The internal workflow has been modified, but the functionality of its predecessor version has been maintained.
 

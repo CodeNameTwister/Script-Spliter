@@ -19,6 +19,7 @@ initial_position = 4
 size = Vector2i(805, 512)
 visible = false
 wrap_controls = true
+always_on_top = true
 script = ExtResource("1_wfm3d")
 _container = NodePath("PanelContainer/VC")
 _always_top = NodePath("PanelContainer/VC/HB/AlwaysTop")
@@ -67,5 +68,3 @@ layout_mode = 2
 size_flags_horizontal = 10
 tooltip_text = "Close the window"
 text = "X"
-
-[connection signal="focus_entered" from="PanelContainer/VC" to="." method="_on_vc_focus_entered"]

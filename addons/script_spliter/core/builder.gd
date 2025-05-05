@@ -7,7 +7,7 @@ extends Object
 #	Script Spliter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
+	
 const EditorContainer : Script = preload("res://addons/script_spliter/core/EditorContainer.gd")
 const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
 
@@ -796,8 +796,16 @@ func update_queue(__ : int = 0) -> void:
 	if _plugin:
 		_plugin.set_process(true)
 	if _main and _container:
-		_main.size = _container.size
+		if _main.size != _container.size:
+			_main.size = _container.size
+			for x : Node in _main.get_children():
+				if x is Control:
+					if x is TabContainer:
+						for y : Node in x.get_children():
+							if y is Control:
+								y.size = x.size
 		_main.update()
+		
 
 #region callback
 func _on_it(_node : Node) -> void:
@@ -1128,8 +1136,7 @@ func make_pop_script(control : Node) -> Window:
 		
 	node.proxy = editor
 	node.controller = tool
-	node.input_event.connect(_on_pop_input)
-		
+	
 	node.on_close.connect(_on_pop_script_close)
 	
 	_pop_scripts.append(node)

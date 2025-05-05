@@ -8,7 +8,6 @@ extends Window
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 signal on_close(window : Window)
-signal input_event(event : InputEvent)
 
 @export var _container : Control = null
 @export var _base_control : TabContainer = null
@@ -58,12 +57,13 @@ func _on_focus() -> void:
 		var root : Node = script_editor.get_child(0).get_child(1).get_child(1)
 		if root.get_child_count() > 2:
 			replacer = root.get_child(2)
-			replacer.get_parent().remove_child(replacer)
-			
-			if is_instance_valid(_root):
-				_root.add_child(replacer)
-			else:
-				add_child(replacer)
+			if "FindReplaceBar" in replacer.name:
+				replacer.get_parent().remove_child(replacer)
+				
+				if is_instance_valid(_root):
+					_root.add_child(replacer)
+				else:
+					add_child(replacer)
 	
 func _update_name() -> void:
 	if is_queued_for_deletion():
@@ -164,7 +164,7 @@ func _on_focus_exited() -> void:
 		
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
-		if replacer != null:
+		if is_instance_valid(replacer):
 			var script_editor: ScriptEditor = EditorInterface.get_script_editor()
 			var root : Node = script_editor.get_child(0).get_child(1).get_child(1)
 			
@@ -174,6 +174,8 @@ func _notification(what: int) -> void:
 					parent.remove_child(replacer)
 				root.add_child(replacer)
 			replacer = null
+		if is_instance_valid(controller):
+			controller.call(&"reset")
 
 func _move_to_center() -> void:
 	move_to_center()
