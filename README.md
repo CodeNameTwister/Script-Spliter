@@ -35,7 +35,7 @@ differences with version 0.1:
 * Split Custom Window defined by you. *(using RMB context menu or Tool Menu)*
 * Plugins Setting in Editor Settings. *(In the section Plugin, you can see with advance option enabled!)*
 * Pop Script: Make Floating Script in Separate Window using RMB context menu.
-* Refresh Warnings: changes on project save in all opened windows *(Errors/Warning Script)*
+* Refresh Warnings changes in all opened windows when project is saved *(Errors/Warning Script)*
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
 
@@ -53,7 +53,7 @@ differences with version 0.1:
 >
 > * Use Add/Remove split if you want increase or decrease the auto split window function.
 
->[!WARNING]
+>[!NOTE]
 > Keep in mind, the style when appear new window (As Column or Row) depend of you configuration split style!
 >
 > *This may change in future releases.*
@@ -84,6 +84,12 @@ The position of the line will vary depending on the selection of horizontal or v
 
 ![image](images/img2.png)
 
-Copyrights (c) CodeNameTwister. See [LICENSE.md](LICENSE.md) for details.
+# Special Thanks 📜
+This section lists users who have contributed to improving the quality of this project.
+
+[@adancau](https://github.com/adancau)
+
+#
+Copyrights (c) CodeNameTwister. See [LICENSE](LICENSE) for details.
 
 [godot engine]: https://godotengine.org/

@@ -14,9 +14,11 @@ signal input_event(event : InputEvent)
 @export var _base_control : TabContainer = null
 @export var _always_top : Button = null
 @export var _close : Button = null
+@export var _root : Control = null
 
 var proxy : Control = null
 var replacer : Node = null
+var controller : Object = null
 
 func set_base_control(node : Node) -> void:
 	if _base_control:
@@ -38,6 +40,7 @@ func _init() -> void:
 	close_requested.connect(_on_close)
 	visibility_changed.connect(_on_visibility)
 	focus_entered.connect(_on_focus)
+	focus_exited.connect(_on_focus_exited)
 	
 func _get_edit(n : Node) -> CodeEdit:
 	if n is CodeEdit:
@@ -47,15 +50,20 @@ func _get_edit(n : Node) -> CodeEdit:
 	return null
 	
 func _on_focus() -> void:
-	grab_focus()
-	return
-	var edit : CodeEdit = _get_edit(_base_control)
-	if edit:
-		edit.grab_focus()
-	return
-	if !always_on_top:
-		always_on_top = true
-		set_deferred(&"always_on_top", false)
+	if is_instance_valid(controller):
+		controller.emit_signal.call_deferred(&"focus", controller)
+	
+	if replacer == null:
+		var script_editor: ScriptEditor = EditorInterface.get_script_editor()
+		var root : Node = script_editor.get_child(0).get_child(1).get_child(1)
+		if root.get_child_count() > 2:
+			replacer = root.get_child(2)
+			replacer.get_parent().remove_child(replacer)
+			
+			if is_instance_valid(_root):
+				_root.add_child(replacer)
+			else:
+				add_child(replacer)
 	
 func _update_name() -> void:
 	if is_queued_for_deletion():
@@ -95,6 +103,19 @@ func _ready() -> void:
 			_base_control.child_entered_tree.connect(_on_child)
 		if !_base_control.child_exiting_tree.is_connected(_out_child):
 			_base_control.child_exiting_tree.connect(_out_child)
+	
+	always_on_top = true
+	#DIRTY4NOW
+	_rest.call_deferred(5)
+
+func _rest(x : int) -> void:
+	if x > 0:
+		if is_queued_for_deletion():
+			return
+		await get_tree().process_frame
+		_rest.call_deferred(x - 1)
+		return
+	set_deferred(&"always_on_top", false)
 		
 func _connect(n : Node, e : bool) -> void:
 	if n is CodeEdit:
@@ -126,25 +147,8 @@ func _on_visibility() -> void:
 func _on_close() -> void:
 	on_close.emit(self)
 	
-	if _base_control.get_child_count() < 1:
+	if _base_control and _base_control.get_child_count() < 1:
 		queue_free()
-#
-#func _n(n : Node) -> void:
-	#if n is CodeEdit:
-		#n.grab_focus()
-		#return
-	#for x : Node in n.get_children():
-		#_n(x)
-
-func _on_focus_entered() -> void:
-	if replacer == null:
-		var script_editor: ScriptEditor = EditorInterface.get_script_editor()
-		var root : Node = script_editor.get_child(0).get_child(1).get_child(1)
-		if root.get_child_count() > 2:
-			replacer = root.get_child(2)
-			replacer.get_parent().remove_child(replacer)
-			
-			$PanelContainer/VC.add_child(replacer)
 
 func _on_focus_exited() -> void:
 	if replacer != null:
@@ -157,3 +161,22 @@ func _on_focus_exited() -> void:
 				parent.remove_child(replacer)
 			root.add_child(replacer)
 		replacer = null
+		
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		if replacer != null:
+			var script_editor: ScriptEditor = EditorInterface.get_script_editor()
+			var root : Node = script_editor.get_child(0).get_child(1).get_child(1)
+			
+			var parent : Node = replacer.get_parent()
+			if parent != root:
+				if is_instance_valid(parent):
+					parent.remove_child(replacer)
+				root.add_child(replacer)
+			replacer = null
+
+func _move_to_center() -> void:
+	move_to_center()
+
+func _alpha_value(v : float) -> void:
+	get_child(0).modulate.a = v

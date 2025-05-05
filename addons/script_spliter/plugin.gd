@@ -47,7 +47,7 @@ var _frm : int = 0
 func get_builder() -> Object:
 	return _builder
 
-func _get_first_element(root : Node, pattern : String, type : String) -> Node:
+func find(root : Node, pattern : String, type : String) -> Node:
 	var e : Array[Node] = root.find_children(pattern, type, true, false)
 	if e.size() > 0:
 		return e[0]
@@ -91,10 +91,19 @@ func _run() -> void:
 	if is_instance_valid(_builder):
 		var script_editor: ScriptEditor = EditorInterface.get_script_editor()
 		var settings : EditorSettings = EditorInterface.get_editor_settings()
-		var scripts_tab_container : Node = _get_first_element(script_editor, "*", "TabContainer")
+		var scripts_tab_container : Node = find(script_editor, "*", "TabContainer")
 		
+		var il : Node = find(script_editor, "*", "ItemList")
+		if null != il:
+			_builder.set_item_list(il)
+		else:
+			push_warning("[Script-Spliter] Can not find item list!")
+	
 		if !scripts_tab_container.is_node_ready():
 			await scripts_tab_container.ready
+			if !is_instance_valid(scripts_tab_container):
+				push_error("Unspected error reference be replace or free it, can not run plugin!")
+				return
 
 		settings.settings_changed.connect(_on_change_settings)
 
