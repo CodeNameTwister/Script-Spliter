@@ -987,7 +987,6 @@ func add_split(control : Node) -> void:
 		current_unused = unused[0]
 
 	create_code_editor(root, current_unused)
-
 			
 	process_update_queue()
 	

@@ -32,6 +32,22 @@ var _builder : Object = null
 
 var _daemon_chaser : Node = null
 
+#region _REF_
+var _tab_container : Node = null:
+	get:
+		if !is_instance_valid(_tab_container):
+			var script_editor: ScriptEditor = EditorInterface.get_script_editor()
+			_tab_container = find(script_editor, "*", "TabContainer")
+		return _tab_container
+		
+var _item_list : Node = null:
+	get:
+		if !is_instance_valid(_item_list):
+			var script_editor: ScriptEditor = EditorInterface.get_script_editor()
+			_item_list = find(script_editor, "*", "ItemList")
+		return _item_list
+#endregion
+
 #region _USER_BUFFER_
 var _rows : int = 0:
 	set(e):
@@ -86,20 +102,34 @@ func _on_change_settings() -> void:
 		
 		if &"plugin/script_spliter/behaviour/refresh_warnings_on_save" in changes:
 			_refresh_warnings_on_save = settings.get_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save")
+			
+func _init() -> void:
+	var o : Object = _tab_container
+	if o == null:
+		#push_warning("[Script-Spliter] 0x000A")
+		return
+	o = _item_list
+	if o == null:
+		#push_warning("[Script-Spliter] 0x000B")
+		return
 
 func _run() -> void:
 	if is_instance_valid(_builder):
-		var script_editor: ScriptEditor = EditorInterface.get_script_editor()
 		var settings : EditorSettings = EditorInterface.get_editor_settings()
-		var scripts_tab_container : Node = find(script_editor, "*", "TabContainer")
+		var scripts_tab_container : Node = _tab_container
 		
-		var il : Node = find(script_editor, "*", "ItemList")
+		if !scripts_tab_container:
+			push_warning("[Script-Spliter] 0x000A Error can not find editor reference!")
+			return
+		
+		var il : Node = _item_list
 		if null != il:
 			_builder.set_item_list(il)
 		else:
-			push_warning("[Script-Spliter] Can not find item list!")
+			push_warning("[Script-Spliter] 0x000B Error can not find editor reference!")
+			return
 	
-		if !scripts_tab_container.is_node_ready():
+		if  !scripts_tab_container.is_node_ready():
 			await scripts_tab_container.ready
 			if !is_instance_valid(scripts_tab_container):
 				push_error("Unspected error reference be replace or free it, can not run plugin!")

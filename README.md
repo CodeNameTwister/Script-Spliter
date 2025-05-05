@@ -29,6 +29,10 @@ differences with version 0.1:
 * Some visual aspects and configurable parameters in Editor Settings.
 * More Features and Split Options.
 
+>[!NOTE]
+>This plugin uses another built-in plugin created by me called [Multi Split Container](https://github.com/CodeNameTwister/Multi-Split-Container)
+
+
 # Features
 * Split Window of Document Files Like Script/Document Helper Window.
 * Split Two Window Horizontal/Vertical.
