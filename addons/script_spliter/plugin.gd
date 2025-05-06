@@ -59,6 +59,7 @@ var _refresh_warnings_on_save : bool = true
 #endregion
 
 var _frm : int = 0
+var _d_chase : bool = false
 
 func get_builder() -> Object:
 	return _builder
@@ -75,7 +76,14 @@ func get_split_rows() -> int:
 func get_split_columns() -> int:
 	return _columns
 	
+func _on_save(res : Resource) -> void:
+	if res is Script:
+		_save_external_data()
+	
 func _save_external_data() -> void:
+	if _d_chase == true:
+		return
+	_d_chase = true
 	if _refresh_warnings_on_save and is_instance_valid(_builder):
 		if _daemon_chaser == null:
 			_daemon_chaser = ResourceLoader.load("res://addons/script_spliter/core/DaemonChaser.gd").new()
@@ -84,6 +92,7 @@ func _save_external_data() -> void:
 		_daemon_chaser.buffer = _builder.get_focus_config()
 		_builder.enable_focus_highlight(false)
 		_daemon_chaser.run(_builder.focus_by_index, _builder.set_focus_config)
+	set_deferred(&"_d_chase", false)
 
 func _process(__: float) -> void:
 	if _frm < 2:
@@ -185,6 +194,8 @@ func _setup(input : int) -> void:
 	var settings : EditorSettings = EditorInterface.get_editor_settings()
 
 	if input != 0:
+		resource_saved.connect(_on_save)
+		
 		var ctx_add_column : String = _get_translated_text("ADD_SPLIT").capitalize()
 		var ctx_remove_split : String = _get_translated_text("REMOVE_SPLIT").capitalize()
 		var ctx_pop_script : String = _get_translated_text("MAKE_FLOATING_SCRIPT").capitalize()
@@ -223,6 +234,8 @@ func _setup(input : int) -> void:
 		else:
 			_refresh_warnings_on_save = settings.get_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save")
 	else:
+		resource_saved.disconnect(_on_save)
+		
 		if is_instance_valid(_rmb_editor_add_split):
 			remove_context_menu_plugin(_rmb_editor_add_split)
 		if is_instance_valid(_rmb_editor_remove_split):
@@ -248,39 +261,43 @@ func _can_add_split(path : PackedStringArray) -> bool:
 	for x : String in path:
 		if x.begins_with("res://"):
 			var sc : ScriptEditor = EditorInterface.get_script_editor()
-			var arr : Array[ScriptEditorBase] = sc.get_open_script_editors()
-			var scs : Array[Script] = sc.get_open_scripts()
-			if arr.size() == scs.size():
-				for y : int in range(0, scs.size(), 1):
-					if scs[y].resource_path == x:
-						return _builder.can_add_split(arr[y].get_base_editor())
+			return _builder.can_add_split(sc.get_current_editor().get_base_editor())
 		else:
 			var node : Node = get_node_or_null(x)
 			if node:
 				return _builder.can_add_split(node)
+			else:
+				var sc : ScriptEditor = EditorInterface.get_script_editor()
+				return _builder.can_add_split(sc.get_current_editor().get_base_editor())
 	return false
 
 func _can_remove_split(path : PackedStringArray) -> bool:
 	if !is_instance_valid(_builder):
 		return false
 	for x : String in path:
-		var node : Node = get_node_or_null(x)
-		if node:
-			return _builder.can_remove_split(node)
+		if x.begins_with("res://"):
+			var sc : ScriptEditor = EditorInterface.get_script_editor()
+			return _builder.can_remove_split(sc.get_current_editor().get_base_editor())
+		else:
+			var node : Node = get_node_or_null(x)
+			if node:
+				return _builder.can_remove_split(node)
+			else:
+				var sc : ScriptEditor = EditorInterface.get_script_editor()
+				return _builder.can_remove_split(sc.get_current_editor().get_base_editor())
 	return false
 
 func _add_window_split(variant : Variant) -> void:
 	var control : Control = null
 	if variant is Script:
 		var sc : ScriptEditor = EditorInterface.get_script_editor()
-		var arr : Array[ScriptEditorBase] = sc.get_open_script_editors()
-		var scs : Array[Script] = sc.get_open_scripts()
-		if arr.size() == scs.size():
-			for y : int in range(0, scs.size(), 1):
-				if scs[y] == variant:
-					control = arr[y].get_base_editor()
-					break
-	if variant is CodeEdit:
+		if variant == sc.get_current_script():
+			control = sc.get_current_editor().get_base_editor()
+		else:
+			var c : ScriptEditorBase = sc.get_current_editor()
+			if c:
+				control = c.get_base_editor()
+	elif variant is CodeEdit:
 		control = variant
 	if is_instance_valid(control):
 		_builder.add_split(control)
@@ -289,14 +306,13 @@ func _remove_window_split(variant : Variant) -> void:
 	var control : Control = null
 	if variant is Script:
 		var sc : ScriptEditor = EditorInterface.get_script_editor()
-		var arr : Array[ScriptEditorBase] = sc.get_open_script_editors()
-		var scs : Array[Script] = sc.get_open_scripts()
-		if arr.size() == scs.size():
-			for y : int in range(0, scs.size(), 1):
-				if scs[y] == variant:
-					control = variant
-					break
-	if variant is CodeEdit:
+		if variant == sc.get_current_script():
+			control = sc.get_current_editor().get_base_editor()
+		else:
+			var c : ScriptEditorBase = sc.get_current_editor()
+			if c:
+				control = c.get_base_editor()
+	elif variant is CodeEdit:
 		control = variant
 	if is_instance_valid(control):
 		_builder.remove_split(control)

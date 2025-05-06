@@ -46,7 +46,7 @@ var _item_list : ItemList = null:
 
 #region __CONFIG__
 var _SPLIT_USE_HIGHLIGHT_SELECTED : bool = true
-var _MINIMAP_4_UNFOCUS_WINDOW : bool = true
+var _MINIMAP_4_UNFOCUS_WINDOW : bool = false
 
 var _SPLIT_HIGHLIGHT_COLOR : Color = Color.MEDIUM_SLATE_BLUE
 
@@ -569,7 +569,6 @@ func _on_focus(tool : Mickeytools) -> void:
 			gui.modulate = Color.WHITE
 			
 	if should_grab_focus():
-		gui = _last_tool.get_gui()
 		if is_instance_valid(gui):
 			var vp : Viewport = gui.get_viewport()
 			if is_instance_valid(vp):
@@ -696,7 +695,6 @@ func _get_root() -> Control:
 	texture.self_modulate.a = 0.25
 
 	margin.add_child(texture)
-
 	return margin
 
 func _get_container() -> Control:
@@ -834,21 +832,16 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 		
 	tool.update.call_deferred()
 	return tool
-
+	
 func update_queue(__ : int = 0) -> void:
 	if _plugin:
 		_plugin.set_process(true)
 	if _main and _container:
-		if _main.size != _container.size:
-			_main.size = _container.size
-			for x : Node in _main.get_children():
-				if x is Control:
-					if x is TabContainer:
-						for y : Node in x.get_children():
-							if y is Control:
-								y.size = x.size
+		var _size : Vector2 = _container.size - Vector2(9.0,7.0)
+		_size.x = maxf(_main.size.x, 1.0)
+		_size.y = maxf(_main.size.y, 1.0)
+		_main.size = _size
 		_main.update()
-		
 
 #region callback
 func _on_it(_node : Node) -> void:
@@ -966,9 +959,6 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 	_container.anchor_top = 0.0
 	_container.anchor_right = 1.0
 	_container.anchor_bottom = 1.0
-
-	_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	_main.behaviour_expand_on_focus = true
 	_main.behaviour_expand_on_double_click = true
