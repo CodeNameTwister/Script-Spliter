@@ -840,7 +840,14 @@ func update_queue(__ : int = 0) -> void:
 		var _size : Vector2 = _container.size - Vector2(9.0,7.0)
 		_size.x = maxf(_main.size.x, 1.0)
 		_size.y = maxf(_main.size.y, 1.0)
-		_main.size = _size
+		if _main.size != _size:
+			_main.size = _size
+			for x : Node in _main.get_children():
+				if x is Control:
+					if x is TabContainer:continue
+					for y : Node in x.get_children():
+						if y is Control:
+							y.set_deferred(&"size", x.size)
 		_main.update()
 
 #region callback
@@ -1003,7 +1010,6 @@ func add_split(control : Node) -> void:
 
 	var current_unused : Node = control
 
-	var tool : Mickeytools = null
 	for x : Mickeytools in _code_editors:
 		if x.is_equal(control) or x.get_gui() == control:
 			current_unused = null
