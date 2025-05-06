@@ -838,8 +838,8 @@ func update_queue(__ : int = 0) -> void:
 		_plugin.set_process(true)
 	if _main and _container:
 		var _size : Vector2 = _container.size - Vector2(9.0,7.0)
-		_size.x = maxf(_main.size.x, 1.0)
-		_size.y = maxf(_main.size.y, 1.0)
+		_size.x = maxf(_container.size.x, 1.0)
+		_size.y = maxf(_container.size.y, 1.0)
 		_main.size = _size
 		for x : Node in _main.get_children():
 			if x is Control:
