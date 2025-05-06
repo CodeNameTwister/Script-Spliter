@@ -60,6 +60,9 @@ var _SEPARATOR_BUTTON_ICON : Texture = preload("res://addons/script_spliter/cont
 var _SEPARATOR_SMOOTH_EXPAND : bool = true
 var _SEPARATOR_SMOOTH_EXPAND_TIME : float = 0.24
 
+var _OUT_FOCUS_COLORED : bool = true
+var _UNFOCUS_COLOR : Color = Color.GRAY
+
 # CURRENT CONFIG
 var current_columns : int = 1
 var current_rows : int = 1
@@ -78,6 +81,8 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/minimap_for_unfocus_window", &"_MINIMAP_4_UNFOCUS_WINDOW"]
 		,[&"plugin/script_spliter/editor/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
 		,[&"plugin/script_spliter/editor/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
+		,[&"plugin/script_spliter/editor/out_focus_color_enabled", &"_OUT_FOCUS_COLORED"]
+		,[&"plugin/script_spliter/editor/out_focus_color_value", &"_UNFOCUS_COLOR"]
 
 		,[&"plugin/script_spliter/line/size", &"_SEPARATOR_LINE_SIZE"]
 		,[&"plugin/script_spliter/line/color", &"_SEPARATOR_LINE_COLOR"]
@@ -142,11 +147,19 @@ func update_config() -> void:
 	var settings : EditorSettings = EditorInterface.get_editor_settings()
 	var changes : PackedStringArray = settings.get_changed_settings()
 
+	var _dirty_colored : bool = _OUT_FOCUS_COLORED
+
 	for x : Array in _get_data_cfg():
 		if x[0] in changes:
 			set(x[1], settings.get_setting(x[0]))
 
 	_update_container()
+	
+	if _dirty_colored and !_OUT_FOCUS_COLORED:
+		for x : Mickeytools in _code_editors:
+			var gui : Node = x.get_control()
+			if is_instance_valid(gui) and gui is Control:
+				gui.modulate = Color.WHITE
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -435,7 +448,7 @@ class Mickeytools extends Object:
 				x.queue_free()
 
 	func reset(disconnect_signals : bool = true) -> void:
-		if disconnect_signals and  is_instance_valid(_gui):
+		if is_instance_valid(_gui):
 			if disconnect_signals and _gui.focus_entered.is_connected(_i_like_coffe):
 				_gui.focus_entered.disconnect(_i_like_coffe)
 			_gui.modulate = Color.WHITE
@@ -526,8 +539,37 @@ func _on_focus(tool : Mickeytools) -> void:
 			_tweener.color = _SPLIT_HIGHLIGHT_COLOR
 			_tweener.create_tween(control)
 	
+	var gui : Node = _last_tool.get_gui()
+	
+	if !_MINIMAP_4_UNFOCUS_WINDOW and _OUT_FOCUS_COLORED:
+		for x : Mickeytools in _code_editors:
+			var _gui : Node = x.get_gui()
+			if is_instance_valid(_gui) and _gui is CodeEdit:
+				_gui.modulate = _UNFOCUS_COLOR
+				_gui.minimap_draw = false
+				
+		if is_instance_valid(gui) and gui is CodeEdit:
+			gui.modulate = Color.WHITE
+			gui.minimap_draw = true
+	
+	elif !_MINIMAP_4_UNFOCUS_WINDOW:
+		for x : Mickeytools in _code_editors:
+			var _gui : Node = x.get_gui()
+			if is_instance_valid(_gui) and _gui is CodeEdit:
+				_gui.minimap_draw = false
+		if is_instance_valid(gui) and gui is CodeEdit:
+			gui.minimap_draw = true
+	
+	elif _OUT_FOCUS_COLORED:
+		for x : Mickeytools in _code_editors:
+			var _gui : Node = x.get_gui()
+			if is_instance_valid(gui) and gui is CodeEdit:
+				_gui.modulate = _UNFOCUS_COLOR
+		if is_instance_valid(gui) and gui is CodeEdit:
+			gui.modulate = Color.WHITE
+			
 	if should_grab_focus():
-		var gui : Control = tool.get_gui()
+		gui = _last_tool.get_gui()
 		if is_instance_valid(gui):
 			var vp : Viewport = gui.get_viewport()
 			if is_instance_valid(vp):
@@ -536,6 +578,7 @@ func _on_focus(tool : Mickeytools) -> void:
 					wm.grab_focus()
 		if !gui.has_focus():
 			gui.grab_focus()
+			
 
 func _out_it(node : Node, with_signals : bool = false) -> void:
 	var has_tween : bool = is_instance_valid(_tweener)
