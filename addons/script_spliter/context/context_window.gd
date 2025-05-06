@@ -1,4 +1,12 @@
+@tool
 extends EditorContextMenuPlugin
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#	Script Spliter
+#	https://github.com/CodeNameTwister/Script-Spliter
+#
+#	Script Spliter addon for godot 4
+#	author:		"Twister"
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 var CONTEXT : String = "CUSTOM"
 var ICON : Texture = null
 var SHORTCUT : Shortcut = null
@@ -11,7 +19,7 @@ func _init(context : String, handle : Callable, validator : Callable, icon : Tex
 	ICON = icon
 	VALIDATOR = validator
 	if input_key.size() > 0:
-		var SHORTCUT : Shortcut = Shortcut.new()
+		SHORTCUT = Shortcut.new()
 		SHORTCUT.events = input_key
 		add_menu_shortcut(SHORTCUT, handle)
 

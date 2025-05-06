@@ -19,6 +19,8 @@ var proxy : Control = null
 var replacer : Node = null
 var controller : Object = null
 
+var _fps : int = 10
+
 func set_base_control(node : Node) -> void:
 	if _base_control:
 		_base_control.queue_sort()
@@ -49,9 +51,6 @@ func _get_edit(n : Node) -> CodeEdit:
 	return null
 	
 func _on_focus() -> void:
-	if is_instance_valid(controller):
-		controller.emit_signal.call_deferred(&"focus", controller)
-	
 	if replacer == null:
 		var script_editor: ScriptEditor = EditorInterface.get_script_editor()
 		var root : Node = script_editor.get_child(0).get_child(1).get_child(1)
@@ -64,6 +63,9 @@ func _on_focus() -> void:
 					_root.add_child(replacer)
 				else:
 					add_child(replacer)
+					
+	if is_instance_valid(controller):
+		controller.emit_signal.call_deferred(&"focus", controller)
 	
 func _update_name() -> void:
 	if is_queued_for_deletion():
@@ -104,19 +106,6 @@ func _ready() -> void:
 		if !_base_control.child_exiting_tree.is_connected(_out_child):
 			_base_control.child_exiting_tree.connect(_out_child)
 	
-	always_on_top = true
-	#DIRTY4NOW
-	_rest.call_deferred(5)
-
-func _rest(x : int) -> void:
-	if x > 0:
-		if is_queued_for_deletion():
-			return
-		await get_tree().process_frame
-		_rest.call_deferred(x - 1)
-		return
-	set_deferred(&"always_on_top", false)
-		
 func _connect(n : Node, e : bool) -> void:
 	if n is CodeEdit:
 		if e:
@@ -142,6 +131,8 @@ func _on_visibility() -> void:
 		_on_focus_exited()
 		_on_close()
 		return
+	set_deferred(&"always_top", false)
+	set_process(true)
 	_update_name.call_deferred()
 	
 func _on_close() -> void:

@@ -1,4 +1,12 @@
+@tool
 extends Node
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#	Script Spliter
+#	https://github.com/CodeNameTwister/Script-Spliter
+#
+#	Script Spliter addon for godot 4
+#	author:		"Twister"
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 var callback : Callable
 var end_callback : Callable
 var index : int = 0

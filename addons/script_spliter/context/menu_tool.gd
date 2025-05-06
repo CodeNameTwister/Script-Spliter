@@ -7,7 +7,6 @@ extends Window
 #	Script Spliter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 @export var _container : Node
 @export var _custom_options : Control
 

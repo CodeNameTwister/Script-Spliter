@@ -13,7 +13,9 @@ const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
 
 #POP SCRIPT	
 const FLYING_SCRIPT : PackedScene = preload("res://addons/script_spliter/context/flying_script.tscn")
-var _pop_scripts : Array[Node] = []
+var _pop_scripts : Array[Window] = []
+var _pop_script_placeholder : bool = false
+const _POP_SCRIPT_PLACEHOLDER : String = "_POPGDScript_"
 
 var _plugin : Node = null
 
@@ -208,7 +210,7 @@ func init_0() -> void:
 		_setup(_editor, false)
 		_editor.visible = true
 			
-	for x : Node in _pop_scripts:
+	for x : Window in _pop_scripts:
 		if is_instance_valid(x) and !x.is_queued_for_deletion():
 			x.queue_free()
 	_pop_scripts.clear()
@@ -226,7 +228,7 @@ func _clear() -> void:
 			_code_editors[z].reset()
 			_code_editors.remove_at(z)
 			
-	for x : Node in _pop_scripts:
+	for x : Window in _pop_scripts:
 		var node : Node = x.get_base_control()
 		for y : Node in node.get_children():
 			var dirty : bool = false
@@ -285,6 +287,18 @@ class Mickeytools extends Object:
 	var _gui : Node = null
 	var _index : int = 0
 	var __placeholder : Node = null
+	
+	func get_title_name() -> String:
+		if is_instance_valid(_reference):
+			if _reference.get_parent() != null:
+				return _helper.get_item_text(_reference.get_index())
+		return ""
+		
+	func has_focus() -> bool:
+		if is_instance_valid(_reference):
+			if _reference.get_parent() != null:
+				return _helper.get_selected_item() == _reference.get_index()
+		return false
 
 	func get_gui() -> Node:
 		return _gui
@@ -523,7 +537,7 @@ func _on_focus(tool : Mickeytools) -> void:
 	var index : int = ref.get_index()
 	if index < 0:
 		return
-
+		
 	for x : Node in _editor.get_children():
 		if x == ref:
 			if index > -1 and is_instance_valid(_item_list):
@@ -540,44 +554,42 @@ func _on_focus(tool : Mickeytools) -> void:
 			_tweener.create_tween(control)
 	
 	var gui : Node = _last_tool.get_gui()
-	
-	if !_MINIMAP_4_UNFOCUS_WINDOW and _OUT_FOCUS_COLORED:
-		for x : Mickeytools in _code_editors:
-			var _gui : Node = x.get_gui()
-			if is_instance_valid(_gui) and _gui is CodeEdit:
-				_gui.modulate = _UNFOCUS_COLOR
-				_gui.minimap_draw = false
-				
-		if is_instance_valid(gui) and gui is CodeEdit:
-			gui.modulate = Color.WHITE
-			gui.minimap_draw = true
-	
-	elif !_MINIMAP_4_UNFOCUS_WINDOW:
-		for x : Mickeytools in _code_editors:
-			var _gui : Node = x.get_gui()
-			if is_instance_valid(_gui) and _gui is CodeEdit:
-				_gui.minimap_draw = false
-		if is_instance_valid(gui) and gui is CodeEdit:
-			gui.minimap_draw = true
-	
-	elif _OUT_FOCUS_COLORED:
-		for x : Mickeytools in _code_editors:
-			var _gui : Node = x.get_gui()
-			if is_instance_valid(gui) and gui is CodeEdit:
-				_gui.modulate = _UNFOCUS_COLOR
-		if is_instance_valid(gui) and gui is CodeEdit:
-			gui.modulate = Color.WHITE
-			
-	if should_grab_focus():
-		if is_instance_valid(gui):
-			var vp : Viewport = gui.get_viewport()
-			if is_instance_valid(vp):
-				var wm : Window = vp.get_window()
-				if wm and !wm.has_focus():
-					wm.grab_focus()
+	if is_instance_valid(gui) and should_grab_focus():
+		if !_MINIMAP_4_UNFOCUS_WINDOW and _OUT_FOCUS_COLORED:
+			for x : Mickeytools in _code_editors:
+				var _gui : Node = x.get_gui()
+				if is_instance_valid(_gui) and _gui is CodeEdit:
+					_gui.modulate = _UNFOCUS_COLOR
+					_gui.minimap_draw = false
+					
+			if gui is CodeEdit:
+				gui.modulate = Color.WHITE
+				gui.minimap_draw = true
+		
+		elif !_MINIMAP_4_UNFOCUS_WINDOW:
+			for x : Mickeytools in _code_editors:
+				var _gui : Node = x.get_gui()
+				if is_instance_valid(_gui) and _gui is CodeEdit:
+					_gui.minimap_draw = false
+			if gui is CodeEdit:
+				gui.minimap_draw = true
+		
+		elif _OUT_FOCUS_COLORED:
+			for x : Mickeytools in _code_editors:
+				var _gui : Node = x.get_gui()
+				if is_instance_valid(gui) and gui is CodeEdit:
+					_gui.modulate = _UNFOCUS_COLOR
+			if gui is CodeEdit:
+				gui.modulate = Color.WHITE
+		
+		var vp : Viewport = gui.get_viewport()
+		if is_instance_valid(vp):
+			var wm : Window = vp.get_window()
+			if wm and !wm.has_focus():
+				wm.grab_focus()
 		if !gui.has_focus():
 			gui.grab_focus()
-			
+		
 
 func _out_it(node : Node, with_signals : bool = false) -> void:
 	var has_tween : bool = is_instance_valid(_tweener)
@@ -598,7 +610,7 @@ func _out_it(node : Node, with_signals : bool = false) -> void:
 func _grab_focus_by_tab(tb : int) -> void:
 	if tb > -1 and tb < _editor.get_child_count():
 		var ctrl : Control = _editor.get_child(tb)
-		for pop : Node in _pop_scripts:
+		for pop : Window in _pop_scripts:
 			var control : Control = pop.get_base_control()
 			for m : Mickeytools in _code_editors:
 				var gui : Control = m.get_gui()
@@ -756,6 +768,32 @@ func update() -> void:
 				_last_tool.focus.emit(_last_tool)
 				break
 			_code_editors.remove_at(i)
+			
+	if _pop_scripts.size() > 0:
+		for p : Window in _pop_scripts:
+			if !p.visible:
+				p.show()
+				
+		if _pop_script_placeholder:
+			for x : Mickeytools in _code_editors:
+				if !x.is_floating():
+					var ref : Node = x.get_reference()
+					if ref.get_parent() != null:
+						if get_item_text(ref.get_index()).begins_with(_POP_SCRIPT_PLACEHOLDER):
+							continue
+						_clear_placeholder()
+	else:
+		_clear_placeholder()	
+	
+func _clear_placeholder() -> void:				
+	if _pop_script_placeholder:
+			for x : int in range(_item_list.item_count):
+				var txt : String = _item_list.get_item_text(x)
+				if txt.begins_with(_POP_SCRIPT_PLACEHOLDER):
+					_item_list.item_clicked.emit(x, _item_list.get_local_mouse_position(), MOUSE_BUTTON_MIDDLE)
+					break
+			_pop_script_placeholder = false
+		
 					
 
 func is_visible_minimap_required() -> bool:
@@ -821,6 +859,7 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 		tool = Mickeytools.new(self, root, editor)
 		tool.focus.connect(_on_focus)
 		_code_editors.append(tool)
+		
 		tool.focus.emit(tool)
 	else:
 		tool.reset()
@@ -829,7 +868,7 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 	if _last_tool == null:
 		_last_tool = tool
 		tool.focus.emit(tool)
-		
+	
 	tool.update.call_deferred()
 	return tool
 	
@@ -988,17 +1027,59 @@ func can_remove_split(node : Node) -> bool:
 		return false
 	if _code_editors.size() > 1:
 		if node is CodeEdit:
+			var main : bool = false
 			for x : Mickeytools in _code_editors:
-				if x.get_gui() == node:
+				if x.is_floating():
+					continue
+				var item_list : Node = _item_list
+				if item_list:
+					var reference : Node = x.get_reference()
+					if reference.get_parent() != null:
+						if get_control_item_name(reference.get_index()).begins_with(_POP_SCRIPT_PLACEHOLDER):
+							continue
+				if main:
 					return true
+				main = true
 	return false
+
+func get_control_item_name(index : int) -> String:
+	var item_list : Node = _item_list
+	if item_list:
+		if index > -1 and index < item_list.item_count:
+			return item_list.get_item_text(index)
+	return ""
 
 func can_add_split(_node : Node) -> bool:
 	if !is_instance_valid(_main):
 		return false
-	var unused : Array[Node] =_get_unused_editor_control()
-	if unused.size() > 0:
-		return true
+			
+	for o : int in _editor.get_child_count():
+		if get_item_text(o).begins_with(_POP_SCRIPT_PLACEHOLDER):
+			continue
+		var x : Node = _editor.get_child(o)
+		var created : bool = false
+		if x.has_method(&"get_base_editor"):
+			x = x.call(&"get_base_editor")
+			for m : Mickeytools in _code_editors:
+				if m.get_gui() == x:
+					created = true
+					break
+		else:
+			if x.get_child_count() > 0:
+				var child : Node = x.get_child(0)
+				for m : Mickeytools in _code_editors:
+					var gui : Node = m.get_gui()
+					if gui == x or child == gui:
+						created = true
+						break
+			else:
+				for m : Mickeytools in _code_editors:
+					var gui : Node = m.get_gui()
+					if gui == x :
+						created = true
+						break
+		if !created:
+			return true
 	return false
 
 func add_split(control : Node) -> void:
@@ -1087,6 +1168,7 @@ func get_focus_config() -> Dictionary:
 	return {
 		"highlight_selected" : _SPLIT_USE_HIGHLIGHT_SELECTED
 		,"behaviour_expand_on_focus" : _main.behaviour_expand_on_focus
+		,"last_tool" : _last_tool
 	}
 
 func set_focus_config(d : Dictionary) -> void:
@@ -1094,10 +1176,18 @@ func set_focus_config(d : Dictionary) -> void:
 	_SPLIT_USE_HIGHLIGHT_SELECTED = d["highlight_selected"]
 	_main.behaviour_expand_on_focus = d["behaviour_expand_on_focus"]
 
+	var _last : Mickeytools = d["last_tool"]
+	if is_instance_valid(_last):
+		if _last != _last_local_tool:
+			_last.focus.emit(_last)
+
 func enable_focus_highlight(enable : bool) -> void:
 	_chaser_enabled = !enable
 	_SPLIT_USE_HIGHLIGHT_SELECTED = enable
 	_main.behaviour_expand_on_focus = enable
+	
+func should_grab_focus() -> bool:
+	return !_chaser_enabled
 #endregion
 
 #region _POP_SCRIPT_
@@ -1177,17 +1267,51 @@ func make_pop_script(control : Node) -> Window:
 	node.on_close.connect(_on_pop_script_close)
 	
 	_pop_scripts.append(node)
-	node.show()
-	node.move_to_center()
-	update_queue()
-#	
-	tool.emit_signal.call_deferred(&"focus", tool)
+	
+	_check_pop()
 	return node
-#endregion
+	
+func _check_pop() -> void:
+	if !_pop_script_placeholder:
+		var placeholder : bool = true
+		var total_floatings : int = 0
+		for x : Mickeytools in _code_editors:
+			if !x.is_floating():
+				placeholder = false
+				break
+			total_floatings += 1
+		if placeholder and _editor.get_child_count() <= total_floatings:
+			_pop_script_placeholder = true
+			var PLACEHOLDER : String = str("res://addons/script_spliter/context/",_POP_SCRIPT_PLACEHOLDER, ".gd")
+			if FileAccess.file_exists(PLACEHOLDER):
+				var script : Script = ResourceLoader.load(PLACEHOLDER)
+				if null != script:
+					_editor.child_entered_tree.connect(_on_placeholder, CONNECT_ONE_SHOT)
+					EditorInterface.edit_script(script)
 
-func should_grab_focus() -> bool:
-	return !_chaser_enabled
+func _placeholder_queue() -> void:
+	for x : int in _editor.get_child_count():
+		var txt : String = get_item_text(x)
+		if txt.begins_with(_POP_SCRIPT_PLACEHOLDER):
+			var n : Node = _editor.get_child(x)
+			var c : Control = n.call(&"get_base_editor")
+			if c != null:
+				if c is CodeEdit:
+					c.editable = false
+					c.minimap_draw = false
+	
+func _on_placeholder(n : Node) -> void:
+	_placeholder_queue.call_deferred()
+#endregion
 	
 func process_update_queue(__ : int = 0) -> void:
 	update_queue(__)
 	update_queue.call_deferred(__)
+
+func get_selected_item() -> int:
+	var item_list : ItemList = _item_list
+	if is_instance_valid(item_list):
+		for x : int in item_list.item_count:
+			if item_list.is_selected(x):
+				return x
+	return -1
