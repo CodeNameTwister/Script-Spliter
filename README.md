@@ -8,11 +8,10 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 
 - [Preview](#preview-)
 - [News](#news-)
-- [Issues](#issues-)
 - [Features](#features-)
 - [Roadmap](#roadmap)
 - [How-Work](#how-work)
-- [Issues](#issues-)
+- [Know Issues](#know-issues-)
 - [Special Thanks](#special-thanks--)
 
 
@@ -103,7 +102,7 @@ The position of the line will vary depending on the selection of horizontal or v
 
 ![image](images/img2.png)
 
-# Issues [↑](#table-of-contents)
+# know Issues [↑](#table-of-contents)
 ### Version 0.2.3
 The **PopScripts** (Floating Scripts) 
 It still has some issues related to the editor focus, which means that if you switch scenes, some features like the search engine within the PopScript may be affected and become unresponsive.
