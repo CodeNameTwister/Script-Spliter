@@ -3,7 +3,19 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 
 [![Godot Engine 4.3](https://img.shields.io/badge/Godot_Engine-4.x-blue)](https://godotengine.org/) ![ToolHack](https://img.shields.io/badge/Tool-Addon-green) ![Copyrights License](https://img.shields.io/badge/License-MIT-blue)
 
-# Preview
+
+## Table of contents
+
+- [Preview](#preview-)
+- [News](#news-)
+- [Features](#features-)
+- [Roadmap](#roadmap)
+- [How-Work](#how-work)
+- [Know Issues](#know-issues-)
+- [Special Thanks](#special-thanks--)
+
+
+# Preview [↑](#table-of-contents)
 
 ### V0.2 Video Preview
 [![video preview](https://github.com/user-attachments/assets/636cddf4-815e-4bf3-acab-13c26ff21318)](https://youtu.be/ISSu45qzWWw)
@@ -11,7 +23,7 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 ### V0.1 Image Preview
 ![image](https://github.com/user-attachments/assets/a6e1dea8-74cf-4fd9-b0b4-ec7d65ea3995)
 
-# NEWS
+# NEWS [↑](#table-of-contents)
 <p align="center">
   <img width="128" height="128" src="addons/script_spliter/assets/github_CodeNameTwister.png">
 </p>
@@ -33,7 +45,7 @@ differences with version 0.1:
 >This plugin uses another built-in plugin created by me called [Multi Split Container](https://github.com/CodeNameTwister/Multi-Split-Container)
 
 
-# Features
+# Features [↑](#table-of-contents)
 * Split Window of Document Files Like Script/Document Helper Window.
 * Split Two Window Horizontal/Vertical.
 * Split Three Window Horizontal/Vertical.
@@ -64,7 +76,7 @@ differences with version 0.1:
 >
 > *This may change in future releases.*
 
-### Enable by shortcut
+### Enable by shortcut [↑](#table-of-contents)
 * Press shortcut (**Ctrl + 1**) for set one window.
 * Press shortcut (**Ctrl + 2**) for set one split of two windows: Horizontal.
 * Press shortcut (**Ctrl + 3**) for set one split of two windows: Vertical.
@@ -72,7 +84,7 @@ differences with version 0.1:
 * Press shortcut (**Ctrl + 5**) for set two split of three windows: Vertical.
 * Press shortcut (**Ctrl + 6**) for set three split of four windows: Squared split.
 
-### Enable by Tool Menu
+### Enable by Tool Menu [↑](#table-of-contents)
 For enable the Script spliter menu go to **Project > Tools > Script Spliter**.
 
 ![image](images/img0.png)
@@ -90,7 +102,12 @@ The position of the line will vary depending on the selection of horizontal or v
 
 ![image](images/img2.png)
 
-# Special Thanks 📜
+# know Issues [↑](#table-of-contents)
+### Version 0.2.3
+The **PopScripts** (Floating Scripts) 
+It still has some issues related to the editor focus, which means that if you switch scenes, some features like the search engine within the PopScript may be affected and become unresponsive.
+
+# Special Thanks 📜 [↑](#table-of-contents)
 This section lists users who have contributed to improving the quality of this project.
 
 [@adancau](https://github.com/adancau)
