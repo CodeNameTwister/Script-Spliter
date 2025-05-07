@@ -56,8 +56,10 @@ var _SEPARATOR_LINE_SIZE : int = 8
 var _SEPARATOR_LINE_COLOR : Color = Color.MAGENTA
 var _SEPARATOR_BUTTON_SIZE : int = 19
 var _SEPARATOR_BUTTON_MODULATE : Color = Color.WHITE
-var _SEPARATOR_BUTTON_ICON : Texture = preload("res://addons/script_spliter/context/icons/expand.svg")
+var _SEPARATOR_BUTTON_ICON : String = "res://addons/script_spliter/context/icons/expand.svg"
 
+var _BEHAVIOUR_CAN_EXPAND_ON_FOCUS : bool = true
+var _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS : bool = false
 
 var _SEPARATOR_SMOOTH_EXPAND : bool = true
 var _SEPARATOR_SMOOTH_EXPAND_TIME : float = 0.24
@@ -81,8 +83,6 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/window/highlight_selected_color",&"_SPLIT_HIGHLIGHT_COLOR"]
 
 		,[&"plugin/script_spliter/editor/minimap_for_unfocus_window", &"_MINIMAP_4_UNFOCUS_WINDOW"]
-		,[&"plugin/script_spliter/editor/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
-		,[&"plugin/script_spliter/editor/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
 		,[&"plugin/script_spliter/editor/out_focus_color_enabled", &"_OUT_FOCUS_COLORED"]
 		,[&"plugin/script_spliter/editor/out_focus_color_value", &"_UNFOCUS_COLOR"]
 
@@ -91,7 +91,13 @@ func _get_data_cfg() -> Array[Array]:
 
 		,[&"plugin/script_spliter/line/button/size", &"_SEPARATOR_BUTTON_SIZE"]
 		,[&"plugin/script_spliter/line/button/modulate", &"_SEPARATOR_BUTTON_MODULATE"]
-		,[&"plugin/script_spliter/line/button/icon", &"_SEPARATOR_BUTTON_ICON"]
+		,[&"plugin/script_spliter/line/button/icon_path", &"_SEPARATOR_BUTTON_ICON"]
+		
+		,[&"plugin/script_spliter/editor/behaviour/expand_on_focus", &"_BEHAVIOUR_CAN_EXPAND_ON_FOCUS"]
+		,[&"plugin/script_spliter/editor/behaviour/can_expand_on_same_focus", &"_BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS"]
+		,[&"plugin/script_spliter/editor/behaviour/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
+		,[&"plugin/script_spliter/editor/behaviour/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
+		
 		]
 	return CFG
 	
@@ -137,12 +143,12 @@ func init_1() -> void:
 		"name": &"plugin/script_spliter/line/button/modulate",
 		"type": TYPE_COLOR
 	})
-	settings.add_property_info({
-		"name": &"plugin/script_spliter/line/button/icon",
-		"type": TYPE_OBJECT,
-		"hint" : PROPERTY_HINT_RESOURCE_TYPE,
-		"hint_string": "Texture2D"
-	})
+	#settings.add_property_info({
+		#"name": &"plugin/script_spliter/line/button/icon",
+		#"type": TYPE_OBJECT,
+		#"hint" : PROPERTY_HINT_RESOURCE_TYPE,
+		#"hint_string": "Texture2D"
+	#})
 #endregion
 
 func update_config() -> void:
@@ -170,9 +176,20 @@ func _update_container() -> void:
 	_main.separator_line_color = _SEPARATOR_LINE_COLOR
 	_main.drag_button_size = _SEPARATOR_BUTTON_SIZE
 	_main.drag_button_modulate = _SEPARATOR_BUTTON_MODULATE
-	_main.drag_button_icon = _SEPARATOR_BUTTON_ICON
 	_main.behaviour_expand_smoothed = _SEPARATOR_SMOOTH_EXPAND
 	_main.behaviour_expand_smoothed_time = _SEPARATOR_SMOOTH_EXPAND_TIME
+	_main.behaviour_expand_on_focus = _BEHAVIOUR_CAN_EXPAND_ON_FOCUS
+	_main.behaviour_can_expand_focus_same_container = _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS
+	
+	if !_SEPARATOR_BUTTON_ICON.is_empty():
+		if FileAccess.file_exists(_SEPARATOR_BUTTON_ICON):
+			var text : Variant = ResourceLoader.load(_SEPARATOR_BUTTON_ICON)
+			if text is Texture:
+				_main.drag_button_icon = text
+			else:
+				push_warning("[Script-Spliter] The resource is not a texture imported ", _SEPARATOR_BUTTON_ICON)
+		else:
+			push_warning("[Script-Spliter] Can not find the resource ", _SEPARATOR_BUTTON_ICON)
 
 func _init(plugin : Object) -> void:
 	_plugin = plugin
@@ -377,6 +394,19 @@ class Mickeytools extends Object:
 	func set_root(root : Node) -> void:
 		_root = root
 
+	func _on_input(__ : InputEvent) -> void:
+		if !_helper.can_expand_same_focus():
+			return
+			
+		if __ is InputEventMouseMotion:
+			return
+			
+		var tab : TabContainer = _root
+
+		var parent : Node = tab.get_parent()
+		if parent and parent.has_method(&"show_splited_container"):
+			parent.call(&"show_splited_container")
+
 	func set_reference(control : Node) -> void:
 		if !is_instance_valid(control):
 			return
@@ -391,6 +421,10 @@ class Mickeytools extends Object:
 
 		if control is ScriptEditorBase:
 			_gui = control.get_base_editor()
+			
+			if _gui.focus_mode != Control.FOCUS_NONE:
+				if !_gui.gui_input.is_connected(_on_input):
+					_gui.gui_input.connect(_on_input)
 
 			if _gui is CodeEdit:
 				var carets : PackedInt32Array = _gui.get_sorted_carets()
@@ -1315,3 +1349,6 @@ func get_selected_item() -> int:
 			if item_list.is_selected(x):
 				return x
 	return -1
+
+func can_expand_same_focus() -> bool:
+	return _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS
