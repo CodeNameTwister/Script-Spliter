@@ -19,7 +19,6 @@ initial_position = 4
 size = Vector2i(805, 512)
 visible = false
 wrap_controls = true
-always_on_top = true
 script = ExtResource("1_wfm3d")
 _container = NodePath("PanelContainer/VC")
 _always_top = NodePath("PanelContainer/VC/HB/AlwaysTop")

@@ -4,7 +4,7 @@ extends Window
 #	Script Spliter
 #	https://github.com/CodeNameTwister/Script-Spliter
 #
-#	Script Spliter addon for godot 4
+#	Script Spliter addon for godot 4f
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 signal on_close(window : Window)
