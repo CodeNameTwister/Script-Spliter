@@ -56,8 +56,10 @@ var _SEPARATOR_LINE_SIZE : int = 8
 var _SEPARATOR_LINE_COLOR : Color = Color.MAGENTA
 var _SEPARATOR_BUTTON_SIZE : int = 19
 var _SEPARATOR_BUTTON_MODULATE : Color = Color.WHITE
-var _SEPARATOR_BUTTON_ICON : Texture = preload("res://addons/script_spliter/context/icons/expand.svg")
+var _SEPARATOR_BUTTON_ICON : String = "res://addons/script_spliter/context/icons/expand.svg"
 
+var _BEHAVIOUR_CAN_EXPAND_ON_FOCUS : bool = true
+var _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS : bool = false
 
 var _SEPARATOR_SMOOTH_EXPAND : bool = true
 var _SEPARATOR_SMOOTH_EXPAND_TIME : float = 0.24
@@ -71,6 +73,7 @@ var current_rows : int = 1
 
 # FLAG
 var _chaser_enabled : bool = false
+var _focus_queue : bool = false
 
 # REF
 var _wm : Window = null
@@ -81,8 +84,6 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/window/highlight_selected_color",&"_SPLIT_HIGHLIGHT_COLOR"]
 
 		,[&"plugin/script_spliter/editor/minimap_for_unfocus_window", &"_MINIMAP_4_UNFOCUS_WINDOW"]
-		,[&"plugin/script_spliter/editor/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
-		,[&"plugin/script_spliter/editor/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
 		,[&"plugin/script_spliter/editor/out_focus_color_enabled", &"_OUT_FOCUS_COLORED"]
 		,[&"plugin/script_spliter/editor/out_focus_color_value", &"_UNFOCUS_COLOR"]
 
@@ -91,7 +92,13 @@ func _get_data_cfg() -> Array[Array]:
 
 		,[&"plugin/script_spliter/line/button/size", &"_SEPARATOR_BUTTON_SIZE"]
 		,[&"plugin/script_spliter/line/button/modulate", &"_SEPARATOR_BUTTON_MODULATE"]
-		,[&"plugin/script_spliter/line/button/icon", &"_SEPARATOR_BUTTON_ICON"]
+		,[&"plugin/script_spliter/line/button/icon_path", &"_SEPARATOR_BUTTON_ICON"]
+		
+		,[&"plugin/script_spliter/editor/behaviour/expand_on_focus", &"_BEHAVIOUR_CAN_EXPAND_ON_FOCUS"]
+		,[&"plugin/script_spliter/editor/behaviour/can_expand_on_same_focus", &"_BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS"]
+		,[&"plugin/script_spliter/editor/behaviour/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
+		,[&"plugin/script_spliter/editor/behaviour/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
+		
 		]
 	return CFG
 	
@@ -137,12 +144,12 @@ func init_1() -> void:
 		"name": &"plugin/script_spliter/line/button/modulate",
 		"type": TYPE_COLOR
 	})
-	settings.add_property_info({
-		"name": &"plugin/script_spliter/line/button/icon",
-		"type": TYPE_OBJECT,
-		"hint" : PROPERTY_HINT_RESOURCE_TYPE,
-		"hint_string": "Texture2D"
-	})
+	#settings.add_property_info({
+		#"name": &"plugin/script_spliter/line/button/icon",
+		#"type": TYPE_OBJECT,
+		#"hint" : PROPERTY_HINT_RESOURCE_TYPE,
+		#"hint_string": "Texture2D"
+	#})
 #endregion
 
 func update_config() -> void:
@@ -162,6 +169,9 @@ func update_config() -> void:
 			var gui : Node = x.get_control()
 			if is_instance_valid(gui) and gui is Control:
 				gui.modulate = Color.WHITE
+				
+	for x : Mickeytools in _code_editors:
+		x.update_focus_behaviour()
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -170,9 +180,20 @@ func _update_container() -> void:
 	_main.separator_line_color = _SEPARATOR_LINE_COLOR
 	_main.drag_button_size = _SEPARATOR_BUTTON_SIZE
 	_main.drag_button_modulate = _SEPARATOR_BUTTON_MODULATE
-	_main.drag_button_icon = _SEPARATOR_BUTTON_ICON
 	_main.behaviour_expand_smoothed = _SEPARATOR_SMOOTH_EXPAND
 	_main.behaviour_expand_smoothed_time = _SEPARATOR_SMOOTH_EXPAND_TIME
+	_main.behaviour_expand_on_focus = _BEHAVIOUR_CAN_EXPAND_ON_FOCUS
+	_main.behaviour_can_expand_focus_same_container = _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS
+	
+	if !_SEPARATOR_BUTTON_ICON.is_empty():
+		if FileAccess.file_exists(_SEPARATOR_BUTTON_ICON):
+			var text : Variant = ResourceLoader.load(_SEPARATOR_BUTTON_ICON)
+			if text is Texture:
+				_main.drag_button_icon = text
+			else:
+				push_warning("[Script-Spliter] The resource is not a texture imported ", _SEPARATOR_BUTTON_ICON)
+		else:
+			push_warning("[Script-Spliter] Can not find the resource ", _SEPARATOR_BUTTON_ICON)
 
 func _init(plugin : Object) -> void:
 	_plugin = plugin
@@ -193,6 +214,11 @@ func init_0() -> void:
 			_editor.tree_exiting.disconnect(_on_container_exit)
 		if _editor.tree_entered.is_connected(_on_container_entered):
 			_editor.tree_entered.disconnect(_on_container_entered)
+			
+	
+	if is_instance_valid(_root) and _root is Control:
+		if _root.item_rect_changed.is_connected(update_rect):
+			_root.item_rect_changed.disconnect(update_rect)
 
 	for x : Mickeytools in _code_editors:
 		x.reset(false)
@@ -272,7 +298,7 @@ func _get_editor_root() -> Node:
 		return _last_tool.get_root()
 	return null
 
-class Root extends PanelContainer:
+class Root extends MarginContainer:
 	pass
 
 class Mickeytools extends Object:
@@ -377,6 +403,26 @@ class Mickeytools extends Object:
 	func set_root(root : Node) -> void:
 		_root = root
 
+	func _on_input(__ : InputEvent) -> void:
+		if __ is InputEventMouseMotion:
+			return
+			
+		var tab : TabContainer = _root
+
+		var parent : Node = tab.get_parent()
+		if parent and parent.has_method(&"show_splited_container"):
+			parent.call(&"show_splited_container")
+
+	func update_focus_behaviour() -> void:
+		if !is_instance_valid(_gui) or _gui.focus_mode == Control.FOCUS_NONE:
+			return
+		
+		if _helper.can_expand_same_focus():
+			if !_gui.gui_input.is_connected(_on_input):
+				_gui.gui_input.connect(_on_input)
+		elif _gui.gui_input.is_connected(_on_input):
+			_gui.gui_input.disconnect(_on_input)
+
 	func set_reference(control : Node) -> void:
 		if !is_instance_valid(control):
 			return
@@ -384,6 +430,9 @@ class Mickeytools extends Object:
 			return
 		elif is_instance_valid(_reference):
 			reset()
+			
+		if is_instance_valid(_gui) and _gui.gui_input.is_connected(_on_input):
+			_gui.gui_input.disconnect(_on_input)
 
 		_reference = control
 		_control  = null
@@ -391,6 +440,7 @@ class Mickeytools extends Object:
 
 		if control is ScriptEditorBase:
 			_gui = control.get_base_editor()
+			update_focus_behaviour()
 
 			if _gui is CodeEdit:
 				var carets : PackedInt32Array = _gui.get_sorted_carets()
@@ -463,8 +513,11 @@ class Mickeytools extends Object:
 
 	func reset(disconnect_signals : bool = true) -> void:
 		if is_instance_valid(_gui):
-			if disconnect_signals and _gui.focus_entered.is_connected(_i_like_coffe):
-				_gui.focus_entered.disconnect(_i_like_coffe)
+			if disconnect_signals:
+				if _gui.focus_entered.is_connected(_i_like_coffe):
+					_gui.focus_entered.disconnect(_i_like_coffe)
+				if _gui.gui_input.is_connected(_on_input):
+					_gui.gui_input.disconnect(_on_input)
 			_gui.modulate = Color.WHITE
 
 		if is_instance_valid(_control):
@@ -492,6 +545,15 @@ class Mickeytools extends Object:
 		_control = null
 		_reference = null
 		_index = 0
+
+#func can_create(ref : Control) -> bool:
+	#if !ref.has_meta("_tab_index"):
+		#return false
+	#var index : int = ref.get_meta("_tab_index")
+	#var item_list : ItemList = _item_list
+	#if !item_list or item_list.item_count <= index or index < 0:
+		#return false
+	#return true
 
 class ReTweener extends RefCounted:
 	var _tween : Tween = null
@@ -527,7 +589,7 @@ class ReTweener extends RefCounted:
 			if is_instance_valid(_ref):
 				_ref.modulate = Color.WHITE
 
-func _on_focus(tool : Mickeytools) -> void:
+func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray = []) -> void:
 	_last_tool = tool
 	var ref : Node = _last_tool.get_reference()
 	
@@ -589,7 +651,32 @@ func _on_focus(tool : Mickeytools) -> void:
 				wm.grab_focus()
 		if !gui.has_focus():
 			gui.grab_focus()
+	
+	if txt.length() > 0:
+		for x : int in range(_item_list.item_count - 1, -1, -1):
+			var _txt : String = _item_list.get_item_text(x)
+			if !(_txt in items):
+				_item_list.remove_item(x)
+		_item_list.get_parent().get_child(0).set(&"text", txt)
+		_item_list.queue_redraw()
+	_focus_queue = false
 		
+func _on_focus(tool : Mickeytools) -> void:
+	if _focus_queue:
+		return
+	_focus_queue = true
+	
+	var filesearch : Object = _item_list.get_parent().get_child(0)
+	if filesearch is LineEdit:
+		var txt : String = filesearch.text
+		if !txt.is_empty():
+			var items : PackedStringArray = []
+			for x : int in _item_list.item_count:
+				items.append(_item_list.get_item_text(x))
+			filesearch.set(&"text", "")
+			_set_focus.call_deferred(tool, txt, items)
+			return
+	_set_focus(tool)
 
 func _out_it(node : Node, with_signals : bool = false) -> void:
 	var has_tween : bool = is_instance_valid(_tweener)
@@ -834,7 +921,7 @@ func is_valid_code_editor(root : Node, editor : Node, fallback : bool = true) ->
 	if editor.get_child_count() == 0:
 		if fallback and editor.is_inside_tree():
 			var index : int = editor.get_index()
-			if _item_list.item_count > index:
+			if index > -1 and _item_list.item_count > index:
 				_item_list.item_selected.emit(index)
 				return is_valid_code_editor(root, editor, false)
 		return false
@@ -876,16 +963,7 @@ func update_queue(__ : int = 0) -> void:
 	if _plugin:
 		_plugin.set_process(true)
 	if _main and _container:
-		var _size : Vector2 = _container.size - Vector2(9.0,7.0)
-		_size.x = maxf(_container.size.x, 1.0)
-		_size.y = maxf(_container.size.y, 1.0)
-		_main.size = _size
-		for x : Node in _main.get_children():
-			if x is Control:
-				if x is TabContainer:continue
-				for y : Node in x.get_children():
-					if y is Control:
-						y.set_deferred(&"size", x.size)
+		update_rect()
 		_main.update()
 
 #region callback
@@ -969,6 +1047,7 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 			_editor.tree_exiting.disconnect(_on_container_exit)
 
 	_editor = editor
+	
 
 	if !_editor.tree_entered.is_connected(_on_container_entered):
 		_editor.tree_entered.connect(_on_container_entered)
@@ -1014,6 +1093,26 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 	update_config()
 
 	update_build(columns, rows)
+	
+	if (_root is Control):
+		if !_root.item_rect_changed.is_connected(update_rect):
+			_root.item_rect_changed.connect(update_rect)
+	update_rect.call_deferred()
+	
+func update_rect() -> void:
+	var _size : Vector2 = _container.size# - Vector2(9.0,7.0)
+	_size.x = maxf(_container.size.x, 1.0)
+	_size.y = maxf(_container.size.y, 1.0)
+	_main.size = _size
+	for x : Node in _main.get_children():
+		if x is Control:
+			if x is TabContainer:
+					continue
+			for y : Node in x.get_children():
+				
+				if y is Control:
+					y.set_deferred(&"size", x.size)
+	_main.update()
 
 func find_editor(node : Node) -> Control:
 	for x : Node in _main.get_children():
@@ -1300,7 +1399,7 @@ func _placeholder_queue() -> void:
 					c.editable = false
 					c.minimap_draw = false
 	
-func _on_placeholder(n : Node) -> void:
+func _on_placeholder(__ : Node) -> void:
 	_placeholder_queue.call_deferred()
 #endregion
 	
@@ -1315,3 +1414,6 @@ func get_selected_item() -> int:
 			if item_list.is_selected(x):
 				return x
 	return -1
+
+func can_expand_same_focus() -> bool:
+	return _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS

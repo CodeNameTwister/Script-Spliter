@@ -194,6 +194,7 @@ func _setup(input : int) -> void:
 	var settings : EditorSettings = EditorInterface.get_editor_settings()
 
 	if input != 0:
+		main_screen_changed.connect(_on_change)
 		resource_saved.connect(_on_save)
 		
 		var ctx_add_column : String = _get_translated_text("ADD_SPLIT").capitalize()
@@ -234,6 +235,7 @@ func _setup(input : int) -> void:
 		else:
 			_refresh_warnings_on_save = settings.get_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save")
 	else:
+		main_screen_changed.disconnect(_on_change)
 		resource_saved.disconnect(_on_save)
 		
 		if is_instance_valid(_rmb_editor_add_split):
@@ -342,9 +344,14 @@ func _can_make_pop_script(path : PackedStringArray) -> bool:
 			return !_builder.is_pop_script(node)
 	return false
 
+func _on_change(screen_name : String) -> void:
+	if screen_name == "Script":
+		if is_instance_valid(_builder):
+			_builder.update_rect.call_deferred()
+	
+
 func _enter_tree() -> void:
 	_setup(1)
-
 	if !is_instance_valid(_builder):
 		_builder = BUILDER.new(self)
 	add_tool_menu_item(CMD_MENU_TOOL, _on_tool_command)
