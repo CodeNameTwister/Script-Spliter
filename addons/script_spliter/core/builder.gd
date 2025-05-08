@@ -73,6 +73,7 @@ var current_rows : int = 1
 
 # FLAG
 var _chaser_enabled : bool = false
+var _focus_queue : bool = false
 
 # REF
 var _wm : Window = null
@@ -414,6 +415,9 @@ class Mickeytools extends Object:
 			return
 		elif is_instance_valid(_reference):
 			reset()
+			
+		if is_instance_valid(_gui) and _gui.gui_input.is_connected(_on_input):
+			_gui.gui_input.disconnect(_on_input)
 
 		_reference = control
 		_control  = null
@@ -497,8 +501,11 @@ class Mickeytools extends Object:
 
 	func reset(disconnect_signals : bool = true) -> void:
 		if is_instance_valid(_gui):
-			if disconnect_signals and _gui.focus_entered.is_connected(_i_like_coffe):
-				_gui.focus_entered.disconnect(_i_like_coffe)
+			if disconnect_signals:
+				if _gui.focus_entered.is_connected(_i_like_coffe):
+					_gui.focus_entered.disconnect(_i_like_coffe)
+				if _gui.gui_input.is_connected(_on_input):
+					_gui.gui_input.disconnect(_on_input)
 			_gui.modulate = Color.WHITE
 
 		if is_instance_valid(_control):
@@ -526,6 +533,15 @@ class Mickeytools extends Object:
 		_control = null
 		_reference = null
 		_index = 0
+
+func can_create(ref : Control) -> bool:
+	if !ref.has_meta("_tab_index"):
+		return false
+	var index : int = ref.get_meta("_tab_index")
+	var item_list : ItemList = _item_list
+	if !item_list or item_list.item_count <= index or index < 0:
+		return false
+	return true
 
 class ReTweener extends RefCounted:
 	var _tween : Tween = null
@@ -561,7 +577,7 @@ class ReTweener extends RefCounted:
 			if is_instance_valid(_ref):
 				_ref.modulate = Color.WHITE
 
-func _on_focus(tool : Mickeytools) -> void:
+func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray = []) -> void:
 	_last_tool = tool
 	var ref : Node = _last_tool.get_reference()
 	
@@ -623,7 +639,32 @@ func _on_focus(tool : Mickeytools) -> void:
 				wm.grab_focus()
 		if !gui.has_focus():
 			gui.grab_focus()
+	
+	if txt.length() > 0:
+		for x : int in range(_item_list.item_count - 1, -1, -1):
+			var _txt : String = _item_list.get_item_text(x)
+			if !(_txt in items):
+				_item_list.remove_item(x)
+		_item_list.get_parent().get_child(0).set(&"text", txt)
+		_item_list.queue_redraw()
+	_focus_queue = false
 		
+func _on_focus(tool : Mickeytools) -> void:
+	if _focus_queue:
+		return
+	_focus_queue = true
+	
+	var filesearch : Object = _item_list.get_parent().get_child(0)
+	if filesearch is LineEdit:
+		var txt : String = filesearch.text
+		if !txt.is_empty():
+			var items : PackedStringArray = []
+			for x : int in _item_list.item_count:
+				items.append(_item_list.get_item_text(x))
+			filesearch.set(&"text", "")
+			_set_focus.call_deferred(tool, txt, items)
+			return
+	_set_focus(tool)
 
 func _out_it(node : Node, with_signals : bool = false) -> void:
 	var has_tween : bool = is_instance_valid(_tweener)
@@ -868,7 +909,7 @@ func is_valid_code_editor(root : Node, editor : Node, fallback : bool = true) ->
 	if editor.get_child_count() == 0:
 		if fallback and editor.is_inside_tree():
 			var index : int = editor.get_index()
-			if _item_list.item_count > index:
+			if index > -1 and _item_list.item_count > index:
 				_item_list.item_selected.emit(index)
 				return is_valid_code_editor(root, editor, false)
 		return false
