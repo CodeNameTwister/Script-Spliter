@@ -169,6 +169,9 @@ func update_config() -> void:
 			var gui : Node = x.get_control()
 			if is_instance_valid(gui) and gui is Control:
 				gui.modulate = Color.WHITE
+				
+	for x : Mickeytools in _code_editors:
+		x.update_focus_behaviour()
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -211,6 +214,11 @@ func init_0() -> void:
 			_editor.tree_exiting.disconnect(_on_container_exit)
 		if _editor.tree_entered.is_connected(_on_container_entered):
 			_editor.tree_entered.disconnect(_on_container_entered)
+			
+	
+	if is_instance_valid(_root) and _root is Control:
+		if _root.item_rect_changed.is_connected(update_rect):
+			_root.item_rect_changed.disconnect(update_rect)
 
 	for x : Mickeytools in _code_editors:
 		x.reset(false)
@@ -290,7 +298,7 @@ func _get_editor_root() -> Node:
 		return _last_tool.get_root()
 	return null
 
-class Root extends PanelContainer:
+class Root extends MarginContainer:
 	pass
 
 class Mickeytools extends Object:
@@ -396,9 +404,6 @@ class Mickeytools extends Object:
 		_root = root
 
 	func _on_input(__ : InputEvent) -> void:
-		if !_helper.can_expand_same_focus():
-			return
-			
 		if __ is InputEventMouseMotion:
 			return
 			
@@ -407,6 +412,16 @@ class Mickeytools extends Object:
 		var parent : Node = tab.get_parent()
 		if parent and parent.has_method(&"show_splited_container"):
 			parent.call(&"show_splited_container")
+
+	func update_focus_behaviour() -> void:
+		if !is_instance_valid(_gui) or _gui.focus_mode == Control.FOCUS_NONE:
+			return
+		
+		if _helper.can_expand_same_focus():
+			if !_gui.gui_input.is_connected(_on_input):
+				_gui.gui_input.connect(_on_input)
+		elif _gui.gui_input.is_connected(_on_input):
+			_gui.gui_input.disconnect(_on_input)
 
 	func set_reference(control : Node) -> void:
 		if !is_instance_valid(control):
@@ -425,10 +440,7 @@ class Mickeytools extends Object:
 
 		if control is ScriptEditorBase:
 			_gui = control.get_base_editor()
-			
-			if _gui.focus_mode != Control.FOCUS_NONE:
-				if !_gui.gui_input.is_connected(_on_input):
-					_gui.gui_input.connect(_on_input)
+			update_focus_behaviour()
 
 			if _gui is CodeEdit:
 				var carets : PackedInt32Array = _gui.get_sorted_carets()
@@ -534,14 +546,14 @@ class Mickeytools extends Object:
 		_reference = null
 		_index = 0
 
-func can_create(ref : Control) -> bool:
-	if !ref.has_meta("_tab_index"):
-		return false
-	var index : int = ref.get_meta("_tab_index")
-	var item_list : ItemList = _item_list
-	if !item_list or item_list.item_count <= index or index < 0:
-		return false
-	return true
+#func can_create(ref : Control) -> bool:
+	#if !ref.has_meta("_tab_index"):
+		#return false
+	#var index : int = ref.get_meta("_tab_index")
+	#var item_list : ItemList = _item_list
+	#if !item_list or item_list.item_count <= index or index < 0:
+		#return false
+	#return true
 
 class ReTweener extends RefCounted:
 	var _tween : Tween = null
@@ -951,16 +963,7 @@ func update_queue(__ : int = 0) -> void:
 	if _plugin:
 		_plugin.set_process(true)
 	if _main and _container:
-		var _size : Vector2 = _container.size - Vector2(9.0,7.0)
-		_size.x = maxf(_container.size.x, 1.0)
-		_size.y = maxf(_container.size.y, 1.0)
-		_main.size = _size
-		for x : Node in _main.get_children():
-			if x is Control:
-				if x is TabContainer:continue
-				for y : Node in x.get_children():
-					if y is Control:
-						y.set_deferred(&"size", x.size)
+		update_rect()
 		_main.update()
 
 #region callback
@@ -1044,6 +1047,7 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 			_editor.tree_exiting.disconnect(_on_container_exit)
 
 	_editor = editor
+	
 
 	if !_editor.tree_entered.is_connected(_on_container_entered):
 		_editor.tree_entered.connect(_on_container_entered)
@@ -1089,6 +1093,26 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 	update_config()
 
 	update_build(columns, rows)
+	
+	if (_root is Control):
+		if !_root.item_rect_changed.is_connected(update_rect):
+			_root.item_rect_changed.connect(update_rect)
+	update_rect.call_deferred()
+	
+func update_rect() -> void:
+	var _size : Vector2 = _container.size# - Vector2(9.0,7.0)
+	_size.x = maxf(_container.size.x, 1.0)
+	_size.y = maxf(_container.size.y, 1.0)
+	_main.size = _size
+	for x : Node in _main.get_children():
+		if x is Control:
+			if x is TabContainer:
+					continue
+			for y : Node in x.get_children():
+				
+				if y is Control:
+					y.set_deferred(&"size", x.size)
+	_main.update()
 
 func find_editor(node : Node) -> Control:
 	for x : Node in _main.get_children():
@@ -1375,7 +1399,7 @@ func _placeholder_queue() -> void:
 					c.editable = false
 					c.minimap_draw = false
 	
-func _on_placeholder(n : Node) -> void:
+func _on_placeholder(__ : Node) -> void:
 	_placeholder_queue.call_deferred()
 #endregion
 	

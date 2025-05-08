@@ -29,7 +29,7 @@ func _back() -> void:
 	if callback.is_valid():
 		callback.call(back_to)
 	
-func _process(delta: float) -> void:
+func _process(__: float) -> void:
 	if !callback.is_valid() or !callback.call(index):
 		set_process(false)
 		_back()

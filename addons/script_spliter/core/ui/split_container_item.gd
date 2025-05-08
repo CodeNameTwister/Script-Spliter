@@ -17,14 +17,14 @@ func show_splited_container() -> void:
 	if parent.has_method(&"expand_splited_container"):
 		parent.call(&"expand_splited_container", self)
 
-func _on_gui_input(input : InputEvent) -> void:
-	#if input.is_pressed():
-		#show_splited_container()
-
-	if focus_handler:
-		var parent : Node = get_parent()
-		if parent and parent.has_method(&"in_focus"):
-			parent.call(&"in_focus", self)
+#func _on_gui_input(_input : InputEvent) -> void:
+	##if input.is_pressed():
+		##show_splited_container()
+#
+	#if focus_handler:
+		#var parent : Node = get_parent()
+		#if parent and parent.has_method(&"in_focus"):
+			#parent.call(&"in_focus", self)
 
 
 func _ready() -> void:
@@ -41,17 +41,17 @@ func _ready() -> void:
 func _init() -> void:
 	name = "SplitContainerItem"
 
-	gui_input.connect(_on_gui_input)
+	#gui_input.connect(_on_gui_input)
 
 	child_exiting_tree.connect(_on_child_exiting_tree)
 	child_entered_tree.connect(_on_child_entered_tree)
-
-func _on_child_enter(n : Node) -> void:
-	if n is Control:
-		if !n.gui_input.is_connected(_on_gui_input):
-			n.gui_input.connect(_on_gui_input)
-	for x : Node in n.get_children():
-		_on_child_enter(x)
+#
+#func _on_child_enter(n : Node) -> void:
+	#if n is Control:
+		#if !n.gui_input.is_connected(_on_gui_input):
+			#n.gui_input.connect(_on_gui_input)
+	#for x : Node in n.get_children():
+		#_on_child_enter(x)
 
 func _on_visible() -> void:
 	var _visible : bool = false
@@ -71,12 +71,12 @@ func _on_child_entered_tree(n : Node) -> void:
 		n.set_anchor(SIDE_BOTTOM, 1.0)
 		if !n.visibility_changed.is_connected(_on_visible):
 			n.visibility_changed.connect(_on_visible)
-	_on_child_enter(n)
+	#_on_child_enter(n)
 
 func _disconnect(n : Node) -> void:
 	if n is Control:
-		if n.gui_input.is_connected(_on_gui_input):
-			n.gui_input.disconnect(_on_gui_input)
+		#if n.gui_input.is_connected(_on_gui_input):
+			#n.gui_input.disconnect(_on_gui_input)
 		if n.visibility_changed.is_connected(_on_visible):
 			n.visibility_changed.disconnect(_on_visible)
 	for x : Node in n.get_children():

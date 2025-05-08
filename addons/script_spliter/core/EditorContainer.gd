@@ -46,8 +46,8 @@ func make_split_container_item() -> Control:
 	#for x : Node in get_children():
 		#x.set(&"focus_handler", enable)
 
-func in_focus(_node : Node) -> void:
-	return
+#func in_focus(_node : Node) -> void:
+	#return
 	#if _last_container_dd != node:
 		#node = _last_container_dd
 		#var parent : Node = preview.get_parent()
