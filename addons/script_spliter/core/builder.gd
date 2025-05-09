@@ -86,6 +86,8 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/minimap_for_unfocus_window", &"_MINIMAP_4_UNFOCUS_WINDOW"]
 		,[&"plugin/script_spliter/editor/out_focus_color_enabled", &"_OUT_FOCUS_COLORED"]
 		,[&"plugin/script_spliter/editor/out_focus_color_value", &"_UNFOCUS_COLOR"]
+		,[&"plugin/script_spliter/editor/split/reopen_last_closed_editor_on_add_split", &"_SHOULD_OPEN_CLOSED_EDITOR_SCRIPT"]
+		,[&"plugin/script_spliter/editor/split/remember_last_used_editor_buffer_size", &"_LAST_USED_EDITOR_SIZE"]
 
 		,[&"plugin/script_spliter/line/size", &"_SEPARATOR_LINE_SIZE"]
 		,[&"plugin/script_spliter/line/color", &"_SEPARATOR_LINE_COLOR"]
@@ -151,6 +153,36 @@ func init_1() -> void:
 		#"hint_string": "Texture2D"
 	#})
 #endregion
+	
+#region _FEATURE#5_
+var _SHOULD_OPEN_CLOSED_EDITOR_SCRIPT : bool = false
+var _LAST_USED_EDITOR_SIZE : int = 4
+
+var _lifo_src : PackedStringArray = []
+
+func add_last_script_used(src : String) -> void:
+	if _LAST_USED_EDITOR_SIZE > 0:
+		if src.is_empty():
+			return
+		
+		var x : int = _lifo_src.find(src)
+		if x > -1:
+			_lifo_src.remove_at(x)
+		
+		_lifo_src.append(src)
+		var total : int = maxi(_LAST_USED_EDITOR_SIZE, 0)
+		while _lifo_src.size() > total:
+			_lifo_src.remove_at(0)
+		
+func get_last_script_used() -> String:
+	var size : int = _lifo_src.size()
+	var result : String = ""
+	if size > 0:
+		size -= 1
+		result = _lifo_src[size]
+		_lifo_src.remove_at(size)
+	return result
+#region
 
 func update_config() -> void:
 	var settings : EditorSettings = EditorInterface.get_editor_settings()
@@ -313,6 +345,13 @@ class Mickeytools extends Object:
 	var _gui : Node = null
 	var _index : int = 0
 	var __placeholder : Node = null
+	var _src : String = ""
+	
+	func set_src(src : String) -> void:
+		_src = src
+		
+	func get_src() -> String:
+		return _src
 	
 	func get_title_name() -> String:
 		if is_instance_valid(_reference):
@@ -545,6 +584,10 @@ class Mickeytools extends Object:
 		_control = null
 		_reference = null
 		_index = 0
+		
+		if is_instance_valid(_helper) and !_helper.is_queued_for_deletion():
+			if _helper.add_last_script_used.is_valid():
+				_helper.add_last_script_used(_src)
 
 #func can_create(ref : Control) -> bool:
 	#if !ref.has_meta("_tab_index"):
@@ -652,14 +695,28 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 		if !gui.has_focus():
 			gui.grab_focus()
 	
-	if txt.length() > 0:
-		for x : int in range(_item_list.item_count - 1, -1, -1):
-			var _txt : String = _item_list.get_item_text(x)
-			if !(_txt in items):
-				_item_list.remove_item(x)
-		_item_list.get_parent().get_child(0).set(&"text", txt)
-		_item_list.queue_redraw()
-	_focus_queue = false
+	var item_list : ItemList = _item_list
+	if is_instance_valid(item_list):
+		_update_path()
+		
+		if txt.length() > 0:
+			for x : int in range(item_list.item_count - 1, -1, -1):
+				var _txt : String = item_list.get_item_text(x)
+				if !(_txt in items):
+					item_list.remove_item(x)
+			item_list.get_parent().get_child(0).set(&"text", txt)
+			item_list.queue_redraw()
+		
+	set_deferred(&"_focus_queue", false)
+	
+func _update_path() -> void:
+	if _item_list.item_count == _editor.get_child_count():
+		for x : Mickeytools in _code_editors:
+			var ref : Control = x.get_reference()
+			if is_instance_valid(ref):
+				var index : int = ref.get_index()
+				if index > -1 and _item_list.item_count > index:
+					x.set_src(_item_list.get_item_tooltip(index))
 		
 func _on_focus(tool : Mickeytools) -> void:
 	if _focus_queue:
@@ -682,6 +739,7 @@ func _out_it(node : Node, with_signals : bool = false) -> void:
 	var has_tween : bool = is_instance_valid(_tweener)
 	if has_tween and _code_editors.size() == 0:
 		_tweener.clear()
+		
 	for x : int in range(_code_editors.size() - 1, -1 , -1):
 		var tool : Mickeytools = _code_editors[x]
 		if is_instance_valid(tool):
@@ -829,12 +887,46 @@ func _get_container_edit() -> Control:
 
 	return rtab
 			
+func _create_by_last_used() -> void:
+	if _lifo_src.size() > 0:
+		var item_list : ItemList = _item_list
+		if is_instance_valid(item_list):
+			var unused : Array[Node] = []
+			if _item_list.item_count == _editor.get_child_count():
+				for x : Node in _main.get_children():
+					if is_instance_valid(x):
+						if x is TabContainer and x.get_child_count() == 0:
+							unused.append(x)
+						else:
+							for y : Node in x.get_children():
+								if y is TabContainer and y.get_child_count() == 0:
+									unused.append(y)
+			for u : Node in unused:
+				var sc : String = get_last_script_used()
+				var dirty : bool = false
+				if sc.is_empty():
+					continue
+				
+				for x : int in _item_list.item_count:
+					if _item_list.get_item_tooltip(x) == sc:
+						create_code_editor(u, _editor.get_child(x))
+						dirty = true
+						break
+				if !dirty and sc.begins_with("res://") and FileAccess.file_exists(sc):
+					if _SHOULD_OPEN_CLOSED_EDITOR_SCRIPT:
+						var res : Variant = ResourceLoader.load(sc)
+						if res is Script:
+							EditorInterface.edit_script(res)
+			
 func update() -> void:
 	_clear()
 	if _editor.get_child_count() > 0:
 		var root : Node = _get_editor_root()
 		if null != root and _editor.current_tab > -1:
 			create_code_editor(root, _editor.get_current_tab_control())
+			
+		_create_by_last_used()
+			
 		for x : Node in _main.get_children():
 			if is_instance_valid(x):
 				if x is TabContainer and x.get_child_count() == 0:
@@ -1204,7 +1296,9 @@ func add_split(control : Node) -> void:
 	if null == current_unused:
 		current_unused = unused[0]
 
-	create_code_editor(root, current_unused)
+	_create_by_last_used()
+	if root.get_child_count() == 0:
+		create_code_editor(root, current_unused)
 			
 	process_update_queue()
 	
@@ -1238,6 +1332,10 @@ func update_build(columns : int, rows : int) -> void:
 		_main.add_child(broot)
 
 	var aviable : Node = get_aviable()
+	if aviable:
+		if _lifo_src.size() > 0:
+			_create_by_last_used()
+			aviable = get_aviable()
 	while aviable != null:
 		var unused : Array[Node] = _get_unused_editor_control()
 		if unused.size() == 0:
