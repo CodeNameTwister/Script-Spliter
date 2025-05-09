@@ -1296,7 +1296,9 @@ func add_split(control : Node) -> void:
 	if null == current_unused:
 		current_unused = unused[0]
 
-	create_code_editor(root, current_unused)
+	_create_by_last_used()
+	if root.get_child_count() == 0:
+		create_code_editor(root, current_unused)
 			
 	process_update_queue()
 	
