@@ -54,7 +54,7 @@ differences with version 0.1:
 * Plugins Setting in Editor Settings. *(In the section Plugin, you can see with advance option enabled!)*
 * Pop Script: Make Floating Script in Separate Window using RMB context menu.
 * Refresh Warnings changes in all opened windows when project is saved *(Errors/Warning Script)*
-* Reopen recently closed/changed scripts when adding a split. (Suggestion: #5)
+* Reopen recently closed/changed scripts when adding a split. (Suggestion: [#5](https://github.com/CodeNameTwister/Script-Spliter/issues/5))
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
 
