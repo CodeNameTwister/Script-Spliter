@@ -1275,7 +1275,7 @@ func set_focus_config(d : Dictionary) -> void:
 	_SPLIT_USE_HIGHLIGHT_SELECTED = d["highlight_selected"]
 	_main.behaviour_expand_on_focus = d["behaviour_expand_on_focus"]
 
-	var _last : Mickeytools = d["last_tool"]
+	var _last : Variant = d["last_tool"]
 	if is_instance_valid(_last):
 		if _last != _last_local_tool:
 			_last.focus.emit(_last)
