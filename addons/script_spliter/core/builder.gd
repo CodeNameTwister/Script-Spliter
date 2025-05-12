@@ -201,9 +201,6 @@ func update_config() -> void:
 			var gui : Node = x.get_control()
 			if is_instance_valid(gui) and gui is Control:
 				gui.modulate = Color.WHITE
-				
-	for x : Mickeytools in _code_editors:
-		x.update_focus_behaviour()
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -441,26 +438,36 @@ class Mickeytools extends Object:
 
 	func set_root(root : Node) -> void:
 		_root = root
-
-	func _on_input(__ : InputEvent) -> void:
-		if __ is InputEventMouseMotion:
-			return
+		
+	func _context_update(window : Window, control : Control) -> void:
+		if is_instance_valid(window) and is_instance_valid(control) and is_instance_valid(_root):
+			var root : Viewport= _root.get_viewport()
+			var gvp : Vector2 = control.get_global_mouse_position()
+			gvp.x += (window.size.x/ 4.0)
+			gvp.y = min(gvp.y, root.size.y-window.size.y + 16.0)
+			gvp.x = min(gvp.x, root.size.x-window.size.x + 16.0)
 			
-		var tab : TabContainer = _root
+			window.set_deferred(&"position", gvp)
+			
+			
 
-		var parent : Node = tab.get_parent()
-		if parent and parent.has_method(&"show_splited_container"):
-			parent.call(&"show_splited_container")
-
-	func update_focus_behaviour() -> void:
-		if !is_instance_valid(_gui) or _gui.focus_mode == Control.FOCUS_NONE:
+	func _on_input(input : InputEvent) -> void:
+		if input is InputEventMouseMotion:
 			return
 		
+		if input is InputEventMouseButton:
+			if input.pressed and input.button_index == 2:
+				if _reference.get_child_count() > 1:
+					var variant : Node = _reference.get_child(1)
+					if variant is Window and _gui is Control:
+						_context_update.call_deferred(variant, _gui)
+
 		if _helper.can_expand_same_focus():
-			if !_gui.gui_input.is_connected(_on_input):
-				_gui.gui_input.connect(_on_input)
-		elif _gui.gui_input.is_connected(_on_input):
-			_gui.gui_input.disconnect(_on_input)
+			var tab : TabContainer = _root
+
+			var parent : Node = tab.get_parent()
+			if parent and parent.has_method(&"show_splited_container"):
+				parent.call(&"show_splited_container")
 
 	func set_reference(control : Node) -> void:
 		if !is_instance_valid(control):
@@ -469,6 +476,8 @@ class Mickeytools extends Object:
 			return
 		elif is_instance_valid(_reference):
 			reset()
+		#if _reference is CanvasItem:
+			#_gui.get_parent()
 			
 		if is_instance_valid(_gui) and _gui.gui_input.is_connected(_on_input):
 			_gui.gui_input.disconnect(_on_input)
@@ -479,7 +488,6 @@ class Mickeytools extends Object:
 
 		if control is ScriptEditorBase:
 			_gui = control.get_base_editor()
-			update_focus_behaviour()
 
 			if _gui is CodeEdit:
 				var carets : PackedInt32Array = _gui.get_sorted_carets()
@@ -504,8 +512,18 @@ class Mickeytools extends Object:
 		else:
 			for x : Node in control.get_children():
 				if x is RichTextLabel:
-					_gui = x
-					_control = x
+					if _reference is CanvasItem:
+						var canvas : VBoxContainer = VBoxContainer.new()
+						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+						if canvas.get_child_count() < 1:
+							for n : Node in _reference.get_children():
+								n.reparent(canvas)
+						_gui = canvas
+						_control = canvas
+					else:
+						_gui = x
+						_control = x
 					break
 
 		if _control == null:
@@ -518,10 +536,6 @@ class Mickeytools extends Object:
 		if null != parent:
 			_parent = parent
 
-		if null != _gui:
-			if !_gui.focus_entered.is_connected(_i_like_coffe):
-				_gui.focus_entered.connect(_i_like_coffe)
-
 		if is_instance_valid(_parent) and _control.get_parent() == _parent:
 			_index = _control.get_index()
 			_parent.remove_child(_control)
@@ -529,10 +543,20 @@ class Mickeytools extends Object:
 		_root.add_child(_control)
 
 		if _gui:
-			if !_gui.is_node_ready():
-				await _gui.ready
-			if is_instance_valid(_gui):
-				focus.emit(self)
+			var gui : Control = _gui
+			
+			if gui.focus_mode != Control.FOCUS_NONE:
+				if !gui.gui_input.is_connected(_on_input):
+					gui.gui_input.connect(_on_input)
+					
+			if gui is VBoxContainer:
+				gui = gui.get_child(0)
+			if !gui.focus_entered.is_connected(_i_like_coffe):
+				gui.focus_entered.connect(_i_like_coffe)
+				if !gui.is_node_ready():
+					await gui.ready
+				if is_instance_valid(gui):
+					focus.emit(self)
 
 	func update() -> void:
 		if is_instance_valid(_control) and is_instance_valid(_reference):
@@ -553,11 +577,23 @@ class Mickeytools extends Object:
 	func reset(disconnect_signals : bool = true) -> void:
 		if is_instance_valid(_gui):
 			if disconnect_signals:
-				if _gui.focus_entered.is_connected(_i_like_coffe):
-					_gui.focus_entered.disconnect(_i_like_coffe)
-				if _gui.gui_input.is_connected(_on_input):
-					_gui.gui_input.disconnect(_on_input)
+				var gui : Control = _gui
+				if gui is VBoxContainer:
+					gui = gui.get_child(0)
+				if gui.focus_entered.is_connected(_i_like_coffe):
+					gui.focus_entered.disconnect(_i_like_coffe)
+				if gui.gui_input.is_connected(_on_input):
+					gui.gui_input.disconnect(_on_input)
 			_gui.modulate = Color.WHITE
+			
+			if _gui is VBoxContainer:
+				for x : Node in _gui.get_children():
+					x.reparent(_reference)
+				if _gui != _control:
+					_gui.queue_free()
+					_gui = null
+				_control.queue_free()
+				_control = null
 
 		if is_instance_valid(_control):
 			if is_instance_valid(_parent):
@@ -693,6 +729,8 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 			if wm and !wm.has_focus():
 				wm.grab_focus()
 		if !gui.has_focus():
+			if gui is VBoxContainer:
+				gui = gui.get_child(0)
 			gui.grab_focus()
 	
 	var item_list : ItemList = _item_list
@@ -1216,6 +1254,11 @@ func find_editor(node : Node) -> Control:
 func can_remove_split(node : Node) -> bool:
 	if !is_instance_valid(_main):
 		return false
+		
+	if node == null:
+		return _code_editors.size() > 1
+		
+		
 	if _code_editors.size() > 1:
 		if node is CodeEdit:
 			var main : bool = false
@@ -1243,6 +1286,9 @@ func get_control_item_name(index : int) -> String:
 func can_add_split(_node : Node) -> bool:
 	if !is_instance_valid(_main):
 		return false
+			
+	if _node == null:
+		return _code_editors.size() < _editor.get_child_count()
 			
 	for o : int in _editor.get_child_count():
 		if get_item_text(o).begins_with(_POP_SCRIPT_PLACEHOLDER):

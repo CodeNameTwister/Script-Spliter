@@ -260,33 +260,39 @@ func _setup(input : int) -> void:
 func _can_add_split(path : PackedStringArray) -> bool:
 	if !is_instance_valid(_builder):
 		return false
-	for x : String in path:
-		if x.begins_with("res://"):
-			var sc : ScriptEditor = EditorInterface.get_script_editor()
-			return _builder.can_add_split(sc.get_current_editor().get_base_editor())
-		else:
-			var node : Node = get_node_or_null(x)
-			if node:
-				return _builder.can_add_split(node)
-			else:
+	if path.size() == 0:
+		return _builder.can_add_split(null)
+	else:
+		for x : String in path:
+			if x.begins_with("res://"):
 				var sc : ScriptEditor = EditorInterface.get_script_editor()
 				return _builder.can_add_split(sc.get_current_editor().get_base_editor())
+			else:
+				var node : Node = get_node_or_null(x)
+				if node:
+					return _builder.can_add_split(node)
+				else:
+					var sc : ScriptEditor = EditorInterface.get_script_editor()
+					return _builder.can_add_split(sc.get_current_editor().get_base_editor())
 	return false
 
 func _can_remove_split(path : PackedStringArray) -> bool:
 	if !is_instance_valid(_builder):
 		return false
-	for x : String in path:
-		if x.begins_with("res://"):
-			var sc : ScriptEditor = EditorInterface.get_script_editor()
-			return _builder.can_remove_split(sc.get_current_editor().get_base_editor())
-		else:
-			var node : Node = get_node_or_null(x)
-			if node:
-				return _builder.can_remove_split(node)
-			else:
+	if path.size() == 0:
+		return _builder.can_remove_split(null)
+	else:
+		for x : String in path:
+			if x.begins_with("res://"):
 				var sc : ScriptEditor = EditorInterface.get_script_editor()
 				return _builder.can_remove_split(sc.get_current_editor().get_base_editor())
+			else:
+				var node : Node = get_node_or_null(x)
+				if node:
+					return _builder.can_remove_split(node)
+				else:
+					var sc : ScriptEditor = EditorInterface.get_script_editor()
+					return _builder.can_remove_split(sc.get_current_editor().get_base_editor())
 	return false
 
 func _add_window_split(variant : Variant) -> void:

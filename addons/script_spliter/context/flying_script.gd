@@ -19,8 +19,6 @@ var proxy : Control = null
 var replacer : Node = null
 var controller : Object = null
 
-var _fps : int = 10
-
 func set_base_control(node : Node) -> void:
 	if _base_control:
 		_base_control.queue_sort()
