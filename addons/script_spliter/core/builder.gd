@@ -476,8 +476,6 @@ class Mickeytools extends Object:
 			return
 		elif is_instance_valid(_reference):
 			reset()
-		#if _reference is CanvasItem:
-			#_gui.get_parent()
 			
 		if is_instance_valid(_gui) and _gui.gui_input.is_connected(_on_input):
 			_gui.gui_input.disconnect(_on_input)
@@ -514,13 +512,21 @@ class Mickeytools extends Object:
 				if x is RichTextLabel:
 					if _reference is CanvasItem:
 						var canvas : VBoxContainer = VBoxContainer.new()
+						var scroll : ScrollBar = x.get_v_scroll_bar()
+						var val : float = 0.0
 						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+						if scroll:
+							val = scroll.value
 						if canvas.get_child_count() < 1:
 							for n : Node in _reference.get_children():
 								n.reparent(canvas)
+						if scroll:
+							scroll.set_deferred(&"value", val)
 						_gui = canvas
 						_control = canvas
+						
+						#_parse.call_deferred(canvas)
 					else:
 						_gui = x
 						_control = x
