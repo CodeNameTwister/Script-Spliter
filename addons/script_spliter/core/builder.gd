@@ -469,6 +469,9 @@ class Mickeytools extends Object:
 			if parent and parent.has_method(&"show_splited_container"):
 				parent.call(&"show_splited_container")
 
+	func _on_symb(symbol: String, _line: int, _column: int) -> void:
+		_helper.search_symbol.call_deferred(symbol)
+
 	func set_reference(control : Node) -> void:
 		if !is_instance_valid(control):
 			return
@@ -497,6 +500,8 @@ class Mickeytools extends Object:
 							line = _gui.get_line_count() - 1
 						if line > -1:
 							sc.goto_line(line)
+				if !_gui.symbol_lookup.is_connected(_on_symb):
+					_gui.symbol_lookup.connect(_on_symb)
 			_control = _gui.get_parent()
 			var __parent : Node = _control.get_parent()
 			if __parent is VSplitContainer:
@@ -512,21 +517,14 @@ class Mickeytools extends Object:
 				if x is RichTextLabel:
 					if _reference is CanvasItem:
 						var canvas : VBoxContainer = VBoxContainer.new()
-						var scroll : ScrollBar = x.get_v_scroll_bar()
-						var val : float = 0.0
 						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
-						if scroll:
-							val = scroll.value
 						if canvas.get_child_count() < 1:
 							for n : Node in _reference.get_children():
 								n.reparent(canvas)
-						if scroll:
-							scroll.set_deferred(&"value", val)
+							
 						_gui = canvas
 						_control = canvas
-						
-						#_parse.call_deferred(canvas)
 					else:
 						_gui = x
 						_control = x
@@ -590,6 +588,9 @@ class Mickeytools extends Object:
 					gui.focus_entered.disconnect(_i_like_coffe)
 				if gui.gui_input.is_connected(_on_input):
 					gui.gui_input.disconnect(_on_input)
+				if gui is CodeEdit:
+					if _gui.symbol_lookup.is_connected(_on_symb):
+						_gui.symbol_lookup.disconnect(_on_symb)
 			_gui.modulate = Color.WHITE
 			
 			if _gui is VBoxContainer:
@@ -1064,6 +1065,24 @@ func is_valid_code_editor(root : Node, editor : Node, fallback : bool = true) ->
 			
 	return true
 
+func _on_rch_finish(try : int = 2) -> void:
+	if try > 0:
+		if _on_rch_finish.is_valid():
+			_on_rch_finish.call_deferred(try - 1)
+		return
+	if update_queue.is_valid():
+		update_queue.call_deferred()
+
+func is_valid_doc(editor : Control) -> bool:
+	if !editor is ScriptEditorBase:
+		for x : Node in editor.get_children():
+			if x is RichTextLabel:
+				if !x.is_finished():
+					if !x.finished.is_connected(_on_rch_finish):
+						x.finished.connect(_on_rch_finish, CONNECT_ONE_SHOT)
+					return false
+	return true
+
 func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 	if !is_valid_code_editor(root, editor):
 		return null
@@ -1077,6 +1096,9 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 			if o in childs or m.get_gui() in childs:
 				tool = m
 				break
+				
+	if !is_valid_doc(editor):
+		return null
 
 	if null == tool:
 		tool = Mickeytools.new(self, root, editor)
