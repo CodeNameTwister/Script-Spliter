@@ -1057,11 +1057,7 @@ func is_valid_code_editor(root : Node, editor : Node, fallback : bool = true) ->
 			
 	return true
 
-func _on_rch_finish(try : int = 2) -> void:
-	if try > 0:
-		if _on_rch_finish.is_valid():
-			_on_rch_finish.call_deferred(try - 1)
-		return
+func _on_rch_finish() -> void:
 	if update_queue.is_valid():
 		update_queue.call_deferred()
 
