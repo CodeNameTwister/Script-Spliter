@@ -469,9 +469,6 @@ class Mickeytools extends Object:
 			if parent and parent.has_method(&"show_splited_container"):
 				parent.call(&"show_splited_container")
 
-	func _on_symb(symbol: String, _line: int, _column: int) -> void:
-		_helper.search_symbol.call_deferred(symbol)
-
 	func set_reference(control : Node) -> void:
 		if !is_instance_valid(control):
 			return
@@ -500,8 +497,6 @@ class Mickeytools extends Object:
 							line = _gui.get_line_count() - 1
 						if line > -1:
 							sc.goto_line(line)
-				if !_gui.symbol_lookup.is_connected(_on_symb):
-					_gui.symbol_lookup.connect(_on_symb)
 			_control = _gui.get_parent()
 			var __parent : Node = _control.get_parent()
 			if __parent is VSplitContainer:
@@ -588,9 +583,6 @@ class Mickeytools extends Object:
 					gui.focus_entered.disconnect(_i_like_coffe)
 				if gui.gui_input.is_connected(_on_input):
 					gui.gui_input.disconnect(_on_input)
-				if gui is CodeEdit:
-					if _gui.symbol_lookup.is_connected(_on_symb):
-						_gui.symbol_lookup.disconnect(_on_symb)
 			_gui.modulate = Color.WHITE
 			
 			if _gui is VBoxContainer:
