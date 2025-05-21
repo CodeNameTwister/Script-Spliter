@@ -62,6 +62,13 @@ const SplitButton : Texture = preload("res://addons/script_spliter/core/ui/icon/
 		behaviour_expand_on_double_click = e
 		for l : LineSep in _separators:
 			l.double_click_handler = behaviour_expand_on_double_click
+		
+## Enable movement by touching line.	
+@export var behaviour_can_move_by_line : bool = true:
+	set(e):
+		behaviour_can_move_by_line = e
+		for l : LineSep in _separators:
+			l.draggable = behaviour_can_move_by_line
 
 ## This allow expand you current focused container if you shrunk it.
 @export var behaviour_can_expand_focus_same_container : bool = false
@@ -136,6 +143,9 @@ var _last_container_focus : Node = null
 var _frame : int = 1
 var _first : bool = true
 var _tween : Tween = null
+
+func get_separators() -> Array[LineSep]:
+	return _separators
 
 ## Get line begin offset limit.
 func get_line_seperator_left_offset_limit(index : int) -> float:
@@ -231,12 +241,12 @@ func expand_splited_container(node : Node) -> void:
 		else:
 			_reset_expanded_lines(1.0, top_lines, bottom_lines)
 
-func _reset_expanded_lines(lerp : float, top_lines : Array[LineSep], bottom_lines : Array[LineSep]) -> void:
+func _reset_expanded_lines(_lerp : float, top_lines : Array[LineSep], bottom_lines : Array[LineSep]) -> void:
 	for iline : int in range(top_lines.size() - 1, -1, -1):
 		var line : LineSep = top_lines[iline]
 		if is_instance_valid(line):
 			if line.offset < 0.0:
-				line.offset = lerp(line.offset, 0.0, lerp)
+				line.offset = lerp(line.offset, 0.0, _lerp)
 		else:
 			top_lines.remove_at(iline)
 			
@@ -244,7 +254,7 @@ func _reset_expanded_lines(lerp : float, top_lines : Array[LineSep], bottom_line
 		var line : LineSep = bottom_lines[iline]
 		if is_instance_valid(line):
 			if line.offset > 0.0:
-				line.offset = lerp(line.offset, 0.0, lerp)
+				line.offset = lerp(line.offset, 0.0, _lerp)
 		else:
 			bottom_lines.remove_at(iline)
 
@@ -323,6 +333,8 @@ class DragButton extends Button:
 		button_up.connect(_out_press)
 		mouse_entered.connect(_on_enter.bind(0))
 		mouse_exited.connect(_on_exit.bind(0))
+		
+		gui_input.connect(_custom_input)
 
 		icon = SplitButton
 		icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -353,6 +365,11 @@ class DragButton extends Button:
 		z_index = 2000
 
 		update_gui()
+		
+	func _custom_input(e : InputEvent) -> void:
+		if e is InputEventMouseButton:
+			if e.pressed and e.double_click:
+				get_tree().call_group(&"ScriptSpliter", &"swap", get_parent())
 
 	func _on_input(e : InputEvent) -> void:
 		if e is InputEventMouseButton:
@@ -360,9 +377,9 @@ class DragButton extends Button:
 				if _line_sep and _line_sep.double_click_handler:
 					_line_sep.offset = 0.0
 					_line_sep.offset_updated.emit()
-			elif e.pressed and e.button_index == 1:
+			elif e.pressed and _line_sep.draggable and e.button_index == 1:
 				button_down.emit()
-			elif !e.pressed and e.button_index == 1:
+			elif !e.pressed and _line_sep.draggable and e.button_index == 1:
 				button_up.emit()
 
 	func set_line_sep_reference(ref : LineSep) -> void:
@@ -446,6 +463,7 @@ class LineSep extends ColorRect:
 	var button : DragButton = null
 
 	var double_click_handler : bool = true
+	var draggable : bool = true
 
 	func set_next_line(next : LineSep = null) -> void:
 		next_line = next
@@ -869,6 +887,7 @@ func _update() -> void:
 			l.button.self_modulate = drag_button_modulate
 			l.button.min_no_focus_transparense = min_visible_drag_button
 			l.button.set_drag_icon(drag_button_icon)
+			l.draggable = behaviour_can_move_by_line
 
 			l.reset()
 
@@ -887,6 +906,7 @@ func _update() -> void:
 			l.button.self_modulate = drag_button_modulate
 			l.button.min_no_focus_transparense = min_visible_drag_button
 			l.button.set_drag_icon(drag_button_icon)
+			l.draggable = behaviour_can_move_by_line
 
 			l.force_update()
 

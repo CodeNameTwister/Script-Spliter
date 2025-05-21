@@ -190,10 +190,16 @@ func _get_translated_text(text : String) -> String:
 	# TODO: Translation
 	return text
 
+func swap(caller : Object) -> void:
+	if is_instance_valid(_builder):
+		_builder.swap(caller)
+
 func _setup(input : int) -> void:
 	var settings : EditorSettings = EditorInterface.get_editor_settings()
 
 	if input != 0:
+		add_to_group(&"ScriptSpliter")
+		
 		main_screen_changed.connect(_on_change)
 		resource_saved.connect(_on_save)
 		
@@ -235,6 +241,9 @@ func _setup(input : int) -> void:
 		else:
 			_refresh_warnings_on_save = settings.get_setting(&"plugin/script_spliter/behaviour/refresh_warnings_on_save")
 	else:
+		if is_in_group(&"ScriptSpliter"):
+			remove_from_group(&"ScriptSpliter")
+			
 		main_screen_changed.disconnect(_on_change)
 		resource_saved.disconnect(_on_save)
 		

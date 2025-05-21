@@ -11,11 +11,14 @@ extends Object
 const EditorContainer : Script = preload("res://addons/script_spliter/core/EditorContainer.gd")
 const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
 
-#POP SCRIPT	
+#region POPSC	
 const FLYING_SCRIPT : PackedScene = preload("res://addons/script_spliter/context/flying_script.tscn")
+const _POP_SCRIPT_PLACEHOLDER : String = "_POPGDScript_"
 var _pop_scripts : Array[Window] = []
 var _pop_script_placeholder : bool = false
-const _POP_SCRIPT_PLACEHOLDER : String = "_POPGDScript_"
+#endregion
+
+const GLOBALS : PackedStringArray = ["_GlobalScope", "_GDScript"]
 
 var _plugin : Node = null
 
@@ -58,6 +61,9 @@ var _SEPARATOR_BUTTON_SIZE : int = 19
 var _SEPARATOR_BUTTON_MODULATE : Color = Color.WHITE
 var _SEPARATOR_BUTTON_ICON : String = "res://addons/script_spliter/context/icons/expand.svg"
 
+var _SEPARATOR_LINE_MOVEMENT : bool = true
+var _SEPARATOR_LINE_DOUBLE_CLICK : bool = true
+
 var _BEHAVIOUR_CAN_EXPAND_ON_FOCUS : bool = true
 var _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS : bool = false
 
@@ -66,6 +72,8 @@ var _SEPARATOR_SMOOTH_EXPAND_TIME : float = 0.24
 
 var _OUT_FOCUS_COLORED : bool = true
 var _UNFOCUS_COLOR : Color = Color.GRAY
+
+var _SWAP_BY_BUTTON : bool = true
 
 # CURRENT CONFIG
 var current_columns : int = 1
@@ -91,6 +99,8 @@ func _get_data_cfg() -> Array[Array]:
 
 		,[&"plugin/script_spliter/line/size", &"_SEPARATOR_LINE_SIZE"]
 		,[&"plugin/script_spliter/line/color", &"_SEPARATOR_LINE_COLOR"]
+		,[&"plugin/script_spliter/line/draggable", &"_SEPARATOR_LINE_MOVEMENT"]
+		,[&"plugin/script_spliter/line/expand_by_double_click", &"_SEPARATOR_LINE_DOUBLE_CLICK"]
 
 		,[&"plugin/script_spliter/line/button/size", &"_SEPARATOR_BUTTON_SIZE"]
 		,[&"plugin/script_spliter/line/button/modulate", &"_SEPARATOR_BUTTON_MODULATE"]
@@ -100,6 +110,7 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/can_expand_on_same_focus", &"_BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS"]
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
+		,[&"plugin/script_spliter/editor/behaviour/swap_by_double_click_separator_button", &"_SWAP_BY_BUTTON"]
 		
 		]
 	return CFG
@@ -213,6 +224,8 @@ func _update_container() -> void:
 	_main.behaviour_expand_smoothed_time = _SEPARATOR_SMOOTH_EXPAND_TIME
 	_main.behaviour_expand_on_focus = _BEHAVIOUR_CAN_EXPAND_ON_FOCUS
 	_main.behaviour_can_expand_focus_same_container = _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS
+	_main.behaviour_expand_on_double_click = _SEPARATOR_LINE_DOUBLE_CLICK
+	_main.behaviour_can_move_by_line = _SEPARATOR_LINE_MOVEMENT
 	
 	if !_SEPARATOR_BUTTON_ICON.is_empty():
 		if FileAccess.file_exists(_SEPARATOR_BUTTON_ICON):
@@ -468,6 +481,9 @@ class Mickeytools extends Object:
 			var parent : Node = tab.get_parent()
 			if parent and parent.has_method(&"show_splited_container"):
 				parent.call(&"show_splited_container")
+				
+	func _on_symb(symbol: String, _line: int, _column: int, rch : Variant = null) -> void:
+		_helper.set_search_symbol(symbol)
 
 	func set_reference(control : Node) -> void:
 		if !is_instance_valid(control):
@@ -497,6 +513,8 @@ class Mickeytools extends Object:
 							line = _gui.get_line_count() - 1
 						if line > -1:
 							sc.goto_line(line)
+				if !_gui.symbol_lookup.is_connected(_on_symb):
+					_gui.symbol_lookup.connect(_on_symb.bind(_gui))
 			_control = _gui.get_parent()
 			var __parent : Node = _control.get_parent()
 			if __parent is VSplitContainer:
@@ -505,8 +523,7 @@ class Mickeytools extends Object:
 				_parent = __parent
 				
 				for x : Node in __parent.get_children():
-					__parent.remove_child(x)
-					_control.add_child(x)
+					x.reparent(_control)
 		else:
 			for x : Node in control.get_children():
 				if x is RichTextLabel:
@@ -514,12 +531,17 @@ class Mickeytools extends Object:
 						var canvas : VBoxContainer = VBoxContainer.new()
 						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 						canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+						_root.add_child(canvas)
+						canvas.size = _root.size
+						
+							
 						if canvas.get_child_count() < 1:
 							for n : Node in _reference.get_children():
 								n.reparent(canvas)
-							
+						x.size = canvas.size
 						_gui = canvas
 						_control = canvas
+						_helper.search_by_symbol(control, x)
 					else:
 						_gui = x
 						_control = x
@@ -535,11 +557,11 @@ class Mickeytools extends Object:
 		if null != parent:
 			_parent = parent
 
-		if is_instance_valid(_parent) and _control.get_parent() == _parent:
-			_index = _control.get_index()
-			_parent.remove_child(_control)
-
-		_root.add_child(_control)
+		if _control.get_parent() != _root:
+			if _control.get_parent():
+				_control.reparent(_parent)
+			else:
+				_root.add_child(_control)
 
 		if _gui:
 			var gui : Control = _gui
@@ -583,6 +605,9 @@ class Mickeytools extends Object:
 					gui.focus_entered.disconnect(_i_like_coffe)
 				if gui.gui_input.is_connected(_on_input):
 					gui.gui_input.disconnect(_on_input)
+				if gui is CodeEdit:
+					if _gui.symbol_lookup.is_connected(_on_symb):
+						_gui.symbol_lookup.disconnect(_on_symb)
 			_gui.modulate = Color.WHITE
 			
 			if _gui is VBoxContainer:
@@ -624,15 +649,6 @@ class Mickeytools extends Object:
 			if _helper.add_last_script_used.is_valid():
 				_helper.add_last_script_used(_src)
 
-#func can_create(ref : Control) -> bool:
-	#if !ref.has_meta("_tab_index"):
-		#return false
-	#var index : int = ref.get_meta("_tab_index")
-	#var item_list : ItemList = _item_list
-	#if !item_list or item_list.item_count <= index or index < 0:
-		#return false
-	#return true
-
 class ReTweener extends RefCounted:
 	var _tween : Tween = null
 	var _ref : Control = null
@@ -670,7 +686,6 @@ class ReTweener extends RefCounted:
 func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray = []) -> void:
 	_last_tool = tool
 	var ref : Node = _last_tool.get_reference()
-	
 	if ref.get_parent() == null:
 		return
 
@@ -1056,20 +1071,14 @@ func is_valid_code_editor(root : Node, editor : Node, fallback : bool = true) ->
 		return false
 			
 	return true
-
-func _on_rch_finish() -> void:
-	if update_queue.is_valid():
-		update_queue.call_deferred()
+	
 
 func is_valid_doc(editor : Control) -> bool:
 	if !editor is ScriptEditorBase:
 		for x : Node in editor.get_children():
 			if x is RichTextLabel:
-				if !x.is_finished():
-					if !x.finished.is_connected(_on_rch_finish):
-						x.finished.connect(_on_rch_finish, CONNECT_ONE_SHOT)
-					return false
-	return true
+				return true
+	return false
 
 func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 	if !is_valid_code_editor(root, editor):
@@ -1085,8 +1094,16 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 				tool = m
 				break
 				
-	if !is_valid_doc(editor):
-		return null
+	if is_valid_doc(editor):
+		if editor.name.begins_with("@"):
+			return
+		
+		if _last_tool:
+			tool = _last_tool
+		else:
+			for m : Mickeytools in _code_editors:
+				tool = m
+				break
 
 	if null == tool:
 		tool = Mickeytools.new(self, root, editor)
@@ -1113,9 +1130,14 @@ func update_queue(__ : int = 0) -> void:
 		_main.update()
 
 #region callback
-func _on_it(_node : Node) -> void:
+func _on_it(editor : Node) -> void:
+	if is_valid_doc(editor):
+		if editor.name.begins_with("@"):
+			editor.queue_free()
+			return
 	update_queue(0)
-
+	update()
+	
 func _on_container_entered() -> void:
 	update_queue()
 
@@ -1193,7 +1215,6 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 			_editor.tree_exiting.disconnect(_on_container_exit)
 
 	_editor = editor
-	
 
 	if !_editor.tree_entered.is_connected(_on_container_entered):
 		_editor.tree_entered.connect(_on_container_entered)
@@ -1206,8 +1227,6 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 
 	if !is_instance_valid(_main):
 		_main = _get_container()
-
-	_editor.visible = false
 
 	root = _container.get_parent()
 
@@ -1234,6 +1253,7 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 	_main.behaviour_expand_on_double_click = true
 
 
+	_editor.visible = false
 	_main.visible = true
 	
 	update_config()
@@ -1246,14 +1266,14 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 	update_rect.call_deferred()
 	
 func update_rect() -> void:
-	var _size : Vector2 = _container.size# - Vector2(9.0,7.0)
+	var _size : Vector2 = _container.size
 	_size.x = maxf(_container.size.x, 1.0)
 	_size.y = maxf(_container.size.y, 1.0)
 	_main.size = _size
 	for x : Node in _main.get_children():
 		if x is Control:
 			if x is TabContainer:
-					continue
+				continue
 			for y : Node in x.get_children():
 				
 				if y is Control:
@@ -1273,7 +1293,6 @@ func can_remove_split(node : Node) -> bool:
 		
 	if node == null:
 		return _code_editors.size() > 1
-		
 		
 	if _code_editors.size() > 1:
 		if node is CodeEdit:
@@ -1450,7 +1469,6 @@ func should_grab_focus() -> bool:
 #endregion
 
 #region _POP_SCRIPT_
-
 func _on_pop_input(event : InputEvent) -> void:
 	(_editor.get_parent() as Control).gui_input.emit(event)
 
@@ -1577,3 +1595,123 @@ func get_selected_item() -> int:
 
 func can_expand_same_focus() -> bool:
 	return _BEHAVIOUR_CAN_EXPAND_SAME_ON_FOCUS
+
+#region _8_
+func swap(caller : Object) -> void:
+	if !_SWAP_BY_BUTTON:
+		return
+		
+	if !is_instance_valid(_main) or _main.get_child_count() == 0:
+		return
+	
+	var separators : Array = _main.get_separators()
+	if separators.size() == 0:
+		return
+		
+	var index : int = 0
+	var linesep : Object = null
+	for x : Object in separators:
+		if x == caller:
+			linesep =x
+			break
+		index += 1
+		
+	if linesep:
+		if linesep.is_vertical:
+			var atotal : int = 1
+			var btotal : int = 1
+			var a : Array[Node] = []
+			
+			for x : int in range(index + 1, separators.size(), 1):
+				var clinesep : Object = separators[x]
+				if clinesep.is_vertical:
+					break
+				atotal += 1
+			for x : int in range(index - 1, -1, -1):
+				var clinesep : Object = separators[x]
+				if clinesep.is_vertical:
+					break
+				btotal += 1
+			
+			var cindex : int = index
+			while atotal > 0:
+				cindex += 1
+				atotal -= 1
+				if cindex < _main.get_child_count():
+					a.append(_main.get_child(cindex))
+					continue
+				break
+				
+			for x : Node in a:
+				cindex = btotal
+				while cindex > 0:
+					cindex -= 1
+					_main.move_child(x, x.get_index() - 1)
+		else:
+			index += 1
+			if _main.get_child_count() > index:
+				var child : Node = _main.get_child(index - 1)
+				_main.move_child(child, index)
+#endregion
+#region _7_
+var _search_symbol : String = ""
+
+func set_search_symbol(symbol: String) -> void:
+	_search_symbol = symbol
+
+func _scroll(rich : RichTextLabel, line : int) -> void:
+	rich.get_v_scroll_bar().value = line + 25
+	rich.scroll_to_line.call_deferred(line)
+	
+func reset_symbol() -> void:
+	_search_symbol = ""
+	
+func search_by_symbol(reference : Node, rich : RichTextLabel) -> void:
+	if _search_symbol.is_empty():
+		return
+	var symbol : String = _search_symbol
+	var class_nm : StringName = reference.name.strip_edges()
+	reset_symbol()
+	
+	if symbol == class_nm:
+		return
+	
+	if class_nm.is_empty():
+		return
+		
+	if class_nm.begins_with("_"):
+		for x : String in GLOBALS:
+			if x == class_nm:
+				class_nm = "@" + class_nm.trim_prefix("_")
+				break
+		
+	if ClassDB.class_exists(class_nm):
+		var prefx : String = ""
+		if class_nm == "GraphNode":
+			prefx = "class_theme_item"
+		if symbol.begins_with("@"):
+			prefx = "class_annotation"
+		elif ClassDB.class_has_signal(class_nm, symbol):
+			prefx = "class_signal"
+		elif ClassDB.class_has_enum(class_nm, symbol, true):
+			prefx = "class_constant"
+		else:
+			var list : Array[Dictionary] = ClassDB.class_get_property_list(class_nm, true)
+			for x : Dictionary in list:
+				if x.name == symbol:
+					prefx = "class_property"
+					break
+			if prefx.is_empty():
+				list = ClassDB.class_get_method_list(class_nm, true)
+				for x : Dictionary in list:
+					if x.name == symbol:
+						prefx = "class_method"
+						break
+		if !prefx.is_empty():
+			var path : String = "{0}:{1}:{2}".format([prefx, class_nm, symbol])
+			EditorInterface.get_script_editor().goto_help(path)
+	else:
+		for prefx : String in ["class_annotation", "class_signal", "class_constant", "class_property", "class_method"]:			
+			var path : String = "{0}:{1}:{2}".format([prefx, class_nm, symbol])
+			EditorInterface.get_script_editor().goto_help(path)
+#endregion
