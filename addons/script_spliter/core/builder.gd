@@ -157,12 +157,6 @@ func init_1() -> void:
 		"name": &"plugin/script_spliter/line/button/modulate",
 		"type": TYPE_COLOR
 	})
-	#settings.add_property_info({
-		#"name": &"plugin/script_spliter/line/button/icon",
-		#"type": TYPE_OBJECT,
-		#"hint" : PROPERTY_HINT_RESOURCE_TYPE,
-		#"hint_string": "Texture2D"
-	#})
 #endregion
 	
 #region _FEATURE#5_
@@ -1691,11 +1685,9 @@ func search_by_symbol(reference : Node) -> void:
 		return
 		
 	if class_nm.begins_with("_"):
-		for x : String in GLOBALS:
+		if class_nm in GLOBALS:
 			return
-			#if x == class_nm:
-				#class_nm = "@" + class_nm.trim_prefix("_")
-				#break
+			
 	if ClassDB.class_exists(class_nm):
 		var prefx : String = ""
 		if class_nm == "GraphNode":
@@ -1721,9 +1713,4 @@ func search_by_symbol(reference : Node) -> void:
 		if !prefx.is_empty():
 			var path : String = "{0}:{1}:{2}".format([prefx, class_nm, symbol])
 			EditorInterface.get_script_editor().goto_help(path)
-	#else:
-		#for prefx : String in ["class_signal", "class_constant", "class_property", "class_method"]:			
-			#
-			#var path : String = "{0}:{1}:{2}".format([prefx, class_nm, symbol])
-			#EditorInterface.get_script_editor().goto_help(path)
 #endregion
