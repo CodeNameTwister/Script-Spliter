@@ -341,6 +341,11 @@ func _get_editor_root() -> Node:
 	return null
 
 class Root extends MarginContainer:
+	#func _notification(what: int) -> void:
+		#print(what)
+		#if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+			#print("HERE")
+			#pass
 	pass
 
 class Mickeytools extends Object:
@@ -482,7 +487,22 @@ class Mickeytools extends Object:
 			if parent and parent.has_method(&"show_splited_container"):
 				parent.call(&"show_splited_container")
 				
-	func _on_symb(symbol: String, _line: int, _column: int, rch : Variant = null) -> void:
+	func _on_symb(symbol: String, line : int, column: int, edit : CodeEdit = null) -> void:
+		const BREAKERS : PackedStringArray = [" ", "\n", "\t"]
+		if edit:
+			var txt : String = edit.get_text_for_symbol_lookup()
+			if !txt.is_empty():
+				var pck : PackedStringArray = txt.split('\n')
+				if column > -1 and line > -1 and pck.size() > line:
+					var cline : String = pck[line]
+					while column > -1:
+						var _char : String = cline[column]
+						if _char in BREAKERS:
+							break
+						if _char == "@":
+							symbol = str("@", symbol)
+							break
+						column -= 1
 		_helper.set_search_symbol(symbol)
 
 	func set_reference(control : Node) -> void:
@@ -541,7 +561,7 @@ class Mickeytools extends Object:
 						x.size = canvas.size
 						_gui = canvas
 						_control = canvas
-						_helper.search_by_symbol(control, x)
+						_helper.search_by_symbol(control)
 					else:
 						_gui = x
 						_control = x
@@ -1620,7 +1640,7 @@ func swap(caller : Object) -> void:
 		if linesep.is_vertical:
 			var atotal : int = 1
 			var btotal : int = 1
-			var a : Array[Node] = []
+			var nodes : Array[Node] = []
 			
 			for x : int in range(index + 1, separators.size(), 1):
 				var clinesep : Object = separators[x]
@@ -1638,11 +1658,11 @@ func swap(caller : Object) -> void:
 				cindex += 1
 				atotal -= 1
 				if cindex < _main.get_child_count():
-					a.append(_main.get_child(cindex))
+					nodes.append(_main.get_child(cindex))
 					continue
 				break
 				
-			for x : Node in a:
+			for x : Node in nodes:
 				cindex = btotal
 				while cindex > 0:
 					cindex -= 1
@@ -1658,19 +1678,16 @@ var _search_symbol : String = ""
 
 func set_search_symbol(symbol: String) -> void:
 	_search_symbol = symbol
-
-func _scroll(rich : RichTextLabel, line : int) -> void:
-	rich.get_v_scroll_bar().value = line + 25
-	rich.scroll_to_line.call_deferred(line)
 	
 func reset_symbol() -> void:
 	_search_symbol = ""
 	
-func search_by_symbol(reference : Node, rich : RichTextLabel) -> void:
+func search_by_symbol(reference : Node) -> void:
 	if _search_symbol.is_empty():
 		return
 	var symbol : String = _search_symbol
 	var class_nm : StringName = reference.name.strip_edges()
+	
 	reset_symbol()
 	
 	if symbol == class_nm:
@@ -1681,10 +1698,10 @@ func search_by_symbol(reference : Node, rich : RichTextLabel) -> void:
 		
 	if class_nm.begins_with("_"):
 		for x : String in GLOBALS:
-			if x == class_nm:
-				class_nm = "@" + class_nm.trim_prefix("_")
-				break
-		
+			return
+			#if x == class_nm:
+				#class_nm = "@" + class_nm.trim_prefix("_")
+				#break
 	if ClassDB.class_exists(class_nm):
 		var prefx : String = ""
 		if class_nm == "GraphNode":
@@ -1710,8 +1727,9 @@ func search_by_symbol(reference : Node, rich : RichTextLabel) -> void:
 		if !prefx.is_empty():
 			var path : String = "{0}:{1}:{2}".format([prefx, class_nm, symbol])
 			EditorInterface.get_script_editor().goto_help(path)
-	else:
-		for prefx : String in ["class_annotation", "class_signal", "class_constant", "class_property", "class_method"]:			
-			var path : String = "{0}:{1}:{2}".format([prefx, class_nm, symbol])
-			EditorInterface.get_script_editor().goto_help(path)
+	#else:
+		#for prefx : String in ["class_signal", "class_constant", "class_property", "class_method"]:			
+			#
+			#var path : String = "{0}:{1}:{2}".format([prefx, class_nm, symbol])
+			#EditorInterface.get_script_editor().goto_help(path)
 #endregion
