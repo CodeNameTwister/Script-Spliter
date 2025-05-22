@@ -341,11 +341,6 @@ func _get_editor_root() -> Node:
 	return null
 
 class Root extends MarginContainer:
-	#func _notification(what: int) -> void:
-		#print(what)
-		#if what == NOTIFICATION_WM_GO_BACK_REQUEST:
-			#print("HERE")
-			#pass
 	pass
 
 class Mickeytools extends Object:
@@ -578,11 +573,10 @@ class Mickeytools extends Object:
 			_parent = parent
 
 		if _control.get_parent() != _root:
-			if _control.get_parent():
-				_control.reparent(_parent)
+			if _control.get_parent() != null:
+				_control.reparent(_root)
 			else:
 				_root.add_child(_control)
-
 		if _gui:
 			var gui : Control = _gui
 			
@@ -1124,7 +1118,7 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 			for m : Mickeytools in _code_editors:
 				tool = m
 				break
-
+				
 	if null == tool:
 		tool = Mickeytools.new(self, root, editor)
 		tool.focus.connect(_on_focus)
