@@ -75,6 +75,8 @@ var _UNFOCUS_COLOR : Color = Color.GRAY
 
 var _SWAP_BY_BUTTON : bool = true
 
+var _HANDLE_BACK_FORWARD_BUTTONS : bool = true
+
 # CURRENT CONFIG
 var current_columns : int = 1
 var current_rows : int = 1
@@ -85,6 +87,8 @@ var _focus_queue : bool = false
 
 # REF
 var _wm : Window = null
+
+signal tool_added(tool : Mickeytools)
 
 func _get_data_cfg() -> Array[Array]:
 	const CFG : Array[Array] = [
@@ -111,6 +115,7 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
 		,[&"plugin/script_spliter/editor/behaviour/swap_by_double_click_separator_button", &"_SWAP_BY_BUTTON"]
+		,[&"plugin/script_spliter/editor/behaviour/handle_back_and_forward_buttons", &"_HANDLE_BACK_FORWARD_BUTTONS"]
 		
 		]
 	return CFG
@@ -326,6 +331,9 @@ func _clear() -> void:
 					else:
 						y.remove_child(z)
 
+func get_editors() -> Array[Mickeytools]:
+	return _code_editors
+
 func _get_editor_root() -> Node:
 	var aviable : Node = get_aviable()
 	if is_instance_valid(aviable):
@@ -335,10 +343,146 @@ func _get_editor_root() -> Node:
 	return null
 
 class Root extends MarginContainer:
-	pass
+	const MAX_BUFFER : int = 50
+	
+	var _helper : Object = null
+	var _garbage : Array[Array] = []
+	var _wm : Window = null
+	
+	func _init(helper : Object) -> void:
+		_helper = helper
+		
+		_helper.tool_added.connect(_on_added_tool)
+		child_entered_tree.connect(_on_child)
+		
+	func _on_added_tool(_tool : Mickeytools) -> void:
+		if !_tool.tool_updated.is_connected(_on_update_tool):
+			_tool.tool_updated.connect(_on_update_tool)
+		_on_update_tool()
+		
+	func _on_update_tool() -> void:
+		if !_helper._HANDLE_BACK_FORWARD_BUTTONS or get_child_count() < 1:
+			if _garbage.size() > 0:
+				_garbage.clear()
+			return
+			
+		for x : Mickeytools in _helper.get_editors():
+			var gui : Control = x.get_gui()
+			if is_instance_valid(gui):
+				var indx : int = _get_index(x)
+				if indx > -1: 
+					if indx >= _garbage.size():
+						_garbage.resize(indx + 1)
+					var ref : Control = x.get_reference()
+					var grb : Array = _garbage[indx]
+					if is_instance_valid(ref):
+						for g : Array in _garbage:
+							if g == grb:
+								continue
+							g.erase(ref)
+						if !(ref in grb):
+							grb.append(ref)
+							while grb.size() > MAX_BUFFER:
+								grb.remove_at(0)
+		
+	func _on_child(n : Node) -> void:
+		n.child_entered_tree.connect(_on_container_added)
+		n.child_exiting_tree.connect(_on_container_removed)
+		_on_update_tool()
+		
+	func _on_container_added(x : Node) -> void:
+		if get_child_count() < 1:
+			return
+		if x is ColorRect:
+			return
+		if x is TabContainer:
+			return
+		var root : Node = get_child(0)
+		if _garbage.size() != root.get_child_count():
+			_garbage.resize(root.get_child_count())
+		
+	func _on_container_removed(n : Node) -> void:
+		if get_child_count() < 1:
+			_garbage.clear()
+			return
+		if n is ColorRect:
+			return
+		if n is TabContainer:
+			return
+		var root : Node = get_child(0)
+		if n.get_parent() == root:
+			var indx : int = n.get_index()
+			if indx < _garbage.size():
+				_garbage.remove_at(indx)
+	
+	func _get_index(x : Mickeytools) -> int:
+		var gui : Control = x.get_gui()
+		if is_instance_valid(gui):
+			var root : Control = x.get_root()
+			if root:
+				root = root.get_parent()
+			if is_instance_valid(root):
+				return root.get_index()
+		return -1
+	
+	func _fwrd() -> bool:
+		var _tool : Mickeytools = null
+		var indx : int = -1
+		var size : int = _garbage.size()
+		
+		for x : Mickeytools in _helper.get_editors():
+			var gui : Control = x.get_gui()
+			if is_instance_valid(gui) and gui.has_focus():
+				_tool = x
+				indx = _get_index(x)
+				break
+		
+		if is_instance_valid(_tool) and indx > -1 and size > 0 and indx < size:
+			var ref : Control = _garbage[indx].pop_front()
+			_garbage[indx].push_back(ref)
+			_tool.set_reference(ref)
+		return true
+	
+	func _bkt() -> bool:
+		var _tool : Mickeytools = null
+		var indx : int = 1
+		var size : int = _garbage.size()
+		
+		for x : Mickeytools in _helper.get_editors():
+			var gui : Control = x.get_gui()
+			if is_instance_valid(gui) and gui.has_focus():
+				_tool = x
+				indx = _get_index(x)
+				break
+		if is_instance_valid(_tool) and indx > -1 and size > 0 and indx < size:
+			var ref : Control = _garbage[indx].pop_back()
+			_garbage[indx].push_front(ref)
+			_tool.set_reference(ref)
+		return true
+	
+	func _input(event: InputEvent) -> void:
+		if !_helper._HANDLE_BACK_FORWARD_BUTTONS:
+			return
+		if event is InputEventKey:
+			if event.alt_pressed:
+				if event.keycode == KEY_LEFT:
+					event.alt_pressed = false
+					_bkt()
+				elif event.keycode == KEY_RIGHT:
+					event.alt_pressed = false
+					_fwrd()
+		elif event is InputEventMouseButton:
+			if event.pressed:
+				if event.button_index == 8:
+					event.pressed = false
+					_bkt()
+				elif event.button_index == 9:
+					event.pressed = false
+					_fwrd()
 
 class Mickeytools extends Object:
 	signal focus(_self : Mickeytools)
+	signal tool_updated()
 
 	var _helper : Object = null
 
@@ -586,6 +730,7 @@ class Mickeytools extends Object:
 					await gui.ready
 				if is_instance_valid(gui):
 					focus.emit(self)
+		tool_updated.emit()
 
 	func update() -> void:
 		if is_instance_valid(_control) and is_instance_valid(_reference):
@@ -871,10 +1016,7 @@ func _on_close(itab : int, tab : TabContainer) -> void:
 				if x.get_control() == ref:
 					for e : Node in _editor.get_children():
 						if e == x.get_reference():
-							x.reset()
-							_code_editors.erase(x)
-
-							x.free()
+							remove_tool(x)
 							var i : int = e.get_index()
 							if i > -1 and i < _item_list.item_count:
 								_item_list.item_clicked.emit(i, _item_list.get_local_mouse_position(), MOUSE_BUTTON_MIDDLE)
@@ -899,7 +1041,7 @@ func _on_exit(n : Node, tab : TabContainer) -> void:
 		process_update_queue()
 
 func _get_root() -> Control:
-	var margin : Root = Root.new()
+	var margin : Root = Root.new(self)
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
@@ -1088,6 +1230,15 @@ func is_valid_doc(editor : Control) -> bool:
 				return true
 	return false
 
+func add_tool(tool : Mickeytools) -> void:
+	_code_editors.append(tool)
+	tool_added.emit(tool)
+	
+func remove_tool(x : Mickeytools, with_signals : bool = true) -> void:
+	x.reset(with_signals)
+	_code_editors.erase(x)
+	x.free()
+
 func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 	if !is_valid_code_editor(root, editor):
 		return null
@@ -1116,7 +1267,7 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 	if null == tool:
 		tool = Mickeytools.new(self, root, editor)
 		tool.focus.connect(_on_focus)
-		_code_editors.append(tool)
+		add_tool(tool)
 		
 		tool.focus.emit(tool)
 	else:
@@ -1164,9 +1315,7 @@ func remove_split(node : Node) -> void:
 				if x.get_gui() == node:
 					_remove_split_by_control(x.get_control())
 					
-					x.reset()
-					_code_editors.erase(x)
-					x.free()
+					remove_tool(x)
 												
 					process_update_queue()
 					break
@@ -1199,9 +1348,7 @@ func _free_editor_container(control : Control) -> bool:
 			var _a : Node = c.get_control().get_parent()
 			var b : Node = control
 			if _a == b or _a.get_parent() == b:
-				c.reset()
-				_code_editors.erase(c)
-				c.free()
+				remove_tool(c)
 				break
 		_main.remove_child(control)
 		control.queue_free()
@@ -1501,9 +1648,7 @@ func _on_pop_script_close(pop : Window) -> void:
 		var gui : Node = x.get_gui()
 		var control : Node = x.get_control()
 		if control.get_parent() == container or gui.get_parent() == container:
-			x.reset(true)
-			_code_editors.erase(x)
-			x.free()
+			remove_tool(x, true)
 			
 			if container.get_child_count() < 1:
 				_pop_scripts.erase(pop)
@@ -1532,9 +1677,7 @@ func make_pop_script(control : Node) -> Window:
 	node.set_base_control(_get_container_edit())
 		
 	var editor : Control = m.get_reference()
-	m.reset()
-	_code_editors.erase(m)
-	m.free()
+	remove_tool(m)
 	
 	_plugin.add_child(node)
 		
