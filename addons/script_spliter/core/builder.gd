@@ -386,8 +386,10 @@ class Root extends MarginContainer:
 								grb.remove_at(0)
 		
 	func _on_child(n : Node) -> void:
-		n.child_entered_tree.connect(_on_container_added)
-		n.child_exiting_tree.connect(_on_container_removed)
+		if !n.child_entered_tree.is_connected(_on_container_added):
+			n.child_entered_tree.connect(_on_container_added)
+		if !n.child_exiting_tree.is_connected(_on_container_removed):
+			n.child_exiting_tree.connect(_on_container_removed)
 		_on_update_tool()
 		
 	func _on_container_added(x : Node) -> void:
