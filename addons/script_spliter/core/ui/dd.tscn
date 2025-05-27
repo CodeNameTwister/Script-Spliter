@@ -1,0 +1,38 @@
+[gd_scene load_steps=3 format=3 uid="uid://bd4fb42jjkgr0"]
+
+[ext_resource type="Script" uid="uid://prv0v0r500g6" path="res://addons/script_spliter/core/ui/dd.gd" id="1_1ryr1"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_ujojs"]
+line_spacing = 8.0
+font_size = 32
+font_color = Color(0.681044, 0.978038, 0, 1)
+shadow_size = 0
+
+[node name="Dd" type="ColorRect"]
+modulate = Color(0.8, 0.8, 0.8, 0.938422)
+self_modulate = Color(1, 1, 1, 0.4)
+color = Color(1.3236e-07, 0.348188, 0.0242278, 1)
+script = ExtResource("1_1ryr1")
+
+[node name="Label" type="Label" parent="."]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.938422, 0.938422)
+pivot_offset = Vector2(44.5, 49)
+tooltip_text = "Drop the current dragged tab for change window!"
+text = "DROP
+HERE!"
+label_settings = SubResource("LabelSettings_ujojs")
+horizontal_alignment = 1
+vertical_alignment = 1

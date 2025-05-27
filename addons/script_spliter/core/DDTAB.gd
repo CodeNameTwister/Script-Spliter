@@ -14,6 +14,8 @@ signal on_stop_drag(t : TabBar)
 
 const PREVIEW : PackedScene = preload("res://addons/script_spliter/context/tab_preview.tscn")
 
+var is_drag : bool = false
+
 var _fms : float = 0.0
 
 func _init() -> void:
@@ -40,12 +42,18 @@ func make_preview() -> Control:
 func _process(delta: float) -> void:
 	_fms += delta
 	if _fms > 0.24:
-		force_drag(
-			get_parent()
-		,make_preview()
-		)
-		on_start_drag.emit(self)
-		set_process(false)
+		if is_drag:
+			if !Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+				set_process(false)
+				is_drag = false
+				on_stop_drag.emit(self)
+		else:
+			force_drag(
+				self
+			,make_preview()
+			)
+			on_start_drag.emit(self)
+			is_drag = true
 
 func setup() -> void:
 	if !gui_input.is_connected(_on_input):
@@ -54,10 +62,11 @@ func setup() -> void:
 func _on_input(e : InputEvent) -> void:
 	if e is InputEventMouseButton:
 		if e.button_index == 1:
-			if true == e.pressed:
+			if e.pressed:
 				_fms = 0.0
+				is_drag = false
 				set_process(true)
 			else:
 				set_process(false)
-				if _fms >= 24.0:
-					on_stop_drag.emit()
+				if _fms >= 0.24:
+					on_stop_drag.emit(self)
