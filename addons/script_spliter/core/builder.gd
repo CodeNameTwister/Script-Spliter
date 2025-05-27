@@ -402,6 +402,8 @@ class Root extends MarginContainer:
 		return -1
 	
 	func _fwrd() -> bool:
+		if _helper._chaser_enabled:
+			return true
 		var _tool : Mickeytools = null
 		
 		for x : Mickeytools in _helper.get_editors():
@@ -424,6 +426,8 @@ class Root extends MarginContainer:
 		return false
 	
 	func _bkt() -> bool:
+		if _helper._chaser_enabled:
+			return true
 		var _tool : Mickeytools = null
 		
 		for x : Mickeytools in _helper.get_editors():
@@ -460,8 +464,6 @@ class Root extends MarginContainer:
 class Mickeytools extends Object:
 	signal focus(_self : Mickeytools)
 	signal tool_updated()
-
-	var busy : bool = false
 
 	var _helper : Object = null
 
@@ -504,11 +506,12 @@ class Mickeytools extends Object:
 			if _control.get_parent() == null:
 				return
 			var index : int = _control.get_index()
-			for x : Node in root.get_children():
-				if x == _control:
-					if index > -1 and index < root.get_child_count():
-						root.current_tab = index
-					break
+			if !_helper._chaser_enabled:
+				for x : Node in root.get_children():
+					if x == _control:
+						if index > -1 and index < root.get_child_count():
+							root.current_tab = index
+						break
 					
 		if should_grab_focus:
 			if is_instance_valid(_gui) and _gui.is_inside_tree():
@@ -1003,6 +1006,8 @@ func _setup(editor : TabContainer, setup : bool) -> void:
 		InputMap.action_add_event(&"ui_forward", key_1)
 
 func _on_sub_change(__ : int, tab : TabContainer) -> void:
+	if _chaser_enabled:
+		return
 	var _tab : int = tab.current_tab
 	if _tab > -1 and _tab < tab.get_child_count():
 		var control : Control = tab.get_child(_tab)
