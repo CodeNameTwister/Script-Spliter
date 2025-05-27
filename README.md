@@ -57,6 +57,7 @@ differences with version 0.1:
 * Reopen recently closed/changed scripts when adding a split. (Suggestion: [#5](https://github.com/CodeNameTwister/Script-Spliter/issues/5))
 * Swap between windows by double-clicking the draggable button. (Suggestion: [#8](https://github.com/CodeNameTwister/Script-Spliter/issues/8]))
 * Back and Forward between script opened by the window splited. (Suggestion: [#9](https://github.com/CodeNameTwister/Script-Spliter/issues/9]))
+* Drag and Drop tabs between windows.
   
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
