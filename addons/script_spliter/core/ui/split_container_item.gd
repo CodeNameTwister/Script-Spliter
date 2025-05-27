@@ -12,7 +12,6 @@ var focus_handler : bool = false
 
 ## Expand if tight by spliter
 func show_splited_container() -> void:
-	print_stack()
 	var parent : Node = get_parent()
 	if parent.has_method(&"expand_splited_container"):
 		parent.call(&"expand_splited_container", self)
