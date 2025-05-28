@@ -107,12 +107,16 @@ The position of the line will vary depending on the selection of horizontal or v
 
 ![image](images/img2.png)
 
-# know Issues [↑](#table-of-contents)
+### Modify Backward and Forward buttons [↑](#table-of-contents)
+You can modify the buttons by input resources in "script_spliter/io" folder.
+preview in [Backward/Forward Request](https://github.com/CodeNameTwister/Script-Spliter/issues/9#issuecomment-2917555511)
+
+# Know Issues [↑](#table-of-contents)
 ### Version 0.2.3
 The **PopScripts** (Floating Scripts) 
 It still has some issues related to the editor focus, which means that if you switch scenes, some features like the search engine within the PopScript may be affected and become unresponsive.
 
-# Special Thanks 📜 [↑](#table-of-contents)
+# Special Thanks 📜 
 This section lists users who have contributed to improving the quality of this project.
 
 [@adancau](https://github.com/adancau)
