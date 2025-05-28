@@ -80,6 +80,7 @@ var _SWAP_BY_BUTTON : bool = true
 var HANDLE_BACK_FORWARD_BUTTONS : bool = true
 var HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB : bool = false
 var HANDLE_BACK_FORWARD_BUFFER : int = 20
+var USE_NATIVE_ON_NOT_TABS : bool = true
 var _HANDLE_BACKWARD_KEY_PATH : String = "res://addons/script_spliter/io/backward_key_button.tres"
 var _HANDLE_FORWARD_KEY_PATH : String  = "res://addons/script_spliter/io/forward_key_button.tres"
 var _HANDLE_BACKWARD_MOUSE_BUTTON_PATH : String = "res://addons/script_spliter/io/backward_mouse_button.tres"
@@ -135,6 +136,7 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_path", &"_HANDLE_FORWARD_KEY_PATH"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path", &"_HANDLE_BACKWARD_MOUSE_BUTTON_PATH"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path", &"_HANDLE_FORWARD_MOUSE_BUTTON_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/use_native_handler_when_there_are_no_more_tabs", &"USE_NATIVE_ON_NOT_TABS"]
 		]
 	return CFG
 	
@@ -154,8 +156,10 @@ func _out_wm_focus() -> void:
 func show_dd(root : Control) -> void:
 	var dd : Control = null
 	for xx : Node in _main.get_children():
+		if xx is Control and !xx.visible:
+			continue
 		for x : Node in xx.get_children():
-			if x is Control:
+			if x is Control and x.visible:
 				var mp : Vector2i = x.get_global_mouse_position()
 				if x.get_global_rect().has_point(mp):
 					dd = xx
@@ -442,61 +446,85 @@ class Root extends MarginContainer:
 	func _fwrd() -> bool:
 		if _helper._chaser_enabled:
 			return true
-		if _helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
+			
+		var tool : Mickeytools = _helper.get_last_tool()
+		if !is_instance_valid(tool):
 			return false
+			
+		var root : Variant = tool.get_root()
+		if !is_instance_valid(root):
+			return false 
+			
+		if !_helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
+			for __ : int in range(0, 2):
+				if root == null:
+					return false
+				elif root.has_method(&"forward_editor"):
+					var o : Object = root.call(&"forward_editor")
+					if o and o.has_signal(&"focus"):
+						o.emit_signal(&"focus", o, false)
+						return true
+					return false
+				root = root.get_parent()
 		else:
-			var tool : Mickeytools = _helper.get_last_tool()
-			if is_instance_valid(tool):
-				var root : Variant = tool.get_root()
-				if is_instance_valid(root):
-					var control : TabContainer = root
-					var count : int = control.get_tab_count()
-					if count > 1:
-						var current : int = wrapi(control.current_tab + 1, 0, count)
-						if current > -1 and  current < control.get_child_count():
-							var gui : Node = control.get_child(current)
-							for x : Mickeytools in _helper.get_editors():
-								var ctrl : Control = x.get_control()
-								if gui == ctrl or gui.find_child(ctrl.name):
-									x.focus.emit.call_deferred(x)
-									return true
+			var control : TabContainer = root
+			var count : int = control.get_tab_count()
+			if count > 1:
+				var current : int = wrapi(control.current_tab + 1, 0, count)
+				if current > -1 and  current < control.get_child_count():
+					var gui : Node = control.get_child(current)
+					for x : Mickeytools in _helper.get_editors():
+						var ctrl : Control = x.get_control()
+						if gui == ctrl or gui.find_child(ctrl.name):
+							x.focus.emit.call_deferred(x)
+							return true
 		return false
-	
-	#var HANDLE_BACK_FORWARD_BUTTONS : bool = true
-	#var HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB : bool = false
-	#var HANDLE_BACK_FORWARD_BUFFER : int = 20
+		
 	func _bkt() -> bool:
 		if _helper._chaser_enabled:
-			return true
-		if _helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
 			return false
+		var tool : Mickeytools = _helper.get_last_tool()
+		if !is_instance_valid(tool):
+			return false
+			
+		var root : Variant = tool.get_root()
+		if !is_instance_valid(root):
+			return false
+			
+		if !_helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
+			for __ : int in range(0, 2):
+				if root == null:
+					return false
+				elif root.has_method(&"backward_editor"):
+					var o : Object = root.call(&"backward_editor")
+					if o and o.has_signal(&"focus"):
+						o.emit_signal(&"focus", o, false)
+						return true
+					return false
+				root = root.get_parent()
 		else:
-			var tool : Mickeytools = _helper.get_last_tool()
-			if is_instance_valid(tool):
-				var root : Variant = tool.get_root()
-				if is_instance_valid(root):
-					var control : TabContainer = root
-					var count : int = control.get_tab_count()
-					if count > 1:
-						var current : int = wrapi(control.current_tab - 1, 0, count)
-						if current > -1 and  current < control.get_child_count():
-							var gui : Node = control.get_child(current)
-							for x : Mickeytools in _helper.get_editors():
-								var ctrl : Control = x.get_control()
-								if gui == ctrl or gui.find_child(ctrl.name):
-									x.focus.emit.call_deferred(x)
-									return true
+			var control : TabContainer = root
+			var count : int = control.get_tab_count()
+			if count > 1:
+				var current : int = wrapi(control.current_tab - 1, 0, count)
+				if current > -1 and  current < control.get_child_count():
+					var gui : Node = control.get_child(current)
+					for x : Mickeytools in _helper.get_editors():
+						var ctrl : Control = x.get_control()
+						if gui == ctrl or gui.find_child(ctrl.name):
+							x.focus.emit.call_deferred(x)
+							return true
 		return false
 		
 	func _input(event: InputEvent) -> void:
 		if _helper.HANDLE_BACK_FORWARD_BUTTONS:
 			if event.is_action_pressed(&"ui_script_spliter_backward"):
-				if _bkt():
+				if _bkt() or !_helper.USE_NATIVE_ON_NOT_TABS:
 					event.alt_pressed = false
 					get_viewport().set_input_as_handled()
 				return
 			elif event.is_action_pressed(&"ui_script_spliter_forward"):
-				if _fwrd():
+				if _fwrd() or !_helper.USE_NATIVE_ON_NOT_TABS:
 					event.alt_pressed = false
 					get_viewport().set_input_as_handled()
 		if _helper.is_dd_handled:
@@ -606,11 +634,14 @@ class Mickeytools extends Object:
 
 	func _init(helper : Object, root : Node, control : Control) -> void:
 		_helper = helper
-		_root = root
-
+		set_root(root)
 		set_reference(control)
 
 	func set_root(root : Node) -> void:
+		if root != _root:
+			if is_instance_valid(_root):
+				if _root.has_method(&"remove_editor"):
+					_root.call(&"remove_editor", self)
 		_root = root
 		
 	func _context_update(window : Window, control : Control) -> void:
@@ -859,20 +890,28 @@ class ReTweener extends RefCounted:
 			if is_instance_valid(_ref):
 				_ref.modulate = Color.WHITE
 
-func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray = []) -> void:
+func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray = [], refresh_history : bool = true) -> void:
 	if !is_instance_valid(tool):
 		return
 	
 	_last_tool = tool
-	
 	if !_chaser_enabled:
 		var ctrl : Variant = tool.get_control()
 		if is_instance_valid(ctrl):
 			var root : Control = tool.get_root()
-			if root and ctrl and ctrl.get_parent() == root:
+			if root is TabContainer and ctrl and ctrl.get_parent() == root:
 				var indx : int = ctrl.get_index()
 				if root.current_tab != indx:
 					root.current_tab = indx
+				if refresh_history:
+					var current : Node = root
+					for __ : int in range(0, 2):
+						if current == null:
+							break
+						elif current.has_method(&"add_editor"):
+							current.call(&"add_editor", tool, HANDLE_BACK_FORWARD_BUFFER)
+							break
+						current = current.get_parent()
 	
 	var ref : Node = _last_tool.get_reference()
 	if ref.get_parent() == null:
@@ -901,10 +940,11 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 	if is_instance_valid(gui) and should_grab_focus():
 		if !_MINIMAP_4_UNFOCUS_WINDOW and _OUT_FOCUS_COLORED:
 			for x : Mickeytools in _code_editors:
-				var _gui : Node = x.get_gui()
-				if is_instance_valid(_gui) and _gui is CodeEdit:
-					_gui.modulate = _UNFOCUS_COLOR
-					_gui.minimap_draw = false
+				if is_instance_valid(x):
+					var _gui : Variant = x.get_gui()
+					if is_instance_valid(_gui) and _gui is CodeEdit:
+						_gui.modulate = _UNFOCUS_COLOR
+						_gui.minimap_draw = false
 					
 			if gui is CodeEdit:
 				gui.modulate = Color.WHITE
@@ -912,17 +952,19 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 		
 		elif !_MINIMAP_4_UNFOCUS_WINDOW:
 			for x : Mickeytools in _code_editors:
-				var _gui : Node = x.get_gui()
-				if is_instance_valid(_gui) and _gui is CodeEdit:
-					_gui.minimap_draw = false
+				if is_instance_valid(x):
+					var _gui : Variant = x.get_gui()
+					if is_instance_valid(_gui) and _gui is CodeEdit:
+						_gui.minimap_draw = false
 			if gui is CodeEdit:
 				gui.minimap_draw = true
 		
 		elif _OUT_FOCUS_COLORED:
 			for x : Mickeytools in _code_editors:
-				var _gui : Node = x.get_gui()
-				if is_instance_valid(gui) and gui is CodeEdit:
-					_gui.modulate = _UNFOCUS_COLOR
+				if is_instance_valid(x):
+					var _gui : Variant = x.get_gui()
+					if is_instance_valid(gui) and gui is CodeEdit:
+						_gui.modulate = _UNFOCUS_COLOR
 			if gui is CodeEdit:
 				gui.modulate = Color.WHITE
 		
@@ -931,7 +973,7 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 			var wm : Window = vp.get_window()
 			if wm and !wm.has_focus():
 				wm.grab_focus()
-		if !gui.has_focus():
+		if is_instance_valid(gui) and !gui.has_focus():
 			if gui is VBoxContainer:
 				gui = gui.get_child(0)
 			gui.grab_focus()
@@ -961,7 +1003,7 @@ func _update_path() -> void:
 				if index > -1 and _item_list.item_count > index:
 					x.set_src(_item_list.get_item_tooltip(index))
 		
-func _on_focus(tool : Mickeytools) -> void:
+func _on_focus(tool : Mickeytools, refresh_history : bool = true) -> void:
 	if _focus_queue:
 		return
 	_focus_queue = true
@@ -974,9 +1016,9 @@ func _on_focus(tool : Mickeytools) -> void:
 			for x : int in _item_list.item_count:
 				items.append(_item_list.get_item_text(x))
 			filesearch.set(&"text", "")
-			_set_focus.call_deferred(tool, txt, items)
+			_set_focus.call_deferred(tool, txt, items, refresh_history)
 			return
-	_set_focus(tool)
+	_set_focus(tool, "", [], refresh_history)
 
 func _out_it(node : Node, with_signals : bool = false) -> void:
 	var has_tween : bool = is_instance_valid(_tweener)
@@ -1050,13 +1092,14 @@ func _on_sub_change(__ : int, tab : TabContainer) -> void:
 	var _tab : int = tab.current_tab
 	if _tab > -1 and _tab < tab.get_child_count():
 		var control : Control = tab.get_child(_tab)
-		for x : Mickeytools in _code_editors.duplicate(false):
+			
+		for x : Mickeytools in _code_editors:
 			if is_instance_valid(x):
-				if x.get_control() == control:
-					x.focus.emit(x)
-					return
-			else:
-				_code_editors.erase(x)
+				var ctrl : Variant = x.get_control()
+				if is_instance_valid(ctrl):
+					if ctrl == control:
+						x.focus.emit(x)
+						return
 			
 func _on_tab_rmb(itab : int, tab : TabContainer) -> void:
 	if tab.get_child_count() > itab and itab > -1:
@@ -1149,7 +1192,7 @@ func _out_drag(e : Control) -> void:
 					var root : Node = null
 					for x : Mickeytools in _code_editors:
 						var __root : Node = x.get_root()
-						if is_instance_valid(_root) and __root.get_parent() == current:#is_instance_valid(__root) and (__root == current or __root.find_child(current.name)):
+						if is_instance_valid(_root) and __root.get_parent() == current:
 							root = __root
 							break
 					

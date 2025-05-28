@@ -31,6 +31,10 @@ func _process(delta: float) -> void:
 	
 func _enter_tree() -> void:
 	set_process(true)
+	for x : Node in get_children():
+		if x is Control:
+			x.set_deferred(&"size_flags_horizontal", Control.SIZE_SHRINK_CENTER)
+			x.set_deferred(&"size_flags_vertical", Control.SIZE_SHRINK_CENTER)
 	
 func _exit_tree() -> void:
 	set_process(false)
