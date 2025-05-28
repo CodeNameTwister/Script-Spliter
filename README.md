@@ -109,7 +109,7 @@ The position of the line will vary depending on the selection of horizontal or v
 
 ### Modify Backward and Forward button [↑](#table-of-contents)
 You can modify the buttons by input resources in "script_spliter/io" folder.
-More details in [Link More Details](https://github.com/CodeNameTwister/Script-Spliter/issues/9#issuecomment-2917555511)
+preview in [Backward/Forward Request](https://github.com/CodeNameTwister/Script-Spliter/issues/9#issuecomment-2917555511)
 
 # Know Issues [↑](#table-of-contents)
 ### Version 0.2.3
