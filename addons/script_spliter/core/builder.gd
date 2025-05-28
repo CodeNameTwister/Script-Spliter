@@ -384,8 +384,10 @@ func _get_editor_root() -> Node:
 		return _last_tool.get_root()
 	return null
 
+func get_last_tool() -> Mickeytools:
+	return _last_tool
+
 class Root extends MarginContainer:
-	
 	var _helper : Object = null
 	
 	func _init(helper : Object) -> void:
@@ -404,60 +406,54 @@ class Root extends MarginContainer:
 	func _fwrd() -> bool:
 		if _helper._chaser_enabled:
 			return true
-		var _tool : Mickeytools = null
-		
-		for x : Mickeytools in _helper.get_editors():
-			var gui : Control = x.get_gui()
-			if is_instance_valid(gui) and gui.has_focus():
-				_tool = x
-				break
-				
-		if is_instance_valid(_tool):
-			var p : Node = _tool.get_control().get_parent()
-			if p is TabContainer:
-				var current : int = p.current_tab 
-				var count: int = p.get_tab_count()
+		var tool : Mickeytools = _helper.get_last_tool()
+		if is_instance_valid(tool):
+			var root : Variant = tool.get_root()
+			if is_instance_valid(root):
+				var control : TabContainer = root
+				var count : int = control.get_tab_count()
 				if count > 1:
-					for __ : int in range(0, count, 1):
-						current = wrapi(current + 1, 0, count)
-						if p.get_child(current) is VSplitContainer:
-							p.current_tab = current
-							return  true
+					var current : int = wrapi(control.current_tab + 1, 0, count)
+					if current > -1 and  current < control.get_child_count():
+						var gui : Node = control.get_child(current)
+						for x : Mickeytools in _helper.get_editors():
+							var ctrl : Control = x.get_control()
+							if gui == ctrl or gui.find_child(ctrl.name):
+								x.focus.emit.call_deferred(x)
+								return true
 		return false
 	
 	func _bkt() -> bool:
 		if _helper._chaser_enabled:
 			return true
-		var _tool : Mickeytools = null
-		
-		for x : Mickeytools in _helper.get_editors():
-			var gui : Control = x.get_gui()
-			if is_instance_valid(gui) and gui.has_focus():
-				_tool = x
-				break
-				
-		if is_instance_valid(_tool):
-			var p : Node = _tool.get_control().get_parent()
-			if p is TabContainer:
-				var current : int = p.current_tab 
-				var count: int = p.get_tab_count()
+		var tool : Mickeytools = _helper.get_last_tool()
+		if is_instance_valid(tool):
+			var root : Variant = tool.get_root()
+			if is_instance_valid(root):
+				var control : TabContainer = root
+				var count : int = control.get_tab_count()
 				if count > 1:
-					for __ : int in range(0, count, 1):
-						current = wrapi(current - 1, 0, count)
-						if p.get_child(current) is VSplitContainer:
-							p.current_tab = current
-							return  true
+					var current : int = wrapi(control.current_tab - 1, 0, count)
+					if current > -1 and  current < control.get_child_count():
+						var gui : Node = control.get_child(current)
+						for x : Mickeytools in _helper.get_editors():
+							var ctrl : Control = x.get_control()
+							if gui == ctrl or gui.find_child(ctrl.name):
+								x.focus.emit.call_deferred(x)
+								return true
 		return false
-	
+		
 	func _input(event: InputEvent) -> void:
 		if _helper.HANDLE_BACK_FORWARD_BUTTONS:
 			if event.is_action_pressed(&"ui_backward"):
 				if _bkt():
 					event.alt_pressed = false
+					get_viewport().set_input_as_handled()
 				return
 			elif event.is_action_pressed(&"ui_forward"):
 				if _fwrd():
 					event.alt_pressed = false
+					get_viewport().set_input_as_handled()
 		if _helper.is_dd_handled:
 			_helper.show_dd(self)
 
@@ -1011,11 +1007,14 @@ func _on_sub_change(__ : int, tab : TabContainer) -> void:
 	var _tab : int = tab.current_tab
 	if _tab > -1 and _tab < tab.get_child_count():
 		var control : Control = tab.get_child(_tab)
-		for x : Mickeytools in _code_editors:
-			if x.get_control() == control:
-				x.focus.emit(x)
-				return
-		
+		for x : Mickeytools in _code_editors.duplicate(false):
+			if is_instance_valid(x):
+				if x.get_control() == control:
+					x.focus.emit(x)
+					return
+			else:
+				_code_editors.erase(x)
+			
 func _on_tab_rmb(itab : int, tab : TabContainer) -> void:
 	if tab.get_child_count() > itab and itab > -1:
 		if is_instance_valid(_item_list):
