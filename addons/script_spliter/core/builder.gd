@@ -76,7 +76,15 @@ var _UNFOCUS_COLOR : Color = Color.GRAY
 
 var _SWAP_BY_BUTTON : bool = true
 
+#region _9_
 var HANDLE_BACK_FORWARD_BUTTONS : bool = true
+var HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB : bool = false
+var HANDLE_BACK_FORWARD_BUFFER : int = 20
+var _HANDLE_BACKWARD_KEY_PATH : String = "res://addons/script_spliter/io/backward_key_button.tres"
+var _HANDLE_FORWARD_KEY_PATH : String  = "res://addons/script_spliter/io/forward_key_button.tres"
+var _HANDLE_BACKWARD_MOUSE_BUTTON_PATH : String = "res://addons/script_spliter/io/backward_mouse_button.tres"
+var _HANDLE_FORWARD_MOUSE_BUTTON_PATH : String  = "res://addons/script_spliter/io/forward_mouse_button.tres"
+#endregion
 
 # CURRENT CONFIG
 var current_columns : int = 1
@@ -120,8 +128,13 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
 		,[&"plugin/script_spliter/editor/behaviour/swap_by_double_click_separator_button", &"_SWAP_BY_BUTTON"]
-		,[&"plugin/script_spliter/editor/behaviour/handle_back_and_forward_buttons", &"HANDLE_BACK_FORWARD_BUTTONS"]
-		
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/handle_back_and_forward", &"HANDLE_BACK_FORWARD_BUTTONS"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/history_size", &"HANDLE_BACK_FORWARD_BUFFER"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/using_as_next_and_back_tab", &"HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_path", &"_HANDLE_BACKWARD_KEY_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_path", &"_HANDLE_FORWARD_KEY_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path", &"_HANDLE_BACKWARD_MOUSE_BUTTON_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path", &"_HANDLE_FORWARD_MOUSE_BUTTON_PATH"]
 		]
 	return CFG
 	
@@ -249,6 +262,29 @@ func update_config() -> void:
 			var gui : Node = x.get_control()
 			if is_instance_valid(gui) and gui is Control:
 				gui.modulate = Color.WHITE
+	
+	for x : String in changes:
+		if "button_path" in x:
+			if !InputMap.has_action(&"ui_script_spliter_forward"):
+				InputMap.add_action(&"ui_script_spliter_forward")
+			else:
+				InputMap.action_erase_events(&"ui_script_spliter_forward")
+			
+			var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
+			var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
+			InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
+			InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
+			
+			if !InputMap.has_action(&"ui_script_spliter_backward"):
+				InputMap.add_action(&"ui_script_spliter_backward")
+			else:
+				InputMap.action_erase_events(&"ui_script_spliter_backward")
+				
+			key_0 = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
+			key_1 = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
+			InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
+			InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
+			break
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -406,51 +442,60 @@ class Root extends MarginContainer:
 	func _fwrd() -> bool:
 		if _helper._chaser_enabled:
 			return true
-		var tool : Mickeytools = _helper.get_last_tool()
-		if is_instance_valid(tool):
-			var root : Variant = tool.get_root()
-			if is_instance_valid(root):
-				var control : TabContainer = root
-				var count : int = control.get_tab_count()
-				if count > 1:
-					var current : int = wrapi(control.current_tab + 1, 0, count)
-					if current > -1 and  current < control.get_child_count():
-						var gui : Node = control.get_child(current)
-						for x : Mickeytools in _helper.get_editors():
-							var ctrl : Control = x.get_control()
-							if gui == ctrl or gui.find_child(ctrl.name):
-								x.focus.emit.call_deferred(x)
-								return true
+		if _helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
+			return false
+		else:
+			var tool : Mickeytools = _helper.get_last_tool()
+			if is_instance_valid(tool):
+				var root : Variant = tool.get_root()
+				if is_instance_valid(root):
+					var control : TabContainer = root
+					var count : int = control.get_tab_count()
+					if count > 1:
+						var current : int = wrapi(control.current_tab + 1, 0, count)
+						if current > -1 and  current < control.get_child_count():
+							var gui : Node = control.get_child(current)
+							for x : Mickeytools in _helper.get_editors():
+								var ctrl : Control = x.get_control()
+								if gui == ctrl or gui.find_child(ctrl.name):
+									x.focus.emit.call_deferred(x)
+									return true
 		return false
 	
+	#var HANDLE_BACK_FORWARD_BUTTONS : bool = true
+	#var HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB : bool = false
+	#var HANDLE_BACK_FORWARD_BUFFER : int = 20
 	func _bkt() -> bool:
 		if _helper._chaser_enabled:
 			return true
-		var tool : Mickeytools = _helper.get_last_tool()
-		if is_instance_valid(tool):
-			var root : Variant = tool.get_root()
-			if is_instance_valid(root):
-				var control : TabContainer = root
-				var count : int = control.get_tab_count()
-				if count > 1:
-					var current : int = wrapi(control.current_tab - 1, 0, count)
-					if current > -1 and  current < control.get_child_count():
-						var gui : Node = control.get_child(current)
-						for x : Mickeytools in _helper.get_editors():
-							var ctrl : Control = x.get_control()
-							if gui == ctrl or gui.find_child(ctrl.name):
-								x.focus.emit.call_deferred(x)
-								return true
+		if _helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
+			return false
+		else:
+			var tool : Mickeytools = _helper.get_last_tool()
+			if is_instance_valid(tool):
+				var root : Variant = tool.get_root()
+				if is_instance_valid(root):
+					var control : TabContainer = root
+					var count : int = control.get_tab_count()
+					if count > 1:
+						var current : int = wrapi(control.current_tab - 1, 0, count)
+						if current > -1 and  current < control.get_child_count():
+							var gui : Node = control.get_child(current)
+							for x : Mickeytools in _helper.get_editors():
+								var ctrl : Control = x.get_control()
+								if gui == ctrl or gui.find_child(ctrl.name):
+									x.focus.emit.call_deferred(x)
+									return true
 		return false
 		
 	func _input(event: InputEvent) -> void:
 		if _helper.HANDLE_BACK_FORWARD_BUTTONS:
-			if event.is_action_pressed(&"ui_backward"):
+			if event.is_action_pressed(&"ui_script_spliter_backward"):
 				if _bkt():
 					event.alt_pressed = false
 					get_viewport().set_input_as_handled()
 				return
-			elif event.is_action_pressed(&"ui_forward"):
+			elif event.is_action_pressed(&"ui_script_spliter_forward"):
 				if _fwrd():
 					event.alt_pressed = false
 					get_viewport().set_input_as_handled()
@@ -977,29 +1022,27 @@ func _setup(editor : TabContainer, setup : bool) -> void:
 			var _1 : Callable = Callable.create(self, _3[1])
 			if editor.is_connected(_0, _1) != setup:
 				editor.call(_2, _0, _1)
-				
-	if !InputMap.has_action(&"ui_backward"):
-		InputMap.add_action(&"ui_backward")
-		var key_0 : InputEventKey = InputEventKey.new()
-		var key_1 : InputEventMouseButton = InputEventMouseButton.new()
-		key_0.alt_pressed = true
-		key_0.keycode = KEY_LEFT
-		key_0.pressed = true
-		key_1.button_index = MOUSE_BUTTON_XBUTTON1
-		key_1.pressed = true
-		InputMap.action_add_event(&"ui_backward", key_0)
-		InputMap.action_add_event(&"ui_backward", key_1)
-	if !InputMap.has_action(&"ui_forward"):
-		var key_0 : InputEventKey = InputEventKey.new()
-		var key_1 : InputEventMouseButton = InputEventMouseButton.new()
-		key_0.alt_pressed = true
-		key_0.keycode = KEY_R
-		key_0.pressed = true
-		key_1.button_index = MOUSE_BUTTON_XBUTTON2
-		key_1.pressed = true
-		InputMap.add_action(&"ui_forward")
-		InputMap.action_add_event(&"ui_forward", key_0)
-		InputMap.action_add_event(&"ui_forward", key_1)
+			
+	if setup:	
+		if !InputMap.has_action(&"ui_script_spliter_forward"):
+			InputMap.add_action(&"ui_script_spliter_forward")
+		else:
+			InputMap.action_erase_events(&"ui_script_spliter_forward")
+		
+		var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
+		var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
+		InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
+		InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
+		
+		if !InputMap.has_action(&"ui_script_spliter_backward"):
+			InputMap.add_action(&"ui_script_spliter_backward")
+		else:
+			InputMap.action_erase_events(&"ui_script_spliter_backward")
+			
+		key_0 = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
+		key_1 = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
+		InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
+		InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
 
 func _on_sub_change(__ : int, tab : TabContainer) -> void:
 	if _chaser_enabled:
