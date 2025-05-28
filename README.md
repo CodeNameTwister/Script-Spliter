@@ -107,7 +107,7 @@ The position of the line will vary depending on the selection of horizontal or v
 
 ![image](images/img2.png)
 
-### Modify Backward and Forward button [↑](#table-of-contents)
+### Modify Backward and Forward buttons [↑](#table-of-contents)
 You can modify the buttons by input resources in "script_spliter/io" folder.
 preview in [Backward/Forward Request](https://github.com/CodeNameTwister/Script-Spliter/issues/9#issuecomment-2917555511)
 
