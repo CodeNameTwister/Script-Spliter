@@ -12,7 +12,7 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 - [Roadmap](#roadmap)
 - [How-Work](#how-work)
 - [Know Issues](#know-issues-)
-- [Special Thanks](#special-thanks--)
+- [Special Thanks](#special-thanks-)
 
 
 # Preview [↑](#table-of-contents)
@@ -24,6 +24,16 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 ![image](https://github.com/user-attachments/assets/a6e1dea8-74cf-4fd9-b0b4-ec7d65ea3995)
 
 # NEWS [↑](#table-of-contents)
+
+### V0.3
+<p align="center">
+  <img width="128" height="128" src="https://github.com/CodeNameTwister/Misc/blob/main/media/ico_gdsp3.png?raw=true">
+</p>
+Introduction to using tabs
+
+* Tabs can be dragged to another window, now you can move one document from a window split to another window split.
+* Backward and Forward has an internal function with the plugin. (Thanks to [@adancau](https://github.com/adancau))
+
 <p align="center">
   <img width="128" height="128" src="addons/script_spliter/assets/github_CodeNameTwister.png">
 </p>
