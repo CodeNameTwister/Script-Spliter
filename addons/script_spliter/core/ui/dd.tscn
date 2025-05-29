@@ -9,7 +9,7 @@ font_color = Color(0.681044, 0.978038, 0, 1)
 shadow_size = 0
 
 [node name="Dd" type="ColorRect"]
-modulate = Color(0.8, 0.8, 0.8, 0.908297)
+modulate = Color(0.8, 0.8, 0.8, 0.90698)
 self_modulate = Color(1, 1, 1, 0.4)
 color = Color(1.3236e-07, 0.348188, 0.0242278, 1)
 script = ExtResource("1_1ryr1")
@@ -28,8 +28,9 @@ offset_right = 44.5
 offset_bottom = 49.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(0.908297, 0.908297)
+scale = Vector2(0.90698, 0.90698)
 pivot_offset = Vector2(44.5, 49)
+size_flags_horizontal = 4
 tooltip_text = "Drop the current dragged tab for change window!"
 text = "DROP
 HERE!"
