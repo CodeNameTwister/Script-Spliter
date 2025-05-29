@@ -34,11 +34,13 @@ Introduction to using tabs
 * Tabs can be dragged to another window, now you can move one document from a window split to another window split.
 * Backward and Forward has an internal function with the plugin. (Thanks to [@adancau](https://github.com/adancau))
 
+>*I had initially planned to create a Notepad++ like functionality as a reference for version 0.3, but it has been decided to maintain the functionality and backward compatibility to avoid confusion for those using the plugin since version 0.1.*
+#
+
+### V0.2
 <p align="center">
   <img width="128" height="128" src="https://github.com/CodeNameTwister/Misc/blob/main/media/ico_gdsp2.png?raw=true">
 </p>
-
-### V0.2
 The internal workflow has been modified, but the functionality of its predecessor version has been maintained.
 
 This has been done to maintain compatibility when using shorteners like Ctrl + [1, 2, 3, 4] to change the split style, this might be broken in version 0.3, see the roadmap for details.
