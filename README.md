@@ -27,18 +27,20 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 
 ### V0.3
 <p align="center">
-  <img width="128" height="128" src="https://github.com/CodeNameTwister/Misc/blob/main/media/ico_gdsp3.png?raw=true">
+  <img width="128" height="128" src="addons/script_spliter/assets/github_CodeNameTwister.png">
 </p>
 Introduction to using tabs
 
 * Tabs can be dragged to another window, now you can move one document from a window split to another window split.
 * Backward and Forward has an internal function with the plugin. (Thanks to [@adancau](https://github.com/adancau))
 
-<p align="center">
-  <img width="128" height="128" src="addons/script_spliter/assets/github_CodeNameTwister.png">
-</p>
+>*I had initially planned to create a Notepad++ like functionality as a reference for version 0.3, but it has been decided to maintain the functionality and backward compatibility to avoid confusion for those using the plugin since version 0.1.*
+#
 
 ### V0.2
+<p align="center">
+  <img width="128" height="128" src="https://github.com/CodeNameTwister/Misc/blob/main/media/ico_gdsp2.png?raw=true">
+</p>
 The internal workflow has been modified, but the functionality of its predecessor version has been maintained.
 
 This has been done to maintain compatibility when using shorteners like Ctrl + [1, 2, 3, 4] to change the split style, this might be broken in version 0.3, see the roadmap for details.
@@ -76,8 +78,9 @@ differences with version 0.1:
 # ROADMAP
 * Version >= 0.2.3: ~Flying scripts; Allow split in separate windows.~
 * Version >= 0.3:
-  * Change logo/colors: Currently the pet I use on github is placed and it is planned to change it to one more suitable for the plugin. 
+  * ~Change logo/colors: Currently the pet I use on github is placed and it is planned to change it to one more suitable for the plugin.~
   * ~Using tabs for drag and drop between windows.~ *~(WARNING! : Some features offered in previous versions may change)~*
+* Version >= 0.4: Revisit Pop Scripts Issues.
 
 # How Work
   
