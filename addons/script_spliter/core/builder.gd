@@ -11,6 +11,7 @@ extends Object
 const EditorContainer : Script = preload("res://addons/script_spliter/core/EditorContainer.gd")
 const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
 const DDO : PackedScene = preload("res://addons/script_spliter/core/ui/dd.tscn")
+const DDITEM : Script = preload("res://addons/script_spliter/core/DDItem.gd")
 
 #region POPSC	
 const FLYING_SCRIPT : PackedScene = preload("res://addons/script_spliter/context/flying_script.tscn")
@@ -40,6 +41,16 @@ var _last_tool : Mickeytools = null:
 
 var _tweener : ReTweener = null
 var _item_list : ItemList = null:
+	set(e):
+		
+		if e == null and is_instance_valid(_item_list):
+			#if _item_list.get_script() == DDITEM:
+				#_item_list.set_script(null)
+			_item_list = null
+		else:
+			_item_list = e
+			#if is_instance_valid(_item_list) and _item_list.get_script() != DDITEM:
+				#_item_list.set_script(DDITEM)
 	get:
 		if !is_instance_valid(_item_list):
 			var script_editor: ScriptEditor = EditorInterface.get_script_editor()
@@ -359,6 +370,8 @@ func init_0() -> void:
 		_setup(_editor, false)
 		_editor.visible = true
 			
+	_item_list = null
+			
 	for x : Window in _pop_scripts:
 		if is_instance_valid(x) and !x.is_queued_for_deletion():
 			x.queue_free()
@@ -426,6 +439,25 @@ func _get_editor_root() -> Node:
 
 func get_last_tool() -> Mickeytools:
 	return _last_tool
+	
+func update_info(root : TabContainer, index : int , src : String) -> void:
+	var item_list : Control = _item_list
+	if !src.is_empty():
+		if is_instance_valid(item_list):
+			var indx : int = -1
+			for x : int in item_list.item_count:
+				if item_list.get_item_tooltip(x) == src:
+					indx = x
+					break
+			if indx > -1:
+				var text : String = _item_list.get_item_text(indx)
+				if text.is_empty() or text.begins_with("@"):
+					text = item_list.get_item_tooltip(index).get_file()
+				text = text.trim_suffix("(*)")
+				root.set_tab_title(index, text)
+				root.set_tab_icon(index, item_list.get_item_icon(indx))
+			
+
 
 class Root extends MarginContainer:
 	var _helper : Object = null
@@ -554,7 +586,7 @@ class Mickeytools extends Object:
 	func get_title_name() -> String:
 		if is_instance_valid(_reference):
 			if _reference.get_parent() != null:
-				return _helper.get_item_text(_reference.get_index())
+				return _helper.get_item_text(_src)
 		return ""
 		
 	func has_focus() -> bool:
@@ -791,11 +823,7 @@ class Mickeytools extends Object:
 			var root : TabContainer = _root
 			if is_instance_valid(root):
 				if _control.get_parent() == root and _reference.get_parent() != null:
-					var index : int = _control.get_index()
-					if root.get_child_count() > index and index > -1:
-						var text : String = _helper.get_item_text(_reference.get_index())
-						if !text.is_empty():
-							root.set_tab_title(index, text)
+					_helper.update_info(root, _control.get_index(), _src)
 
 	func kill() -> void:
 		for x : Node in [_gui, _reference]:
@@ -804,7 +832,7 @@ class Mickeytools extends Object:
 
 	func reset(disconnect_signals : bool = true) -> void:
 		if is_instance_valid(_gui):
-			if disconnect_signals:
+			if disconnect_signals and _gui.is_inside_tree():
 				var gui : Control = _gui
 				if gui is VBoxContainer:
 					gui = gui.get_child(0)
@@ -1054,7 +1082,7 @@ func _on_tab_change(tb : int = 0) -> void:
 	
 	process_update_queue(tb)
 
-func _setup(editor : TabContainer, setup : bool) -> void:
+func _setup(editor : TabContainer, setup : bool) -> void:	
 	const INIT_2 : Array[StringName] = [&"connect", &"disconnect"]
 	const INIT_3 : Array[Array] = [[&"tab_changed", &"_on_tab_change"],[&"child_entered_tree", &"_on_it"], [&"child_exiting_tree", &"_out_it"]]
 	var _2 : StringName = INIT_2[int(!setup)]
@@ -1065,26 +1093,83 @@ func _setup(editor : TabContainer, setup : bool) -> void:
 			if editor.is_connected(_0, _1) != setup:
 				editor.call(_2, _0, _1)
 			
-	if setup:	
+	if setup:
+		if !FileAccess.file_exists("res://addons/script_spliter/io/backward_key_button.tres"):
+			if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+				var input : InputEventKey = InputEventKey.new()
+				input.keycode = KEY_LEFT
+				input.alt_pressed = true
+				input.pressed = true
+				ResourceSaver.save(input, "res://addons/script_spliter/io/backward_key_button.tres")
+				input = null
+		if !FileAccess.file_exists("res://addons/script_spliter/io/forward_key_button.tres"):
+				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+					var input : InputEventKey = InputEventKey.new()
+					input.keycode = KEY_RIGHT
+					input.alt_pressed = true
+					input.pressed = true
+					ResourceSaver.save(input, "res://addons/script_spliter/io/forward_key_button.tres")
+					input = null
+		if !FileAccess.file_exists("res://addons/script_spliter/io/backward_mouse_button.tres"):
+				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+					var input : InputEventMouseButton = InputEventMouseButton.new()
+					input.button_index = MOUSE_BUTTON_XBUTTON1
+					input.pressed = true
+					ResourceSaver.save(input, "res://addons/script_spliter/io/backward_mouse_button.tres")
+					input = null
+		if !FileAccess.file_exists("res://addons/script_spliter/io/forward_mouse_button.tres"):
+				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+					var input : InputEventMouseButton = InputEventMouseButton.new()
+					input.button_index = MOUSE_BUTTON_XBUTTON2
+					input.pressed = true
+					ResourceSaver.save(input, "res://addons/script_spliter/io/forward_mouse_button.tres")
+					input = null
+		
 		if !InputMap.has_action(&"ui_script_spliter_forward"):
 			InputMap.add_action(&"ui_script_spliter_forward")
 		else:
 			InputMap.action_erase_events(&"ui_script_spliter_forward")
 		
-		var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
-		var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
-		InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
-		InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
+		if FileAccess.file_exists(_HANDLE_FORWARD_KEY_PATH):
+			var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
+			if key_0 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
+			else:
+				printerr("Not type InputEvent: ", key_0)
+		else:
+			printerr("Not exist file", _HANDLE_FORWARD_KEY_PATH)
+		
+		if FileAccess.file_exists(_HANDLE_FORWARD_MOUSE_BUTTON_PATH):
+			var key_1 : Variant = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
+			if key_1 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
+			else:
+				printerr("Not type InputEvent: ", key_1)
+		else:
+			printerr("Not exist file", _HANDLE_FORWARD_MOUSE_BUTTON_PATH)
 		
 		if !InputMap.has_action(&"ui_script_spliter_backward"):
 			InputMap.add_action(&"ui_script_spliter_backward")
 		else:
 			InputMap.action_erase_events(&"ui_script_spliter_backward")
 			
-		key_0 = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
-		key_1 = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
-		InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
-		InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
+		if FileAccess.file_exists(_HANDLE_BACKWARD_KEY_PATH):
+			var key_0 : Variant = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
+			if key_0 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
+			else:
+				printerr("Not type InputEvent: ", key_0)
+		else:
+			printerr("Not exist file", _HANDLE_BACKWARD_KEY_PATH)
+		
+		if FileAccess.file_exists(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH):
+			var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
+			if key_1 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
+			else:
+				printerr("Not type InputEvent: ", key_1)
+		else:
+			printerr("Not exist file", _HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
 
 func _on_sub_change(__ : int, tab : TabContainer) -> void:
 	if _chaser_enabled:
@@ -1321,7 +1406,7 @@ func update() -> void:
 				if !x.is_floating():
 					var ref : Node = x.get_reference()
 					if ref.get_parent() != null:
-						if get_item_text(ref.get_index()).begins_with(_POP_SCRIPT_PLACEHOLDER):
+						if get_item_text(x.get_src()).begins_with(_POP_SCRIPT_PLACEHOLDER):
 							continue
 						_clear_placeholder()
 	else:
@@ -1343,15 +1428,20 @@ func _clear_placeholder() -> void:
 func is_visible_minimap_required() -> bool:
 	return _MINIMAP_4_UNFOCUS_WINDOW
 
-func get_item_text(c : int) -> String:
+func get_item_text(src : String) -> String:
 	var item_list : Control = _item_list
 	var text : String = ""
-	if c > -1:
+	if !src.is_empty():
 		if is_instance_valid(item_list):
-			if null != item_list and c < _editor.get_child_count() and item_list.item_count > c:
-				text = item_list.get_item_text(c)
+			var indx : int = -1
+			for x : int in item_list.item_count:
+				if item_list.get_item_tooltip(x) == src:
+					indx = x
+					break
+			if indx > -1:
+				text = item_list.get_item_text(indx)
 				if text.is_empty() or text.begins_with("@"):
-					text = item_list.get_item_tooltip(c).get_file()
+					text = item_list.get_item_tooltip(indx).get_file()
 				text = text.trim_suffix("(*)")
 	return text
 
@@ -1651,6 +1741,19 @@ func get_control_item_name(index : int) -> String:
 			return text
 	return ""
 
+
+func get_editor_item_text(c : int) -> String:
+	var item_list : Control = _item_list
+	var text : String = ""
+	if c > -1:
+		if is_instance_valid(item_list):
+			if null != item_list and c < _editor.get_child_count() and item_list.item_count > c:
+				text = item_list.get_item_text(c)
+				if text.is_empty() or text.begins_with("@"):
+					text = item_list.get_item_tooltip(c).get_file()
+				text = text.trim_suffix("(*)")
+	return text
+
 func can_add_split(_node : Node) -> bool:
 	if !is_instance_valid(_main):
 		return false
@@ -1659,7 +1762,7 @@ func can_add_split(_node : Node) -> bool:
 		return _code_editors.size() < _editor.get_child_count()
 			
 	for o : int in _editor.get_child_count():
-		if get_item_text(o).begins_with(_POP_SCRIPT_PLACEHOLDER):
+		if get_editor_item_text(o).begins_with(_POP_SCRIPT_PLACEHOLDER):
 			continue
 		var x : Node = _editor.get_child(o)
 		var created : bool = false
@@ -1729,6 +1832,13 @@ func get_current_columns_and_rows() -> Array[int]:
 	return out
 	
 func update_build(columns : int, rows : int) -> void:
+	for x : Node in _main.get_children():
+		if x is EditorContainer:
+			for y in x.get_children():
+				if y.has_method(&"reset"):
+					y.call(&"reset")
+	_out_drag(null)
+	
 	current_columns = maxi(columns, 0)
 	current_rows = maxi(rows, 0)
 
@@ -1897,7 +2007,7 @@ func _check_pop() -> void:
 
 func _placeholder_queue() -> void:
 	for x : int in _editor.get_child_count():
-		var txt : String = get_item_text(x)
+		var txt : String = get_editor_item_text(x)
 		if txt.begins_with(_POP_SCRIPT_PLACEHOLDER):
 			var n : Node = _editor.get_child(x)
 			var c : Control = n.call(&"get_base_editor")

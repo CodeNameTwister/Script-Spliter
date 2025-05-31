@@ -16,6 +16,12 @@ const DDTAB : Script = preload("res://addons/script_spliter/core/DDTAB.gd")
 
 var _buffer_editors : Array[Object] = []
 
+func reset() -> void:
+	for x : Node in get_children(true):
+		if x is TabBar:
+			if x.get_script() == DDTAB:
+				x.reset()
+
 func clear_editors() -> void:
 	_buffer_editors.clear()
 
