@@ -16,6 +16,56 @@ const DDTAB : Script = preload("res://addons/script_spliter/core/DDTAB.gd")
 
 var _buffer_editors : Array[Object] = []
 
+#static var _tab_focus : StyleBox = null
+#static var _tab_disabled : StyleBox = null
+#static var _tab_selected : StyleBox = null
+#static var _tab_hovered : StyleBox = null
+#static var _tab_unselected : StyleBox = null
+
+func _config_tab(_tab : StyleBox) -> void:
+	if _tab is StyleBoxFlat:
+		_tab.skew.x = 0.5
+		_tab.border_color = Color.AQUA
+		#_tab.border_width_left = 0.0
+		#_tab.border_width_right = 0.0
+		#_tab.border_width_top = 0.0
+		#_tab.border_width_bottom = 0.1
+
+func _ready() -> void:
+	pass
+	#var root : Control = EditorInterface.get_base_control()
+	#if root:
+		#if _tab_focus == null:
+			#_tab_focus = root.get_theme_stylebox(&"panel", &"tab_focus")
+			#if _tab_focus is StyleBoxFlat:
+				#_tab_focus = _tab_focus.duplicate()
+				#_config_tab(_tab_focus)
+		#if _tab_disabled == null:
+			#_tab_disabled = root.get_theme_stylebox(&"panel", &"tab_disabled")
+			#if _tab_disabled is StyleBoxFlat:
+				#_tab_disabled = _tab_disabled.duplicate()
+				#_config_tab(_tab_disabled)
+		#if _tab_selected == null:
+			#_tab_selected = root.get_theme_stylebox(&"panel", &"tab_selected")
+			#if _tab_selected is StyleBoxFlat:
+				#_tab_selected = _tab_selected.duplicate()
+				#_config_tab(_tab_selected)
+		#if _tab_hovered == null:
+			#_tab_hovered = root.get_theme_stylebox(&"panel", &"tab_hovered")
+			#if _tab_hovered is StyleBoxFlat:
+				#_tab_hovered = _tab_hovered.duplicate()
+				#_config_tab(_tab_hovered)
+		#if _tab_unselected == null:
+			#_tab_unselected = root.get_theme_stylebox(&"panel", &"tab_unselected")
+			#if _tab_unselected is StyleBoxFlat:
+				#_tab_unselected = _tab_unselected.duplicate()
+				#_config_tab(_tab_unselected)
+		#set(&"theme_override_styles/tab_focus", _tab_focus)
+		#set(&"theme_override_styles/tab_disabled", _tab_disabled)
+		#set(&"theme_override_styles/tab_selected", _tab_selected)
+		#set(&"theme_override_styles/tab_hovered", _tab_hovered)
+		#set(&"theme_override_styles/tab_unselected", _tab_unselected)
+
 func reset() -> void:
 	for x : Node in get_children(true):
 		if x is TabBar:

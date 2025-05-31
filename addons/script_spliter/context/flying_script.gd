@@ -103,6 +103,10 @@ func _ready() -> void:
 			_base_control.child_entered_tree.connect(_on_child)
 		if !_base_control.child_exiting_tree.is_connected(_out_child):
 			_base_control.child_exiting_tree.connect(_out_child)
+			
+	var root : Control = EditorInterface.get_base_control()
+	if root:
+		add_theme_stylebox_override(&"Panel",root.get_theme_stylebox("panel", "PanelContainer"))
 	
 func _connect(n : Node, e : bool) -> void:
 	if n is CodeEdit:

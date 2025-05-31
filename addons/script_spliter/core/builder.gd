@@ -44,13 +44,25 @@ var _item_list : ItemList = null:
 	set(e):
 		
 		if e == null and is_instance_valid(_item_list):
-			#if _item_list.get_script() == DDITEM:
-				#_item_list.set_script(null)
+			if _item_list.has_signal(&"on_start_drag") and  _item_list.is_connected(&"on_start_drag", _on_drag):
+				_item_list.disconnect(&"on_start_drag", _on_drag)
+			if _item_list.has_signal(&"on_stop_drag") and  _item_list.is_connected(&"on_stop_drag", _out_drag):
+				_item_list.disconnect(&"on_stop_drag", _out_drag)
+					
+			if _item_list.get_script() == DDITEM:
+				_item_list.set_script(null)
 			_item_list = null
 		else:
 			_item_list = e
-			#if is_instance_valid(_item_list) and _item_list.get_script() != DDITEM:
-				#_item_list.set_script(DDITEM)
+			if is_instance_valid(_item_list) and _item_list.get_script() != DDITEM:
+				_item_list.set_script(DDITEM)
+				
+				if _item_list.has_signal(&"on_start_drag") and  !_item_list.is_connected(&"on_start_drag", _on_drag):
+					_item_list.connect(&"on_start_drag", _on_drag)
+				if _item_list.has_signal(&"on_stop_drag") and  !_item_list.is_connected(&"on_stop_drag", _out_drag):
+					_item_list.connect(&"on_stop_drag", _out_drag)
+					
+				
 	get:
 		if !is_instance_valid(_item_list):
 			var script_editor: ScriptEditor = EditorInterface.get_script_editor()
@@ -441,6 +453,8 @@ func get_last_tool() -> Mickeytools:
 	return _last_tool
 	
 func update_info(root : TabContainer, index : int , src : String) -> void:
+	if !is_instance_valid(root):
+		return
 	var item_list : Control = _item_list
 	if !src.is_empty():
 		if is_instance_valid(item_list):
@@ -823,7 +837,7 @@ class Mickeytools extends Object:
 			var root : TabContainer = _root
 			if is_instance_valid(root):
 				if _control.get_parent() == root and _reference.get_parent() != null:
-					_helper.update_info(root, _control.get_index(), _src)
+					_helper.update_info.call_deferred(root, _control.get_index(), _src)
 
 	func kill() -> void:
 		for x : Node in [_gui, _reference]:
@@ -841,8 +855,8 @@ class Mickeytools extends Object:
 				if gui.gui_input.is_connected(_on_input):
 					gui.gui_input.disconnect(_on_input)
 				if gui is CodeEdit:
-					if _gui.symbol_lookup.is_connected(_on_symb):
-						_gui.symbol_lookup.disconnect(_on_symb)
+					if gui.symbol_lookup.is_connected(_on_symb):
+						gui.symbol_lookup.disconnect(_on_symb)
 			_gui.modulate = Color.WHITE
 			
 			if _gui is VBoxContainer:
@@ -1287,6 +1301,24 @@ func _out_drag(e : Control) -> void:
 								if root != x.get_root():
 									queue_swap.call_deferred(x, root)
 									return
+			elif e is ItemList:
+				var it : PackedInt32Array = e.get_selected_items()
+				if it.size() > 0:
+					var src : String = e.get_item_tooltip(it[0])
+					var root : Node = null
+					for x : Mickeytools in _code_editors:
+						var __root : Node = x.get_root()
+						if is_instance_valid(_root) and __root.get_parent() == current:
+							root = __root
+							break
+					
+					if is_instance_valid(root):
+						for x : Mickeytools in _code_editors:
+							if x.get_src() == src:
+								if root != x.get_root():
+									queue_swap.call_deferred(x, root)
+									return
+					
 								
 func queue_swap(x : Mickeytools, root : Node) -> void:
 	if is_instance_valid(x):
@@ -1364,7 +1396,7 @@ func _create_by_last_used() -> void:
 					if _SHOULD_OPEN_CLOSED_EDITOR_SCRIPT:
 						var res : Variant = ResourceLoader.load(sc)
 						if res is Script:
-							EditorInterface.edit_script(res)
+							EditorInterface.edit_script.call_deferred(res)
 			
 func update() -> void:
 	_clear()
@@ -1392,7 +1424,7 @@ func update() -> void:
 		for i : int in range(_code_editors.size() - 1, -1, -1):
 			if is_instance_valid(_code_editors[i]):
 				_last_tool = _code_editors[i]
-				_last_tool.focus.emit(_last_tool)
+				_last_tool.focus.emit.call_deferred(_last_tool)
 				break
 			_code_editors.remove_at(i)
 			

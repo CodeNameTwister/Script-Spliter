@@ -28,7 +28,8 @@ func reset() -> void:
 	if is_drag:
 		set_process(false)
 		is_drag = false
-		on_stop_drag.emit(null)
+		if is_inside_tree():
+			on_stop_drag.emit(null)
 
 func _init() -> void:
 	setup()
@@ -37,19 +38,6 @@ func _init() -> void:
 
 func _ready() -> void:
 	set_process(false)
-
-#func make_preview() -> Control:
-	#var tab : TabContainer = (get_parent() as TabContainer)
-	#var preview : Control = PREVIEW.instantiate()
-	#var label : Label = preview.get_node("Label")
-	#preview.z_as_relative = false
-	#preview.z_index = 4096
-	#preview.top_level = true
-	#label.text = tab.get_tab_title(tab.current_tab)
-	#preview.visible = true
-	#if label.text.is_empty():
-		#label.text = str("Grab File index " , tab.current_tab)
-	#return preview
 
 func _process(delta: float) -> void:
 	_fms += delta
