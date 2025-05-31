@@ -57,7 +57,7 @@ The internal workflow has been modified, but the functionality of its predecesso
 
 This has been done to maintain compatibility when using shorteners like Ctrl + [1, 2, 3, 4] to change the split style, this might be broken in version 0.3, see the roadmap for details.
 
-differences with version 0.1:
+### Differences with version 0.1
 * It more closely resembles the default editor window.
 * Reduces window switching time.
 * Allows you to zoom in on all windows.
