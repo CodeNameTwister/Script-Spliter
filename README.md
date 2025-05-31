@@ -36,11 +36,12 @@ Introduction to using tabs
 
 >*I had initially planned to create a Notepad++ like functionality as a reference for version 0.3, but it has been decided to maintain the functionality and backward compatibility to avoid confusion for those using the plugin since version 0.1.*
 
-### Modify Backward and Forward buttons [↑](#table-of-contents)
+### Modify Backward and Forward buttons
 You can modify the buttons by input resources in "script_spliter/io" folder,
 seen in [Backward/Forward Request](https://github.com/CodeNameTwister/Script-Spliter/issues/9#issuecomment-2917555511)
 
-When you use Backward/Forward: It is per-window history, this means that if you've navigated through three different scripts within the window, moving back will only move between those three. The same happens when moving forward, and it's not affected by any other movements you've made in another window.
+### Using Backward/Forward
+It is per-window history, this means that if you've navigated through three different scripts within the window, moving back will only move between those three. The same happens when moving forward, and it's not affected by any other movements you've made in another window.
 >[!TIP]
 >In editor settings you have the checkbox: "using_as_next_and_back_tab" if you want use Backward/Forward move like Back/Next Tab.
 #
