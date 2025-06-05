@@ -36,6 +36,9 @@ Introduction to using tabs
 
 >*I had initially planned to create a Notepad++ like functionality as a reference for version 0.3, but it has been decided to maintain the functionality and backward compatibility to avoid confusion for those using the plugin since version 0.1.*
 
+### Drag and Drop
+You can use tabs to drag and drop into another split window to switch between editors or you can drag directly from the script list and drop into the split window.
+
 ### Modify Backward and Forward buttons
 You can modify the buttons by input resources in "script_spliter/io" folder,
 seen in [Backward/Forward Request](https://github.com/CodeNameTwister/Script-Spliter/issues/9#issuecomment-2917555511)
@@ -54,7 +57,7 @@ The internal workflow has been modified, but the functionality of its predecesso
 
 This has been done to maintain compatibility when using shorteners like Ctrl + [1, 2, 3, 4] to change the split style, this might be broken in version 0.3, see the roadmap for details.
 
-differences with version 0.1:
+### Differences with version 0.1
 * It more closely resembles the default editor window.
 * Reduces window switching time.
 * Allows you to zoom in on all windows.
