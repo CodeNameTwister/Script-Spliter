@@ -32,12 +32,12 @@ func reset() -> void:
 			on_stop_drag.emit(null)
 
 func _init() -> void:
-	setup()
 	if is_node_ready():
-		set_process(false)
+		_ready()
 
 func _ready() -> void:
 	set_process(false)
+	setup()
 
 func _process(delta: float) -> void:
 	_fms += delta

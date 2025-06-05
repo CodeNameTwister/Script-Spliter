@@ -588,7 +588,6 @@ class Mickeytools extends Object:
 	var _control : Node = null
 	var _gui : Node = null
 	var _index : int = 0
-	var __placeholder : Node = null
 	var _src : String = ""
 	
 	func set_src(src : String) -> void:
@@ -775,8 +774,14 @@ class Mickeytools extends Object:
 				_control = VSplitContainer.new()
 				_parent = __parent
 				
-				for x : Node in __parent.get_children():
-					x.reparent(_control)
+				var childs : Array[Node] = __parent.get_children()
+				if __parent.is_inside_tree() and _control.is_inside_tree():
+					for x : Node in childs:
+						x.reparent(_control)
+				else:
+					for x : Node in childs:
+						_parent.remove_child(x)
+						_control.add_child(x)
 		else:
 			for x : Node in control.get_children():
 				if x is RichTextLabel:
@@ -789,8 +794,15 @@ class Mickeytools extends Object:
 						
 							
 						if canvas.get_child_count() < 1:
-							for n : Node in _reference.get_children():
-								n.reparent(canvas)
+							var childs : Array[Node] = _reference.get_children()
+							if _reference.is_inside_tree() and canvas.is_inside_tree():
+								for n : Node in childs:
+									n.reparent(canvas)
+							else:
+								for n : Node in childs:
+									_reference.remove_child(n)
+									canvas.add_child(n)
+								
 						x.size = canvas.size
 						_gui = canvas
 						_control = canvas
@@ -810,9 +822,14 @@ class Mickeytools extends Object:
 		if null != parent:
 			_parent = parent
 
-		if _control.get_parent() != _root:
-			if _control.get_parent() != null:
-				_control.reparent(_root)
+			
+		if parent != _root:
+			if parent != null:
+				if !parent.is_inside_tree() or !_root.is_inside_tree():
+					parent.remove_child(_control)
+					_root.add_child(_control)
+				else:
+					_control.reparent(_root)
 			else:
 				_root.add_child(_control)
 		if _gui:
@@ -860,8 +877,14 @@ class Mickeytools extends Object:
 			_gui.modulate = Color.WHITE
 			
 			if _gui is VBoxContainer:
-				for x : Node in _gui.get_children():
-					x.reparent(_reference)
+				if _gui.is_inside_tree() and _reference.is_inside_tree():
+					for x : Node in _gui.get_children():
+						x.reparent(_reference)
+				else:
+					var childs : Array[Node] = _gui.get_children()
+					for x : Node in childs:
+						_gui.remove_child(x)
+						_reference.add_child(x)
 				if _gui != _control:
 					_gui.queue_free()
 					_gui = null
@@ -872,22 +895,18 @@ class Mickeytools extends Object:
 			if is_instance_valid(_parent):
 				var parent : Node = _control.get_parent()
 				if parent != _parent:
-					if is_instance_valid(parent):
-						parent.remove_child(_control)
 					if _control is VSplitContainer:
-						for c : Node in _control.get_children():
-							_control.remove_child(c)
-							_parent.add_child(c)
+						if !_control.is_inside_tree() or !_parent.is_inside_tree():
+							var childs : Array[Node] = _control.get_children()		
+							for c : Node in childs:
+								_control.remove_child(c)
+								_parent.add_child(c)
+						else:	
+							for c : Node in _control.get_children():
+								c.reparent(_parent)
 						_control.queue_free()
 					else:
-						_parent.add_child(_control)
-						if _parent.is_inside_tree():
-							if _index > -1 and _index < _parent.get_child_count():
-								_parent.move_child(_control, _index)
-								
-		if is_instance_valid(__placeholder):
-			__placeholder.queue_free()
-
+						_reparent.call_deferred(_index, _control, parent, _parent)
 		_gui = null
 		_parent = null
 		_control = null
@@ -897,6 +916,19 @@ class Mickeytools extends Object:
 		if is_instance_valid(_helper) and !_helper.is_queued_for_deletion():
 			if _helper.add_last_script_used.is_valid():
 				_helper.add_last_script_used(_src)
+
+	func _reparent(_index : int, _control : Node, parent : Node, _parent : Node) -> void:
+		if is_instance_valid(parent):
+			if _control.is_inside_tree() and _parent.is_inside_tree():
+				_control.reparent(_parent)
+			else:
+				parent.remove_child(_control)
+				_parent.add_child(_control)
+		else:
+			_parent.add_child(_control)
+		if _parent.is_inside_tree():
+			if _index > -1 and _index < _parent.get_child_count():
+				_parent.move_child(_control, _index)
 
 class ReTweener extends RefCounted:
 	var _tween : Tween = null
@@ -939,9 +971,9 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 	_last_tool = tool
 	if !_chaser_enabled:
 		var ctrl : Variant = tool.get_control()
-		if is_instance_valid(ctrl):
+		if is_instance_valid(ctrl) and ctrl.is_inside_tree():
 			var root : Control = tool.get_root()
-			if root is TabContainer and ctrl and ctrl.get_parent() == root:
+			if root is TabContainer and ctrl.get_parent() == root:
 				var indx : int = ctrl.get_index()
 				if root.current_tab != indx:
 					root.current_tab = indx
@@ -1018,7 +1050,7 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 		if is_instance_valid(gui) and !gui.has_focus():
 			if gui is VBoxContainer:
 				gui = gui.get_child(0)
-			gui.grab_focus()
+			gui.grab_focus.call_deferred()
 	
 	var item_list : ItemList = _item_list
 	if is_instance_valid(item_list):
@@ -1277,7 +1309,7 @@ func _out_drag(e : Control) -> void:
 	if is_instance_valid(_ddo):
 		_ddo.visible = false
 		var np : Node = _ddo.get_parent()
-		if np:
+		if is_instance_valid(np):
 			current = np
 			np.remove_child(_ddo)
 	if is_instance_valid(current):
@@ -1299,7 +1331,7 @@ func _out_drag(e : Control) -> void:
 						for x : Mickeytools in _code_editors:
 							if x.get_control() == gui or x.get_gui() == gui:
 								if root != x.get_root():
-									queue_swap.call_deferred(x, root)
+									queue_swap(x, root)
 									return
 			elif e is ItemList:
 				var it : PackedInt32Array = e.get_selected_items()
@@ -1316,7 +1348,7 @@ func _out_drag(e : Control) -> void:
 						for x : Mickeytools in _code_editors:
 							if x.get_src() == src:
 								if root != x.get_root():
-									queue_swap.call_deferred(x, root)
+									queue_swap(x, root)
 									return
 					
 								
@@ -1326,7 +1358,21 @@ func queue_swap(x : Mickeytools, root : Node) -> void:
 		if is_instance_valid(ref) and is_instance_valid(root):
 			remove_tool(x)
 			create_code_editor.call_deferred(root, ref)
+			_new_tools.call_deferred(_code_editors.duplicate(false))
+			
 	
+func _new_tools(tools : Array[Mickeytools]) -> void:
+	var tool : Mickeytools = null
+	for x in _code_editors:
+		if x in tools:
+			continue
+		tool = x
+		break
+	if tool:
+		tool.focus.emit.call_deferred(tool)
+	await Engine.get_main_loop().process_frame
+	if is_instance_valid(tool):
+		tool.update()
 	
 func _on_drag(e : Control) -> void:
 	is_dd_handled = is_instance_valid(e)
@@ -1399,6 +1445,9 @@ func _create_by_last_used() -> void:
 							EditorInterface.edit_script.call_deferred(res)
 			
 func update() -> void:
+	if is_queued_for_deletion() or !_plugin.is_inside_tree():
+		return
+	
 	_clear()
 	if _editor.get_child_count() > 0:
 		var root : Node = _get_editor_root()
@@ -1521,7 +1570,7 @@ func add_tool(tool : Mickeytools) -> void:
 func remove_tool(x : Mickeytools, with_signals : bool = true) -> void:
 	x.reset(with_signals)
 	_code_editors.erase(x)
-	x.free()
+	x.free() 
 
 func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 	if !is_valid_code_editor(root, editor):
@@ -1546,7 +1595,6 @@ func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 						tool = m
 						break
 	
-				
 	if is_valid_doc(editor):
 		if editor.name.begins_with("@"):
 			return

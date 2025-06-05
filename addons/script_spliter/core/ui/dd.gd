@@ -7,7 +7,7 @@ extends Control
 #	Script Spliter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-@export var lbl : Label
+@export var lbl : Control
 
 var _0x0001 : float = 0.0
 var _0x0002 : float= 0.5
@@ -22,7 +22,7 @@ func _process(delta: float) -> void:
 	var p : Control = get_parent()
 	if !p:
 		return
-	_0x0001 += delta * 3.0
+	_0x0001 += delta * 2.0
 	if _0x0001 >= 1.0:
 		_0x0001 = 0.0
 		if _0x0002 == 1.0:
@@ -30,13 +30,11 @@ func _process(delta: float) -> void:
 		else:
 			_0x0002 = 1.0
 	modulate.a = lerp(modulate.a, _0x0002, _0x0001)
+	lbl.pivot_offset = (lbl.size + Vector2.ONE) / 2.0
+	lbl.scale = lerp(lbl.scale, Vector2.ONE * _0x0002 , _0x0001 * 0.24)
 	
 func _enter_tree() -> void:
 	set_process(true)
-	for x : Node in get_children():
-		if x is Control:
-			x.set_deferred(&"size_flags_horizontal", Control.SIZE_SHRINK_CENTER)
-			x.set_deferred(&"size_flags_vertical", Control.SIZE_SHRINK_CENTER)
 	
 func _exit_tree() -> void:
 	set_process(false)

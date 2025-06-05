@@ -113,12 +113,23 @@ func forward_editor() -> Object:
 
 func _on_child(n : Node) -> void:
 	if n is TabBar:
-		n.set_script(DDTAB)
+		if n.get_script() != DDTAB:
+			n.set_script(DDTAB)
 
 		if !n.on_start_drag.is_connected(_on_start_drag):
 			n.on_start_drag.connect(_on_start_drag)
 		if !n.on_stop_drag.is_connected(_on_stop_drag):
 			n.on_stop_drag.connect(_on_stop_drag)
+			
+func _out_child(n : Node) -> void:
+	if n is TabBar:
+
+		if n.on_start_drag.is_connected(_on_start_drag):
+			n.on_start_drag.disconnect(_on_start_drag)
+		if n.on_stop_drag.is_connected(_on_stop_drag):
+			n.on_stop_drag.disconnect(_on_stop_drag)
+		if n.get_script() == DDTAB:
+			n.set_script(null)
 			
 func _on_stop_drag(tab : TabBar) -> void:
 	out_dragging.emit(tab)
@@ -128,3 +139,4 @@ func _on_start_drag(tab : TabBar) -> void:
 #
 func _init() -> void:
 	child_entered_tree.connect(_on_child)
+	child_exiting_tree.connect(_out_child)

@@ -25,37 +25,12 @@ var is_drag : bool = false:
 var _fms : float = 0.0
 
 func _init() -> void:
-	setup()
-	if is_node_ready():
-		set_process(false)
+	if is_node_ready(): 
+		_ready()
 
 func _ready() -> void:
 	set_process(false)
-
-func make_preview() -> Control:
-	var items : PackedInt32Array = get_selected_items()
-	if items.size() > 0:
-		var tab : TabContainer = (get_parent() as TabContainer)
-		var preview : Control = PREVIEW.instantiate()
-		var label : Label = preview.get_node("Label")
-		
-		if  preview and preview.get_child_count() > 0:
-			var ctrl : Control = preview.get_child(0)
-			var item_id : int = items[0]
-			if ctrl is TextureRect:
-				ctrl.texture = get_item_icon(item_id)
-				ctrl.modulate = get_item_icon_modulate(item_id)
-				
-			
-			label.text = get_item_text(item_id)
-			preview.z_as_relative = false
-			preview.z_index = 4096
-			preview.top_level = true
-			preview.visible = true
-			if label.text.is_empty():
-				label.text = str("Grab File index " , tab.current_tab)
-			return preview
-	return null
+	setup()
 
 func _process(delta: float) -> void:
 	_fms += delta
@@ -66,10 +41,6 @@ func _process(delta: float) -> void:
 				is_drag = false
 				on_stop_drag.emit(self)
 		else:
-			#force_drag(
-				#self
-			#,make_preview()
-			#)
 			on_start_drag.emit(self)
 			is_drag = true
 
