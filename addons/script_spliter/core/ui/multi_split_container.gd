@@ -482,7 +482,7 @@ class LineSep extends ColorRect:
 	func update_items() -> void:
 		if is_vertical:
 			for item : Control in top_items:
-				item.size.y = position.y - item.position.y
+				item.size.y = position.y - item.position.y 
 				if !prev_line:
 					item.position.y = 0.0
 
@@ -495,12 +495,12 @@ class LineSep extends ColorRect:
 					item.size.y = get_parent().size.y - item.position.y
 		else:
 			for item : Control in top_items:
-				item.size.x = position.x - item.position.x
+				item.size.x = position.x - item.position.x + (size.x / 2.0) - 2.0
 				if !prev_line:
 					item.position.x = 0.0
 
 			for item : Control in bottom_items:
-				var diff : float = position.x + size.x
+				var diff : float = position.x + (size.x / 2.0) + 2.0
 				item.position.x = diff
 
 				if next_line:
