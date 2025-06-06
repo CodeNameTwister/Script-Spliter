@@ -10,6 +10,8 @@ extends Object
 	
 const EditorContainer : Script = preload("res://addons/script_spliter/core/EditorContainer.gd")
 const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
+const DDO : PackedScene = preload("res://addons/script_spliter/core/ui/dd.tscn")
+const DDITEM : Script = preload("res://addons/script_spliter/core/DDItem.gd")
 
 #region POPSC	
 const FLYING_SCRIPT : PackedScene = preload("res://addons/script_spliter/context/flying_script.tscn")
@@ -39,6 +41,28 @@ var _last_tool : Mickeytools = null:
 
 var _tweener : ReTweener = null
 var _item_list : ItemList = null:
+	set(e):
+		
+		if e == null and is_instance_valid(_item_list):
+			if _item_list.has_signal(&"on_start_drag") and  _item_list.is_connected(&"on_start_drag", _on_drag):
+				_item_list.disconnect(&"on_start_drag", _on_drag)
+			if _item_list.has_signal(&"on_stop_drag") and  _item_list.is_connected(&"on_stop_drag", _out_drag):
+				_item_list.disconnect(&"on_stop_drag", _out_drag)
+					
+			if _item_list.get_script() == DDITEM:
+				_item_list.set_script(null)
+			_item_list = null
+		else:
+			_item_list = e
+			if is_instance_valid(_item_list) and _item_list.get_script() != DDITEM:
+				_item_list.set_script(DDITEM)
+				
+				if _item_list.has_signal(&"on_start_drag") and  !_item_list.is_connected(&"on_start_drag", _on_drag):
+					_item_list.connect(&"on_start_drag", _on_drag)
+				if _item_list.has_signal(&"on_stop_drag") and  !_item_list.is_connected(&"on_stop_drag", _out_drag):
+					_item_list.connect(&"on_stop_drag", _out_drag)
+					
+				
 	get:
 		if !is_instance_valid(_item_list):
 			var script_editor: ScriptEditor = EditorInterface.get_script_editor()
@@ -75,6 +99,17 @@ var _UNFOCUS_COLOR : Color = Color.GRAY
 
 var _SWAP_BY_BUTTON : bool = true
 
+#region _9_
+var HANDLE_BACK_FORWARD_BUTTONS : bool = true
+var HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB : bool = false
+var HANDLE_BACK_FORWARD_BUFFER : int = 20
+var USE_NATIVE_ON_NOT_TABS : bool = true
+var _HANDLE_BACKWARD_KEY_PATH : String = "res://addons/script_spliter/io/backward_key_button.tres"
+var _HANDLE_FORWARD_KEY_PATH : String  = "res://addons/script_spliter/io/forward_key_button.tres"
+var _HANDLE_BACKWARD_MOUSE_BUTTON_PATH : String = "res://addons/script_spliter/io/backward_mouse_button.tres"
+var _HANDLE_FORWARD_MOUSE_BUTTON_PATH : String  = "res://addons/script_spliter/io/forward_mouse_button.tres"
+#endregion
+
 # CURRENT CONFIG
 var current_columns : int = 1
 var current_rows : int = 1
@@ -85,6 +120,12 @@ var _focus_queue : bool = false
 
 # REF
 var _wm : Window = null
+
+var is_dd_handled : bool = false
+var _last_dd_root : Control = null
+var _ddo : Control = null
+
+signal tool_added(tool : Mickeytools)
 
 func _get_data_cfg() -> Array[Array]:
 	const CFG : Array[Array] = [
@@ -111,7 +152,14 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand", &"_SEPARATOR_SMOOTH_EXPAND"]
 		,[&"plugin/script_spliter/editor/behaviour/smooth_expand_time", &"_SEPARATOR_SMOOTH_EXPAND_TIME"]
 		,[&"plugin/script_spliter/editor/behaviour/swap_by_double_click_separator_button", &"_SWAP_BY_BUTTON"]
-		
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/handle_back_and_forward", &"HANDLE_BACK_FORWARD_BUTTONS"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/history_size", &"HANDLE_BACK_FORWARD_BUFFER"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/using_as_next_and_back_tab", &"HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_path", &"_HANDLE_BACKWARD_KEY_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_path", &"_HANDLE_FORWARD_KEY_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path", &"_HANDLE_BACKWARD_MOUSE_BUTTON_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path", &"_HANDLE_FORWARD_MOUSE_BUTTON_PATH"]
+		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/use_native_handler_when_there_are_no_more_tabs", &"USE_NATIVE_ON_NOT_TABS"]
 		]
 	return CFG
 	
@@ -127,6 +175,41 @@ func _on_wm_foucs() -> void:
 
 func _out_wm_focus() -> void:
 	return
+	
+func show_dd(root : Control) -> void:
+	var dd : Control = null
+	for xx : Node in _main.get_children():
+		if xx is Control and !xx.visible:
+			continue
+		for x : Node in xx.get_children():
+			if x is Control and x.visible:
+				var mp : Vector2i = x.get_global_mouse_position()
+				if x.get_global_rect().has_point(mp):
+					dd = xx
+					break
+	if dd == null or _last_dd_root == dd:
+		return
+	_last_dd_root = dd
+		
+	var node : Node = _last_tool.get_root() 
+	
+	if node == root:
+		return
+	if node:
+		if dd.find_child(node.name, true, false) != null:
+			if is_instance_valid(_ddo):
+				var p : Node = _ddo.get_parent()
+				if p:
+					p.remove_child(_ddo)
+			return
+	if !is_instance_valid(_ddo):
+		_ddo = DDO.instantiate()
+	else:
+		var p : Node = _ddo.get_parent()
+		if p:
+			p.remove_child(_ddo)
+	dd.add_child(_ddo)
+	_ddo.visible = true
 
 func set_item_list(o : ItemList) -> void:
 	_item_list = o
@@ -206,6 +289,29 @@ func update_config() -> void:
 			var gui : Node = x.get_control()
 			if is_instance_valid(gui) and gui is Control:
 				gui.modulate = Color.WHITE
+	
+	for x : String in changes:
+		if "button_path" in x:
+			if !InputMap.has_action(&"ui_script_spliter_forward"):
+				InputMap.add_action(&"ui_script_spliter_forward")
+			else:
+				InputMap.action_erase_events(&"ui_script_spliter_forward")
+			
+			var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
+			var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
+			InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
+			InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
+			
+			if !InputMap.has_action(&"ui_script_spliter_backward"):
+				InputMap.add_action(&"ui_script_spliter_backward")
+			else:
+				InputMap.action_erase_events(&"ui_script_spliter_backward")
+				
+			key_0 = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
+			key_1 = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
+			InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
+			InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
+			break
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -238,6 +344,10 @@ func init_0() -> void:
 	if is_instance_valid(_tweener):
 		_tweener.clear()
 	_tweener = null
+	
+	if is_instance_valid(_ddo):
+		if !_ddo.is_queued_for_deletion():
+			_ddo.queue_free()
 		
 	if is_instance_valid(_wm):
 		if _wm.focus_entered.is_connected(_on_wm_foucs):
@@ -271,6 +381,8 @@ func init_0() -> void:
 	if is_instance_valid(_editor):
 		_setup(_editor, false)
 		_editor.visible = true
+			
+	_item_list = null
 			
 	for x : Window in _pop_scripts:
 		if is_instance_valid(x) and !x.is_queued_for_deletion():
@@ -326,6 +438,9 @@ func _clear() -> void:
 					else:
 						y.remove_child(z)
 
+func get_editors() -> Array[Mickeytools]:
+	return _code_editors
+	
 func _get_editor_root() -> Node:
 	var aviable : Node = get_aviable()
 	if is_instance_valid(aviable):
@@ -334,11 +449,136 @@ func _get_editor_root() -> Node:
 		return _last_tool.get_root()
 	return null
 
+func get_last_tool() -> Mickeytools:
+	return _last_tool
+	
+func update_info(root : TabContainer, index : int , src : String) -> void:
+	if !is_instance_valid(root):
+		return
+	var item_list : Control = _item_list
+	if !src.is_empty():
+		if is_instance_valid(item_list):
+			var indx : int = -1
+			for x : int in item_list.item_count:
+				if item_list.get_item_tooltip(x) == src:
+					indx = x
+					break
+			if indx > -1:
+				var text : String = _item_list.get_item_text(indx)
+				if text.is_empty() or text.begins_with("@"):
+					text = item_list.get_item_tooltip(index).get_file()
+				text = text.trim_suffix("(*)")
+				root.set_tab_title(index, text)
+				root.set_tab_icon(index, item_list.get_item_icon(indx))
+			
+
+
 class Root extends MarginContainer:
-	pass
+	var _helper : Object = null
+	
+	func _init(helper : Object) -> void:
+		_helper = helper
+	
+	func _get_index(x : Mickeytools) -> int:
+		var gui : Control = x.get_gui()
+		if is_instance_valid(gui):
+			var root : Control = x.get_root()
+			if root:
+				root = root.get_parent()
+			if is_instance_valid(root):
+				return root.get_index()
+		return -1
+	
+	func _fwrd() -> bool:
+		if _helper._chaser_enabled:
+			return true
+			
+		var tool : Mickeytools = _helper.get_last_tool()
+		if !is_instance_valid(tool):
+			return false
+			
+		var root : Variant = tool.get_root()
+		if !is_instance_valid(root):
+			return false 
+			
+		if !_helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
+			for __ : int in range(0, 2):
+				if root == null:
+					return false
+				elif root.has_method(&"forward_editor"):
+					var o : Object = root.call(&"forward_editor")
+					if o and o.has_signal(&"focus"):
+						o.emit_signal(&"focus", o, false)
+						return true
+					return false
+				root = root.get_parent()
+		else:
+			var control : TabContainer = root
+			var count : int = control.get_tab_count()
+			if count > 1:
+				var current : int = wrapi(control.current_tab + 1, 0, count)
+				if current > -1 and  current < control.get_child_count():
+					var gui : Node = control.get_child(current)
+					for x : Mickeytools in _helper.get_editors():
+						var ctrl : Control = x.get_control()
+						if gui == ctrl or gui.find_child(ctrl.name):
+							x.focus.emit.call_deferred(x)
+							return true
+		return false
+		
+	func _bkt() -> bool:
+		if _helper._chaser_enabled:
+			return false
+		var tool : Mickeytools = _helper.get_last_tool()
+		if !is_instance_valid(tool):
+			return false
+			
+		var root : Variant = tool.get_root()
+		if !is_instance_valid(root):
+			return false
+			
+		if !_helper.HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB:
+			for __ : int in range(0, 2):
+				if root == null:
+					return false
+				elif root.has_method(&"backward_editor"):
+					var o : Object = root.call(&"backward_editor")
+					if o and o.has_signal(&"focus"):
+						o.emit_signal(&"focus", o, false)
+						return true
+					return false
+				root = root.get_parent()
+		else:
+			var control : TabContainer = root
+			var count : int = control.get_tab_count()
+			if count > 1:
+				var current : int = wrapi(control.current_tab - 1, 0, count)
+				if current > -1 and  current < control.get_child_count():
+					var gui : Node = control.get_child(current)
+					for x : Mickeytools in _helper.get_editors():
+						var ctrl : Control = x.get_control()
+						if gui == ctrl or gui.find_child(ctrl.name):
+							x.focus.emit.call_deferred(x)
+							return true
+		return false
+		
+	func _input(event: InputEvent) -> void:
+		if _helper.HANDLE_BACK_FORWARD_BUTTONS:
+			if event.is_action_pressed(&"ui_script_spliter_backward"):
+				if _bkt() or !_helper.USE_NATIVE_ON_NOT_TABS:
+					event.alt_pressed = false
+					get_viewport().set_input_as_handled()
+				return
+			elif event.is_action_pressed(&"ui_script_spliter_forward"):
+				if _fwrd() or !_helper.USE_NATIVE_ON_NOT_TABS:
+					event.alt_pressed = false
+					get_viewport().set_input_as_handled()
+		if _helper.is_dd_handled:
+			_helper.show_dd(self)
 
 class Mickeytools extends Object:
 	signal focus(_self : Mickeytools)
+	signal tool_updated()
 
 	var _helper : Object = null
 
@@ -348,7 +588,6 @@ class Mickeytools extends Object:
 	var _control : Node = null
 	var _gui : Node = null
 	var _index : int = 0
-	var __placeholder : Node = null
 	var _src : String = ""
 	
 	func set_src(src : String) -> void:
@@ -360,7 +599,7 @@ class Mickeytools extends Object:
 	func get_title_name() -> String:
 		if is_instance_valid(_reference):
 			if _reference.get_parent() != null:
-				return _helper.get_item_text(_reference.get_index())
+				return _helper.get_item_text(_src)
 		return ""
 		
 	func has_focus() -> bool:
@@ -381,11 +620,12 @@ class Mickeytools extends Object:
 			if _control.get_parent() == null:
 				return
 			var index : int = _control.get_index()
-			for x : Node in root.get_children():
-				if x == _control:
-					if index > -1 and index < root.get_child_count():
-						root.current_tab = index
-					break
+			if !_helper._chaser_enabled:
+				for x : Node in root.get_children():
+					if x == _control:
+						if index > -1 and index < root.get_child_count():
+							root.current_tab = index
+						break
 					
 		if should_grab_focus:
 			if is_instance_valid(_gui) and _gui.is_inside_tree():
@@ -439,11 +679,14 @@ class Mickeytools extends Object:
 
 	func _init(helper : Object, root : Node, control : Control) -> void:
 		_helper = helper
-		_root = root
-
+		set_root(root)
 		set_reference(control)
 
 	func set_root(root : Node) -> void:
+		if root != _root:
+			if is_instance_valid(_root):
+				if _root.has_method(&"remove_editor"):
+					_root.call(&"remove_editor", self)
 		_root = root
 		
 	func _context_update(window : Window, control : Control) -> void:
@@ -531,8 +774,14 @@ class Mickeytools extends Object:
 				_control = VSplitContainer.new()
 				_parent = __parent
 				
-				for x : Node in __parent.get_children():
-					x.reparent(_control)
+				var childs : Array[Node] = __parent.get_children()
+				if __parent.is_inside_tree() and _control.is_inside_tree():
+					for x : Node in childs:
+						x.reparent(_control)
+				else:
+					for x : Node in childs:
+						_parent.remove_child(x)
+						_control.add_child(x)
 		else:
 			for x : Node in control.get_children():
 				if x is RichTextLabel:
@@ -545,8 +794,15 @@ class Mickeytools extends Object:
 						
 							
 						if canvas.get_child_count() < 1:
-							for n : Node in _reference.get_children():
-								n.reparent(canvas)
+							var childs : Array[Node] = _reference.get_children()
+							if _reference.is_inside_tree() and canvas.is_inside_tree():
+								for n : Node in childs:
+									n.reparent(canvas)
+							else:
+								for n : Node in childs:
+									_reference.remove_child(n)
+									canvas.add_child(n)
+								
 						x.size = canvas.size
 						_gui = canvas
 						_control = canvas
@@ -566,9 +822,14 @@ class Mickeytools extends Object:
 		if null != parent:
 			_parent = parent
 
-		if _control.get_parent() != _root:
-			if _control.get_parent() != null:
-				_control.reparent(_root)
+			
+		if parent != _root:
+			if parent != null:
+				if !parent.is_inside_tree() or !_root.is_inside_tree():
+					parent.remove_child(_control)
+					_root.add_child(_control)
+				else:
+					_control.reparent(_root)
 			else:
 				_root.add_child(_control)
 		if _gui:
@@ -586,17 +847,14 @@ class Mickeytools extends Object:
 					await gui.ready
 				if is_instance_valid(gui):
 					focus.emit(self)
+		tool_updated.emit()
 
 	func update() -> void:
 		if is_instance_valid(_control) and is_instance_valid(_reference):
 			var root : TabContainer = _root
 			if is_instance_valid(root):
 				if _control.get_parent() == root and _reference.get_parent() != null:
-					var index : int = _control.get_index()
-					if root.get_child_count() > index and index > -1:
-						var text : String = _helper.get_item_text(_reference.get_index())
-						if !text.is_empty():
-							root.set_tab_title(index, text)
+					_helper.update_info.call_deferred(root, _control.get_index(), _src)
 
 	func kill() -> void:
 		for x : Node in [_gui, _reference]:
@@ -605,7 +863,7 @@ class Mickeytools extends Object:
 
 	func reset(disconnect_signals : bool = true) -> void:
 		if is_instance_valid(_gui):
-			if disconnect_signals:
+			if disconnect_signals and _gui.is_inside_tree():
 				var gui : Control = _gui
 				if gui is VBoxContainer:
 					gui = gui.get_child(0)
@@ -614,13 +872,19 @@ class Mickeytools extends Object:
 				if gui.gui_input.is_connected(_on_input):
 					gui.gui_input.disconnect(_on_input)
 				if gui is CodeEdit:
-					if _gui.symbol_lookup.is_connected(_on_symb):
-						_gui.symbol_lookup.disconnect(_on_symb)
+					if gui.symbol_lookup.is_connected(_on_symb):
+						gui.symbol_lookup.disconnect(_on_symb)
 			_gui.modulate = Color.WHITE
 			
 			if _gui is VBoxContainer:
-				for x : Node in _gui.get_children():
-					x.reparent(_reference)
+				if _gui.is_inside_tree() and _reference.is_inside_tree():
+					for x : Node in _gui.get_children():
+						x.reparent(_reference)
+				else:
+					var childs : Array[Node] = _gui.get_children()
+					for x : Node in childs:
+						_gui.remove_child(x)
+						_reference.add_child(x)
 				if _gui != _control:
 					_gui.queue_free()
 					_gui = null
@@ -631,22 +895,18 @@ class Mickeytools extends Object:
 			if is_instance_valid(_parent):
 				var parent : Node = _control.get_parent()
 				if parent != _parent:
-					if is_instance_valid(parent):
-						parent.remove_child(_control)
 					if _control is VSplitContainer:
-						for c : Node in _control.get_children():
-							_control.remove_child(c)
-							_parent.add_child(c)
+						if !_control.is_inside_tree() or !_parent.is_inside_tree():
+							var childs : Array[Node] = _control.get_children()		
+							for c : Node in childs:
+								_control.remove_child(c)
+								_parent.add_child(c)
+						else:	
+							for c : Node in _control.get_children():
+								c.reparent(_parent)
 						_control.queue_free()
 					else:
-						_parent.add_child(_control)
-						if _parent.is_inside_tree():
-							if _index > -1 and _index < _parent.get_child_count():
-								_parent.move_child(_control, _index)
-								
-		if is_instance_valid(__placeholder):
-			__placeholder.queue_free()
-
+						_reparent.call_deferred(_index, _control, parent, _parent)
 		_gui = null
 		_parent = null
 		_control = null
@@ -656,6 +916,19 @@ class Mickeytools extends Object:
 		if is_instance_valid(_helper) and !_helper.is_queued_for_deletion():
 			if _helper.add_last_script_used.is_valid():
 				_helper.add_last_script_used(_src)
+
+	func _reparent(_index : int, _control : Node, parent : Node, _parent : Node) -> void:
+		if is_instance_valid(parent):
+			if _control.is_inside_tree() and _parent.is_inside_tree():
+				_control.reparent(_parent)
+			else:
+				parent.remove_child(_control)
+				_parent.add_child(_control)
+		else:
+			_parent.add_child(_control)
+		if _parent.is_inside_tree():
+			if _index > -1 and _index < _parent.get_child_count():
+				_parent.move_child(_control, _index)
 
 class ReTweener extends RefCounted:
 	var _tween : Tween = null
@@ -691,8 +964,29 @@ class ReTweener extends RefCounted:
 			if is_instance_valid(_ref):
 				_ref.modulate = Color.WHITE
 
-func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray = []) -> void:
+func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray = [], refresh_history : bool = true) -> void:
+	if !is_instance_valid(tool):
+		return
+	
 	_last_tool = tool
+	if !_chaser_enabled:
+		var ctrl : Variant = tool.get_control()
+		if is_instance_valid(ctrl) and ctrl.is_inside_tree():
+			var root : Control = tool.get_root()
+			if root is TabContainer and ctrl.get_parent() == root:
+				var indx : int = ctrl.get_index()
+				if root.current_tab != indx:
+					root.current_tab = indx
+				if refresh_history:
+					var current : Node = root
+					for __ : int in range(0, 2):
+						if current == null:
+							break
+						elif current.has_method(&"add_editor"):
+							current.call(&"add_editor", tool, HANDLE_BACK_FORWARD_BUFFER)
+							break
+						current = current.get_parent()
+	
 	var ref : Node = _last_tool.get_reference()
 	if ref.get_parent() == null:
 		return
@@ -720,10 +1014,11 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 	if is_instance_valid(gui) and should_grab_focus():
 		if !_MINIMAP_4_UNFOCUS_WINDOW and _OUT_FOCUS_COLORED:
 			for x : Mickeytools in _code_editors:
-				var _gui : Node = x.get_gui()
-				if is_instance_valid(_gui) and _gui is CodeEdit:
-					_gui.modulate = _UNFOCUS_COLOR
-					_gui.minimap_draw = false
+				if is_instance_valid(x):
+					var _gui : Variant = x.get_gui()
+					if is_instance_valid(_gui) and _gui is CodeEdit:
+						_gui.modulate = _UNFOCUS_COLOR
+						_gui.minimap_draw = false
 					
 			if gui is CodeEdit:
 				gui.modulate = Color.WHITE
@@ -731,17 +1026,19 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 		
 		elif !_MINIMAP_4_UNFOCUS_WINDOW:
 			for x : Mickeytools in _code_editors:
-				var _gui : Node = x.get_gui()
-				if is_instance_valid(_gui) and _gui is CodeEdit:
-					_gui.minimap_draw = false
+				if is_instance_valid(x):
+					var _gui : Variant = x.get_gui()
+					if is_instance_valid(_gui) and _gui is CodeEdit:
+						_gui.minimap_draw = false
 			if gui is CodeEdit:
 				gui.minimap_draw = true
 		
 		elif _OUT_FOCUS_COLORED:
 			for x : Mickeytools in _code_editors:
-				var _gui : Node = x.get_gui()
-				if is_instance_valid(gui) and gui is CodeEdit:
-					_gui.modulate = _UNFOCUS_COLOR
+				if is_instance_valid(x):
+					var _gui : Variant = x.get_gui()
+					if is_instance_valid(gui) and gui is CodeEdit:
+						_gui.modulate = _UNFOCUS_COLOR
 			if gui is CodeEdit:
 				gui.modulate = Color.WHITE
 		
@@ -750,10 +1047,10 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 			var wm : Window = vp.get_window()
 			if wm and !wm.has_focus():
 				wm.grab_focus()
-		if !gui.has_focus():
+		if is_instance_valid(gui) and !gui.has_focus():
 			if gui is VBoxContainer:
 				gui = gui.get_child(0)
-			gui.grab_focus()
+			gui.grab_focus.call_deferred()
 	
 	var item_list : ItemList = _item_list
 	if is_instance_valid(item_list):
@@ -762,6 +1059,8 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 		if txt.length() > 0:
 			for x : int in range(item_list.item_count - 1, -1, -1):
 				var _txt : String = item_list.get_item_text(x)
+				if _txt.is_empty() or _txt.begins_with("@"):
+					_txt = item_list.get_item_tooltip(x).get_file()
 				if !(_txt in items):
 					item_list.remove_item(x)
 			item_list.get_parent().get_child(0).set(&"text", txt)
@@ -778,7 +1077,7 @@ func _update_path() -> void:
 				if index > -1 and _item_list.item_count > index:
 					x.set_src(_item_list.get_item_tooltip(index))
 		
-func _on_focus(tool : Mickeytools) -> void:
+func _on_focus(tool : Mickeytools, refresh_history : bool = true) -> void:
 	if _focus_queue:
 		return
 	_focus_queue = true
@@ -791,9 +1090,9 @@ func _on_focus(tool : Mickeytools) -> void:
 			for x : int in _item_list.item_count:
 				items.append(_item_list.get_item_text(x))
 			filesearch.set(&"text", "")
-			_set_focus.call_deferred(tool, txt, items)
+			_set_focus.call_deferred(tool, txt, items, refresh_history)
 			return
-	_set_focus(tool)
+	_set_focus(tool, "", [], refresh_history)
 
 func _out_it(node : Node, with_signals : bool = false) -> void:
 	var has_tween : bool = is_instance_valid(_tweener)
@@ -829,7 +1128,7 @@ func _on_tab_change(tb : int = 0) -> void:
 	
 	process_update_queue(tb)
 
-func _setup(editor : TabContainer, setup : bool) -> void:
+func _setup(editor : TabContainer, setup : bool) -> void:	
 	const INIT_2 : Array[StringName] = [&"connect", &"disconnect"]
 	const INIT_3 : Array[Array] = [[&"tab_changed", &"_on_tab_change"],[&"child_entered_tree", &"_on_it"], [&"child_exiting_tree", &"_out_it"]]
 	var _2 : StringName = INIT_2[int(!setup)]
@@ -839,16 +1138,100 @@ func _setup(editor : TabContainer, setup : bool) -> void:
 			var _1 : Callable = Callable.create(self, _3[1])
 			if editor.is_connected(_0, _1) != setup:
 				editor.call(_2, _0, _1)
+			
+	if setup:
+		if !FileAccess.file_exists("res://addons/script_spliter/io/backward_key_button.tres"):
+			if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+				var input : InputEventKey = InputEventKey.new()
+				input.keycode = KEY_LEFT
+				input.alt_pressed = true
+				input.pressed = true
+				ResourceSaver.save(input, "res://addons/script_spliter/io/backward_key_button.tres")
+				input = null
+		if !FileAccess.file_exists("res://addons/script_spliter/io/forward_key_button.tres"):
+				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+					var input : InputEventKey = InputEventKey.new()
+					input.keycode = KEY_RIGHT
+					input.alt_pressed = true
+					input.pressed = true
+					ResourceSaver.save(input, "res://addons/script_spliter/io/forward_key_button.tres")
+					input = null
+		if !FileAccess.file_exists("res://addons/script_spliter/io/backward_mouse_button.tres"):
+				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+					var input : InputEventMouseButton = InputEventMouseButton.new()
+					input.button_index = MOUSE_BUTTON_XBUTTON1
+					input.pressed = true
+					ResourceSaver.save(input, "res://addons/script_spliter/io/backward_mouse_button.tres")
+					input = null
+		if !FileAccess.file_exists("res://addons/script_spliter/io/forward_mouse_button.tres"):
+				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
+					var input : InputEventMouseButton = InputEventMouseButton.new()
+					input.button_index = MOUSE_BUTTON_XBUTTON2
+					input.pressed = true
+					ResourceSaver.save(input, "res://addons/script_spliter/io/forward_mouse_button.tres")
+					input = null
+		
+		if !InputMap.has_action(&"ui_script_spliter_forward"):
+			InputMap.add_action(&"ui_script_spliter_forward")
+		else:
+			InputMap.action_erase_events(&"ui_script_spliter_forward")
+		
+		if FileAccess.file_exists(_HANDLE_FORWARD_KEY_PATH):
+			var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
+			if key_0 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
+			else:
+				printerr("Not type InputEvent: ", key_0)
+		else:
+			printerr("Not exist file", _HANDLE_FORWARD_KEY_PATH)
+		
+		if FileAccess.file_exists(_HANDLE_FORWARD_MOUSE_BUTTON_PATH):
+			var key_1 : Variant = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
+			if key_1 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
+			else:
+				printerr("Not type InputEvent: ", key_1)
+		else:
+			printerr("Not exist file", _HANDLE_FORWARD_MOUSE_BUTTON_PATH)
+		
+		if !InputMap.has_action(&"ui_script_spliter_backward"):
+			InputMap.add_action(&"ui_script_spliter_backward")
+		else:
+			InputMap.action_erase_events(&"ui_script_spliter_backward")
+			
+		if FileAccess.file_exists(_HANDLE_BACKWARD_KEY_PATH):
+			var key_0 : Variant = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
+			if key_0 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
+			else:
+				printerr("Not type InputEvent: ", key_0)
+		else:
+			printerr("Not exist file", _HANDLE_BACKWARD_KEY_PATH)
+		
+		if FileAccess.file_exists(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH):
+			var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
+			if key_1 is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
+			else:
+				printerr("Not type InputEvent: ", key_1)
+		else:
+			printerr("Not exist file", _HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
 
 func _on_sub_change(__ : int, tab : TabContainer) -> void:
+	if _chaser_enabled:
+		return
 	var _tab : int = tab.current_tab
 	if _tab > -1 and _tab < tab.get_child_count():
 		var control : Control = tab.get_child(_tab)
+			
 		for x : Mickeytools in _code_editors:
-			if x.get_control() == control:
-				x.focus.emit(x)
-				return
-		
+			if is_instance_valid(x):
+				var ctrl : Variant = x.get_control()
+				if is_instance_valid(ctrl):
+					if ctrl == control:
+						x.focus.emit(x)
+						return
+			
 func _on_tab_rmb(itab : int, tab : TabContainer) -> void:
 	if tab.get_child_count() > itab and itab > -1:
 		if is_instance_valid(_item_list):
@@ -871,10 +1254,7 @@ func _on_close(itab : int, tab : TabContainer) -> void:
 				if x.get_control() == ref:
 					for e : Node in _editor.get_children():
 						if e == x.get_reference():
-							x.reset()
-							_code_editors.erase(x)
-
-							x.free()
+							remove_tool(x)
 							var i : int = e.get_index()
 							if i > -1 and i < _item_list.item_count:
 								_item_list.item_clicked.emit(i, _item_list.get_local_mouse_position(), MOUSE_BUTTON_MIDDLE)
@@ -899,7 +1279,7 @@ func _on_exit(n : Node, tab : TabContainer) -> void:
 		process_update_queue()
 
 func _get_root() -> Control:
-	var margin : Root = Root.new()
+	var margin : Root = Root.new(self)
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
@@ -921,6 +1301,89 @@ func _get_container() -> Control:
 	editor.behaviour_can_expand_focus_same_container = true
 	return editor
 
+func _out_drag(e : Control) -> void:
+	var current : Control = null
+	
+	is_dd_handled = false
+	_last_dd_root = null
+	if is_instance_valid(_ddo):
+		_ddo.visible = false
+		var np : Node = _ddo.get_parent()
+		if is_instance_valid(np):
+			current = np
+			np.remove_child(_ddo)
+	if is_instance_valid(current):
+		if current.get_global_rect().has_point(current.get_global_mouse_position()):
+			if e is TabBar:
+				var ct : int = e.current_tab
+				var p : Node = e.get_parent()
+				if p and ct < p.get_child_count():
+					var gui : Node = p.get_child(ct)
+					
+					var root : Node = null
+					for x : Mickeytools in _code_editors:
+						var __root : Node = x.get_root()
+						if is_instance_valid(_root) and __root.get_parent() == current:
+							root = __root
+							break
+					
+					if is_instance_valid(root):
+						for x : Mickeytools in _code_editors:
+							if x.get_control() == gui or x.get_gui() == gui:
+								if root != x.get_root():
+									queue_swap(x, root)
+									return
+			elif e is ItemList:
+				var it : PackedInt32Array = e.get_selected_items()
+				if it.size() > 0:
+					var src : String = e.get_item_tooltip(it[0])
+					var root : Node = null
+					for x : Mickeytools in _code_editors:
+						var __root : Node = x.get_root()
+						if is_instance_valid(_root) and __root.get_parent() == current:
+							root = __root
+							break
+					
+					if is_instance_valid(root):
+						for x : Mickeytools in _code_editors:
+							if x.get_src() == src:
+								if root != x.get_root():
+									queue_swap(x, root)
+									return
+					
+								
+func queue_swap(x : Mickeytools, root : Node) -> void:
+	if is_instance_valid(x):
+		var ref : Node = x.get_reference()
+		if is_instance_valid(ref) and is_instance_valid(root):
+			remove_tool(x)
+			create_code_editor.call_deferred(root, ref)
+			_new_tools.call_deferred(_code_editors.duplicate(false))
+			
+	
+func _new_tools(tools : Array[Mickeytools]) -> void:
+	var tool : Mickeytools = null
+	for x in _code_editors:
+		if x in tools:
+			continue
+		tool = x
+		break
+	if tool:
+		tool.focus.emit.call_deferred(tool)
+	await Engine.get_main_loop().process_frame
+	if is_instance_valid(tool):
+		tool.update()
+	
+func _on_drag(e : Control) -> void:
+	is_dd_handled = is_instance_valid(e)
+	if !is_dd_handled:
+		_last_dd_root = null
+		if is_instance_valid(_ddo):
+			_ddo.visible = false
+			var np : Node = _ddo.get_parent()
+			if np:
+				np.remove_child(_ddo)
+
 func _get_container_edit() -> Control:
 	var rtab : DD = DD.new()
 
@@ -941,6 +1404,9 @@ func _get_container_edit() -> Control:
 	rtab.get_tab_bar().tab_close_pressed.connect(_on_close.bind(rtab))
 	rtab.get_tab_bar().select_with_rmb = true
 	rtab.get_tab_bar().tab_rmb_clicked.connect(_on_tab_rmb.bind(rtab))
+	
+	rtab.on_dragging.connect(_on_drag)
+	rtab.out_dragging.connect(_out_drag)
 
 	rtab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rtab.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -976,9 +1442,12 @@ func _create_by_last_used() -> void:
 					if _SHOULD_OPEN_CLOSED_EDITOR_SCRIPT:
 						var res : Variant = ResourceLoader.load(sc)
 						if res is Script:
-							EditorInterface.edit_script(res)
+							EditorInterface.edit_script.call_deferred(res)
 			
 func update() -> void:
+	if is_queued_for_deletion() or !_plugin.is_inside_tree():
+		return
+	
 	_clear()
 	if _editor.get_child_count() > 0:
 		var root : Node = _get_editor_root()
@@ -986,7 +1455,7 @@ func update() -> void:
 			create_code_editor(root, _editor.get_current_tab_control())
 			
 		_create_by_last_used()
-			
+					 
 		for x : Node in _main.get_children():
 			if is_instance_valid(x):
 				if x is TabContainer and x.get_child_count() == 0:
@@ -1004,7 +1473,7 @@ func update() -> void:
 		for i : int in range(_code_editors.size() - 1, -1, -1):
 			if is_instance_valid(_code_editors[i]):
 				_last_tool = _code_editors[i]
-				_last_tool.focus.emit(_last_tool)
+				_last_tool.focus.emit.call_deferred(_last_tool)
 				break
 			_code_editors.remove_at(i)
 			
@@ -1018,7 +1487,7 @@ func update() -> void:
 				if !x.is_floating():
 					var ref : Node = x.get_reference()
 					if ref.get_parent() != null:
-						if get_item_text(ref.get_index()).begins_with(_POP_SCRIPT_PLACEHOLDER):
+						if get_item_text(x.get_src()).begins_with(_POP_SCRIPT_PLACEHOLDER):
 							continue
 						_clear_placeholder()
 	else:
@@ -1028,6 +1497,8 @@ func _clear_placeholder() -> void:
 	if _pop_script_placeholder:
 			for x : int in range(_item_list.item_count):
 				var txt : String = _item_list.get_item_text(x)
+				if txt.is_empty() or txt.begins_with("@"):
+					txt = _item_list.get_item_tooltip(x).get_file()
 				if txt.begins_with(_POP_SCRIPT_PLACEHOLDER):
 					_item_list.item_clicked.emit(x, _item_list.get_local_mouse_position(), MOUSE_BUTTON_MIDDLE)
 					break
@@ -1038,13 +1509,21 @@ func _clear_placeholder() -> void:
 func is_visible_minimap_required() -> bool:
 	return _MINIMAP_4_UNFOCUS_WINDOW
 
-func get_item_text(c : int) -> String:
+func get_item_text(src : String) -> String:
 	var item_list : Control = _item_list
 	var text : String = ""
-	if c > -1:
+	if !src.is_empty():
 		if is_instance_valid(item_list):
-			if null != item_list and c < _editor.get_child_count() and item_list.item_count > c:
-				text = item_list.get_item_text(c).trim_suffix("(*)")
+			var indx : int = -1
+			for x : int in item_list.item_count:
+				if item_list.get_item_tooltip(x) == src:
+					indx = x
+					break
+			if indx > -1:
+				text = item_list.get_item_text(indx)
+				if text.is_empty() or text.begins_with("@"):
+					text = item_list.get_item_tooltip(indx).get_file()
+				text = text.trim_suffix("(*)")
 	return text
 
 func get_aviable() -> Node:
@@ -1065,10 +1544,6 @@ func is_valid_code_editor(root : Node, editor : Node, fallback : bool = true) ->
 
 	if !editor.is_node_ready():
 		return false
-	
-	for x : Mickeytools in _code_editors:
-		if x.is_equal(editor):
-			return false
 			
 	if editor.get_child_count() == 0:
 		if fallback and editor.is_inside_tree():
@@ -1088,45 +1563,59 @@ func is_valid_doc(editor : Control) -> bool:
 				return true
 	return false
 
+func add_tool(tool : Mickeytools) -> void:
+	_code_editors.append(tool)
+	tool_added.emit(tool)
+	
+func remove_tool(x : Mickeytools, with_signals : bool = true) -> void:
+	x.reset(with_signals)
+	_code_editors.erase(x)
+	x.free() 
+
 func create_code_editor(root : Node, editor : Node) -> Mickeytools:
 	if !is_valid_code_editor(root, editor):
 		return null
 	
 	var tool : Mickeytools = null
-	var childs : Array[Node] = root.get_children()
-
-	if _code_editors.size() > 0 and childs.size() > 0:
+	
+	if root.get_child_count() > 0:
+		var childs : Array[Node] = root.get_children()
 		for m : Mickeytools in _code_editors:
-			var o : Node = m.get_control()
-			if o in childs or m.get_gui() in childs:
-				tool = m
-				break
-				
+			if m.get_reference() == editor:
+				var o : Node = m.get_control()
+				if o in childs or m.get_gui() in childs:
+					return null
+	else:
+		for m : Mickeytools in _code_editors:
+			if m.get_reference() == editor:
+				var o : Node = m.get_control()
+				var __root : Control = m.get_root()
+				if is_instance_valid(__root) and __root.get_child_count() > 1:
+					if __root and __root.current_tab != o.get_index():
+						tool = m
+						break
+	
 	if is_valid_doc(editor):
 		if editor.name.begins_with("@"):
 			return
-		
-		if _last_tool:
-			tool = _last_tool
-		else:
-			for m : Mickeytools in _code_editors:
-				tool = m
-				break
 				
 	if null == tool:
+		for x : Mickeytools in _code_editors:
+			if x.is_equal(editor):
+				return null
 		tool = Mickeytools.new(self, root, editor)
 		tool.focus.connect(_on_focus)
-		_code_editors.append(tool)
+		add_tool(tool)
 		
 		tool.focus.emit(tool)
 	else:
 		tool.reset()
+		tool.set_root(root)
 		tool.set_reference(editor)
 
 	if _last_tool == null:
 		_last_tool = tool
 		tool.focus.emit(tool)
-	
 	tool.update.call_deferred()
 	return tool
 	
@@ -1164,9 +1653,7 @@ func remove_split(node : Node) -> void:
 				if x.get_gui() == node:
 					_remove_split_by_control(x.get_control())
 					
-					x.reset()
-					_code_editors.erase(x)
-					x.free()
+					remove_tool(x)
 												
 					process_update_queue()
 					break
@@ -1186,6 +1673,9 @@ func _get_unused_editor_control() -> Array[Node]:
 	for x : Node in _editor.get_children():
 		var exist : bool = false
 		for m : Mickeytools in _code_editors:
+			if !is_instance_valid(m):
+				_code_editors.erase(m)
+				continue
 			if m.is_equal(x):
 				exist = true
 				break
@@ -1195,14 +1685,16 @@ func _get_unused_editor_control() -> Array[Node]:
 
 func _free_editor_container(control : Control) -> bool:
 	if control.get_parent() == _main:
-		for c : Mickeytools in _code_editors:
-			var _a : Node = c.get_control().get_parent()
-			var b : Node = control
-			if _a == b or _a.get_parent() == b:
-				c.reset()
-				_code_editors.erase(c)
-				c.free()
-				break
+		for x : int in range(_code_editors.size() - 1, -1 , -1):
+			var c : Mickeytools = _code_editors[x]
+			var cc : Variant = c.get_control()
+			if is_instance_valid(cc):
+				var _a : Node = cc.get_parent()
+				var _b : Node = control
+				if _a == _b or _a.get_parent() == _b:
+					remove_tool(c)
+			else:
+				remove_tool(c)
 		_main.remove_child(control)
 		control.queue_free()
 		return true
@@ -1283,7 +1775,6 @@ func update_rect() -> void:
 			if x is TabContainer:
 				continue
 			for y : Node in x.get_children():
-				
 				if y is Control:
 					y.set_deferred(&"size", x.size)
 	_main.update()
@@ -1323,8 +1814,24 @@ func get_control_item_name(index : int) -> String:
 	var item_list : Node = _item_list
 	if item_list:
 		if index > -1 and index < item_list.item_count:
-			return item_list.get_item_text(index)
+			var text : String = item_list.get_item_text(index)
+			if text.is_empty() or text.begins_with("@"):
+				text = item_list.get_item_tooltip(index).get_file()
+			return text
 	return ""
+
+
+func get_editor_item_text(c : int) -> String:
+	var item_list : Control = _item_list
+	var text : String = ""
+	if c > -1:
+		if is_instance_valid(item_list):
+			if null != item_list and c < _editor.get_child_count() and item_list.item_count > c:
+				text = item_list.get_item_text(c)
+				if text.is_empty() or text.begins_with("@"):
+					text = item_list.get_item_tooltip(c).get_file()
+				text = text.trim_suffix("(*)")
+	return text
 
 func can_add_split(_node : Node) -> bool:
 	if !is_instance_valid(_main):
@@ -1334,7 +1841,7 @@ func can_add_split(_node : Node) -> bool:
 		return _code_editors.size() < _editor.get_child_count()
 			
 	for o : int in _editor.get_child_count():
-		if get_item_text(o).begins_with(_POP_SCRIPT_PLACEHOLDER):
+		if get_editor_item_text(o).begins_with(_POP_SCRIPT_PLACEHOLDER):
 			continue
 		var x : Node = _editor.get_child(o)
 		var created : bool = false
@@ -1404,6 +1911,13 @@ func get_current_columns_and_rows() -> Array[int]:
 	return out
 	
 func update_build(columns : int, rows : int) -> void:
+	for x : Node in _main.get_children():
+		if x is EditorContainer:
+			for y in x.get_children():
+				if y.has_method(&"reset"):
+					y.call(&"reset")
+	_out_drag(null)
+	
 	current_columns = maxi(columns, 0)
 	current_rows = maxi(rows, 0)
 
@@ -1501,9 +2015,7 @@ func _on_pop_script_close(pop : Window) -> void:
 		var gui : Node = x.get_gui()
 		var control : Node = x.get_control()
 		if control.get_parent() == container or gui.get_parent() == container:
-			x.reset(true)
-			_code_editors.erase(x)
-			x.free()
+			remove_tool(x, true)
 			
 			if container.get_child_count() < 1:
 				_pop_scripts.erase(pop)
@@ -1532,9 +2044,7 @@ func make_pop_script(control : Node) -> Window:
 	node.set_base_control(_get_container_edit())
 		
 	var editor : Control = m.get_reference()
-	m.reset()
-	_code_editors.erase(m)
-	m.free()
+	remove_tool(m)
 	
 	_plugin.add_child(node)
 		
@@ -1576,7 +2086,7 @@ func _check_pop() -> void:
 
 func _placeholder_queue() -> void:
 	for x : int in _editor.get_child_count():
-		var txt : String = get_item_text(x)
+		var txt : String = get_editor_item_text(x)
 		if txt.begins_with(_POP_SCRIPT_PLACEHOLDER):
 			var n : Node = _editor.get_child(x)
 			var c : Control = n.call(&"get_base_editor")

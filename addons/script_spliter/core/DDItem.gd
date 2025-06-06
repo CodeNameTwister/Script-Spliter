@@ -1,5 +1,5 @@
 @tool
-extends TabBar
+extends ItemList
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #	Script Spliter
 #	https://github.com/CodeNameTwister/Script-Spliter
@@ -9,8 +9,8 @@ extends TabBar
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-signal on_start_drag(t : TabBar)
-signal on_stop_drag(t : TabBar)
+signal on_start_drag(t : ItemList)
+signal on_stop_drag(t : ItemList)
 
 const PREVIEW : PackedScene = preload("res://addons/script_spliter/context/tab_preview.tscn")
 
@@ -24,15 +24,8 @@ var is_drag : bool = false:
 
 var _fms : float = 0.0
 
-func reset() -> void:
-	if is_drag:
-		set_process(false)
-		is_drag = false
-		if is_inside_tree():
-			on_stop_drag.emit(null)
-
 func _init() -> void:
-	if is_node_ready():
+	if is_node_ready(): 
 		_ready()
 
 func _ready() -> void:
@@ -58,9 +51,9 @@ func setup() -> void:
 func _on_input(e : InputEvent) -> void:
 	if e is InputEventMouseButton:
 		if e.button_index == 1:
-			is_drag = false
 			if e.pressed:
 				_fms = 0.0
+				is_drag = false
 				set_process(true)
 			else:
 				set_process(false)

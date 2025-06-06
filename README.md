@@ -12,7 +12,7 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 - [Roadmap](#roadmap)
 - [How-Work](#how-work)
 - [Know Issues](#know-issues-)
-- [Special Thanks](#special-thanks--)
+- [Special Thanks](#special-thanks-)
 
 
 # Preview [↑](#table-of-contents)
@@ -24,16 +24,40 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 ![image](https://github.com/user-attachments/assets/a6e1dea8-74cf-4fd9-b0b4-ec7d65ea3995)
 
 # NEWS [↑](#table-of-contents)
+
+### V0.3
 <p align="center">
   <img width="128" height="128" src="addons/script_spliter/assets/github_CodeNameTwister.png">
 </p>
+Introduction to using tabs
+
+* Tabs can be dragged to another window, now you can move one document from a window split to another window split.
+* Backward and Forward has an internal function with the plugin. (Thanks to [@adancau](https://github.com/adancau))
+
+>*I had initially planned to create a Notepad++ like functionality as a reference for version 0.3, but it has been decided to maintain the functionality and backward compatibility to avoid confusion for those using the plugin since version 0.1.*
+
+### Drag and Drop
+You can use tabs to drag and drop into another split window to switch between editors or you can drag directly from the script list and drop into the split window.
+
+### Modify Backward and Forward buttons
+You can modify the buttons by input resources in "script_spliter/io" folder,
+seen in [Backward/Forward Request](https://github.com/CodeNameTwister/Script-Spliter/issues/9#issuecomment-2917555511)
+
+### Using Backward/Forward
+It is per-window history, this means that if you've navigated through three different scripts within the window, moving back will only move between those three. The same happens when moving forward, and it's not affected by any other movements you've made in another window.
+>[!TIP]
+>In editor settings you have the checkbox: "using_as_next_and_back_tab" if you want use Backward/Forward move like Back/Next Tab.
+#
 
 ### V0.2
+<p align="center">
+  <img width="128" height="128" src="https://github.com/CodeNameTwister/Misc/blob/main/media/ico_gdsp2.png?raw=true">
+</p>
 The internal workflow has been modified, but the functionality of its predecessor version has been maintained.
 
 This has been done to maintain compatibility when using shorteners like Ctrl + [1, 2, 3, 4] to change the split style, this might be broken in version 0.3, see the roadmap for details.
 
-differences with version 0.1:
+### Differences with version 0.1
 * It more closely resembles the default editor window.
 * Reduces window switching time.
 * Allows you to zoom in on all windows.
@@ -55,7 +79,9 @@ differences with version 0.1:
 * Pop Script: Make Floating Script in Separate Window using RMB context menu.
 * Refresh Warnings changes in all opened windows when project is saved *(Errors/Warning Script)*
 * Reopen recently closed/changed scripts when adding a split. (Suggestion: [#5](https://github.com/CodeNameTwister/Script-Spliter/issues/5))
-* Swap between windows by double-clicking the draggable button. (Suggestion: [#8](https://github.com/CodeNameTwister/Script-Spliter/issues/5](https://github.com/CodeNameTwister/Script-Spliter/issues/8)))
+* Swap between windows by double-clicking the draggable button. (Suggestion: [#8](https://github.com/CodeNameTwister/Script-Spliter/issues/8]))
+* Back and Forward between script opened by the window splited. (Suggestion: [#9](https://github.com/CodeNameTwister/Script-Spliter/issues/9]))
+* Drag and Drop tabs between windows.
   
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
@@ -64,8 +90,9 @@ differences with version 0.1:
 # ROADMAP
 * Version >= 0.2.3: ~Flying scripts; Allow split in separate windows.~
 * Version >= 0.3:
-  * Change logo/colors: Currently the pet I use on github is placed and it is planned to change it to one more suitable for the plugin. 
-  * Using tabs for drag and drop between windows. *(WARNING! : Some features offered in previous versions may change)*
+  * ~Change logo/colors: Currently the pet I use on github is placed and it is planned to change it to one more suitable for the plugin.~
+  * ~Using tabs for drag and drop between windows.~ *~(WARNING! : Some features offered in previous versions may change)~*
+* Version >= 0.4: Revisit Pop Scripts Issues.
 
 # How Work
   
@@ -105,12 +132,12 @@ The position of the line will vary depending on the selection of horizontal or v
 
 ![image](images/img2.png)
 
-# know Issues [↑](#table-of-contents)
+# Know Issues [↑](#table-of-contents)
 ### Version 0.2.3
 The **PopScripts** (Floating Scripts) 
 It still has some issues related to the editor focus, which means that if you switch scenes, some features like the search engine within the PopScript may be affected and become unresponsive.
 
-# Special Thanks 📜 [↑](#table-of-contents)
+# Special Thanks 📜 
 This section lists users who have contributed to improving the quality of this project.
 
 [@adancau](https://github.com/adancau)

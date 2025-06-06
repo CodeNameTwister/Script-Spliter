@@ -13,3 +13,6 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# User IO ignores
+addons/script_spliter/io/*_button.tres
