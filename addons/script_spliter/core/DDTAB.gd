@@ -58,12 +58,11 @@ func setup() -> void:
 func _on_input(e : InputEvent) -> void:
 	if e is InputEventMouseButton:
 		if e.button_index == 1:
+			is_drag = false
 			if e.pressed:
 				_fms = 0.0
-				is_drag = false
 				set_process(true)
 			else:
-				is_drag = false
 				set_process(false)
 				if _fms >= 0.24:
 					on_stop_drag.emit(self)

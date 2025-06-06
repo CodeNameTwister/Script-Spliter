@@ -1775,7 +1775,6 @@ func update_rect() -> void:
 			if x is TabContainer:
 				continue
 			for y : Node in x.get_children():
-				
 				if y is Control:
 					y.set_deferred(&"size", x.size)
 	_main.update()
