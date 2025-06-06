@@ -63,6 +63,7 @@ func _on_input(e : InputEvent) -> void:
 				is_drag = false
 				set_process(true)
 			else:
+				is_drag = false
 				set_process(false)
 				if _fms >= 0.24:
 					on_stop_drag.emit(self)
