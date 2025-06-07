@@ -36,3 +36,41 @@ Each plugin configuration parameter is documented here.
 | Smooth expand time| Total time for complete expand the window shrunk|
 | Swap by double click separator button | Enable swap between windows when double click in separator button |
 
+### Editor/Behaviour/Back And Forward
+|  Setting  | Description  |
+| ------------ | ------------ |
+| Handle Back And Forward | Enable handler event of back and forward by internal function addon |
+| History Size | Max buffer size history of scripts/documents recent opened by the window split (Are stored independently by window)
+| Using As Next And Back Tab| Change Behaviour and use back and forward as next or back aviable tab |
+| Backward Key Button Path| Path of resource setting of backward key button |
+| Forward Key Button Path| Path of resource setting of forward key button |
+| Backward Mouse Button Path| Path of resource setting of backward mouse button |
+| Forward Mouse Button Path| Path of resource setting of forward mouse button |
+| Use Native Handler When There Are No More Tabs| Enable leave to godot handle the back and forward when not exist more tabs in the focused window |
+
+### Editor/Split
+This section work only when you add new split/s.
+in old versions < 0.3 was more useful.
+
+|  Setting  | Description  |
+| ------------ | ------------ |
+| Reopen Last Closed Editor On Add Split | Enable open a script recent used and closed (Only for script / unless you make a request on github and change your mind)|
+| Remember Last Used Editor Buffer Size | Max last scripts for remember, maybe you want increase if you usually work with more than 4 windows |
+
+
+### Line
+|  Setting  | Description  |
+| ------------ | ------------ |
+| Size | Line width  |
+| Color | Color of the Line, magenta is default that mean use editor color  |
+| Draggable | Allow drag the Line pressing the primary mouse button |
+| Expand by Double Click | When you press with mouse (double click) the line back to initial position |
+
+### Button
+|  Setting  | Description  |
+| ------------ | ------------ |
+| Size | Button width  |
+| Modulate | Modulate Button Color  |
+| Icon Path | Texture path for the button  |
+# 
+Script Spliter tool plugin for Community Of Godot 4, created by Twister.
