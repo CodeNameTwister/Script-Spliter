@@ -906,7 +906,7 @@ class Mickeytools extends Object:
 								c.reparent(_parent)
 						_control.queue_free()
 					else:
-						_reparent.call_deferred(_index, _control, parent, _parent)
+						_helper.control_reparent.call_deferred(_index, _control, parent, _parent)
 		_gui = null
 		_parent = null
 		_control = null
@@ -917,7 +917,14 @@ class Mickeytools extends Object:
 			if _helper.add_last_script_used.is_valid():
 				_helper.add_last_script_used(_src)
 
-	func _reparent(_index : int, _control : Node, parent : Node, _parent : Node) -> void:
+func control_reparent(_index : int, _control : Node, parent : Node, _parent : Node) -> void:
+	if !is_instance_valid(_control):
+		return
+		
+	if !is_instance_valid(_parent):
+		return
+	
+	if _parent != _control.get_parent():
 		if is_instance_valid(parent):
 			if _control.is_inside_tree() and _parent.is_inside_tree():
 				_control.reparent(_parent)
