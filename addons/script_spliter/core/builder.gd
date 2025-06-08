@@ -917,7 +917,7 @@ class Mickeytools extends Object:
 			if _helper.add_last_script_used.is_valid():
 				_helper.add_last_script_used(_src)
 
-func control_reparent(_index : int, _control : Node, parent : Node, _parent : Node) -> void:
+func control_reparent(_index : int, _control : Object, parent : Object, _parent : Object) -> void:
 	if !is_instance_valid(_control):
 		return
 		
@@ -1964,12 +1964,31 @@ func get_current_focus_index() -> int:
 		return arr[0]
 	return 0
 	
-func focus_by_index(index : int) -> bool:
-	if _code_editors.size() > index and index > -1:
+func focus_by_index(index : int, check_is_visible : bool = true) -> int:
+	if check_is_visible:
+		while _code_editors.size() > index and index > -1:
+			var cd : Mickeytools  = _code_editors[index]
+			if cd != _last_tool:
+				var variant : Variant = cd.get_control()
+				if is_instance_valid(variant):
+					if variant is Control:
+						var parent : Node = variant.get_parent()
+						if parent is TabContainer:
+							if parent.get_current_tab_control() == variant:
+								_on_focus(cd)
+								return index
+			index += 1
+	else:
 		var cd : Mickeytools  = _code_editors[index]
-		_on_focus(cd)
-		return true
-	return false
+		var variant : Variant = cd.get_control()
+		if is_instance_valid(variant):
+			if variant is Control:
+				var parent : Node = variant.get_parent()
+				if parent is TabContainer:
+					if parent.get_current_tab_control() == variant:
+						_on_focus(cd)
+						return index
+	return -1
 
 func get_focus_config() -> Dictionary:
 	return {

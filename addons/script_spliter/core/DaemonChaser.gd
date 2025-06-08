@@ -27,10 +27,14 @@ func _ready() -> void:
 	
 func _back() -> void:
 	if callback.is_valid():
-		callback.call(back_to)
+		callback.call(back_to, false)
+	
+func update_index() -> int:
+	index = callback.call(index, true)
+	return index
 	
 func _process(__: float) -> void:
-	if !callback.is_valid() or !callback.call(index):
+	if !callback.is_valid() or 0 > update_index():
 		set_process(false)
 		_back()
 		if end_callback.is_valid():
