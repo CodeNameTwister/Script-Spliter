@@ -86,6 +86,10 @@ This has been done to maintain compatibility when using shorteners like Ctrl + [
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
 
+>[!NOTE]
+>In [DocEditorSettings.md](DocEditorSettings.md) you can see the description of the settings.
+
+
 
 # ROADMAP
 * Version >= 0.2.3: ~Flying scripts; Allow split in separate windows.~
