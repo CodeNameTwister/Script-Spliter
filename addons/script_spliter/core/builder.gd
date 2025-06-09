@@ -1965,29 +1965,30 @@ func get_current_focus_index() -> int:
 	return 0
 	
 func focus_by_index(index : int, check_is_visible : bool = true) -> int:
-	if check_is_visible:
-		while _code_editors.size() > index and index > -1:
+	if _code_editors.size() > index:
+		if check_is_visible:
+			while _code_editors.size() > index and index > -1:
+				var cd : Mickeytools  = _code_editors[index]
+				if cd != _last_tool:
+					var variant : Variant = cd.get_control()
+					if is_instance_valid(variant):
+						if variant is Control:
+							var parent : Node = variant.get_parent()
+							if parent is TabContainer:
+								if parent.get_current_tab_control() == variant:
+									_on_focus(cd)
+									return index
+				index += 1
+		else:
 			var cd : Mickeytools  = _code_editors[index]
-			if cd != _last_tool:
-				var variant : Variant = cd.get_control()
-				if is_instance_valid(variant):
-					if variant is Control:
-						var parent : Node = variant.get_parent()
-						if parent is TabContainer:
-							if parent.get_current_tab_control() == variant:
-								_on_focus(cd)
-								return index
-			index += 1
-	else:
-		var cd : Mickeytools  = _code_editors[index]
-		var variant : Variant = cd.get_control()
-		if is_instance_valid(variant):
-			if variant is Control:
-				var parent : Node = variant.get_parent()
-				if parent is TabContainer:
-					if parent.get_current_tab_control() == variant:
-						_on_focus(cd)
-						return index
+			var variant : Variant = cd.get_control()
+			if is_instance_valid(variant):
+				if variant is Control:
+					var parent : Node = variant.get_parent()
+					if parent is TabContainer:
+						if parent.get_current_tab_control() == variant:
+							_on_focus(cd)
+							return index
 	return -1
 
 func get_focus_config() -> Dictionary:
