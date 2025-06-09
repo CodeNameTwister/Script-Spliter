@@ -12,8 +12,6 @@ extends TabBar
 signal on_start_drag(t : TabBar)
 signal on_stop_drag(t : TabBar)
 
-const PREVIEW : PackedScene = preload("res://addons/script_spliter/context/tab_preview.tscn")
-
 var is_drag : bool = false:
 	set(e):
 		is_drag = e

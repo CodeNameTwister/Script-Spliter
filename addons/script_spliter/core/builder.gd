@@ -1967,7 +1967,7 @@ func get_current_focus_index() -> int:
 func focus_by_index(index : int, check_is_visible : bool = true) -> int:
 	if _code_editors.size() > index:
 		if check_is_visible:
-			while _code_editors.size() > index and index > -1:
+			while _code_editors.size() > index:
 				var cd : Mickeytools  = _code_editors[index]
 				if cd != _last_tool:
 					var variant : Variant = cd.get_control()

@@ -12,8 +12,6 @@ extends ItemList
 signal on_start_drag(t : ItemList)
 signal on_stop_drag(t : ItemList)
 
-const PREVIEW : PackedScene = preload("res://addons/script_spliter/context/tab_preview.tscn")
-
 var is_drag : bool = false:
 	set(e):
 		is_drag = e
