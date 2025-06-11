@@ -19,6 +19,7 @@ const ICON_REMOVE_COLUMN : Texture = preload("res://addons/script_spliter/contex
 const ICON_ADD_ROW : Texture = preload("res://addons/script_spliter/context/icons/split_rplus.svg")
 const ICON_REMOVE_ROW : Texture = preload("res://addons/script_spliter/context/icons/split_rminus.svg")
 const ICON_FLOATING : Texture = preload("res://addons/script_spliter/context/icons/atop.png")
+const ICON_TAB : Texture = preload("res://addons/script_spliter/assets/tab_icon.svg")
 
 var _rmb_editor_add_split : EditorContextMenuPlugin = null
 var _rmb_editor_remove_split: EditorContextMenuPlugin = null
@@ -26,6 +27,10 @@ var _rmb_editor_code_add_split : EditorContextMenuPlugin = null
 var _rmb_editor_code_remove_split : EditorContextMenuPlugin = null
 var _rmb_editor_pop_script : EditorContextMenuPlugin = null
 var _rmb_editor_code_pop_script : EditorContextMenuPlugin = null
+
+var _rmb_close_all_tab_in_split : EditorContextMenuPlugin = null
+var _rmb_close_all_tab_in_split_right : EditorContextMenuPlugin = null
+var _rmb_close_all_tab_in_split_left : EditorContextMenuPlugin = null
 
 var _menu_split_selector : Window = null
 var _builder : Object = null
@@ -206,6 +211,9 @@ func _setup(input : int) -> void:
 		var ctx_add_column : String = _get_translated_text("ADD_SPLIT").capitalize()
 		var ctx_remove_split : String = _get_translated_text("REMOVE_SPLIT").capitalize()
 		var ctx_pop_script : String = _get_translated_text("MAKE_FLOATING_SCRIPT").capitalize()
+		var ctx_close_tabs : String = _get_translated_text("CLOSE_OTHERS_TABS_IN_SPLIT").capitalize()
+		var ctx_close_tabs_right : String = _get_translated_text("CLOSE_RIGHT_TABS_IN_SPLIT").capitalize()
+		var ctx_close_tabs_left : String = _get_translated_text("CLOSE_LEFT_TABS_IN_SPLIT").capitalize()
 
 		#SETUP
 		_rmb_editor_add_split = CONTEXT.new(ctx_add_column, _add_window_split, _can_add_split, ICON_ADD_COLUMN)
@@ -216,6 +224,15 @@ func _setup(input : int) -> void:
 
 		_rmb_editor_pop_script = CONTEXT.new(ctx_pop_script, _make_pop_script, _can_make_pop_script, ICON_FLOATING)
 		_rmb_editor_code_pop_script = CONTEXT.new(ctx_pop_script, _make_pop_script, _can_make_pop_script, ICON_FLOATING)
+
+		_rmb_close_all_tab_in_split = CONTEXT.new(ctx_close_tabs, _close_all_tabs_in_split, _can_close_tab_in_split, ICON_TAB)
+		_rmb_close_all_tab_in_split_left = CONTEXT.new(ctx_close_tabs_left, _close_all_tabs_in_split_left, _can_close_left_tab_in_split, ICON_TAB)
+		_rmb_close_all_tab_in_split_right = CONTEXT.new(ctx_close_tabs_right, _close_all_tabs_in_split_right, _can_close_right_tab_in_split, ICON_TAB)
+		
+		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_close_all_tab_in_split)
+		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_close_all_tab_in_split_left)
+		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_close_all_tab_in_split_right)
+		
 
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_editor_add_split)
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_editor_remove_split)
@@ -246,6 +263,13 @@ func _setup(input : int) -> void:
 			
 		main_screen_changed.disconnect(_on_change)
 		resource_saved.disconnect(_on_save)
+
+		if is_instance_valid(_rmb_close_all_tab_in_split):
+			remove_context_menu_plugin(_rmb_close_all_tab_in_split)
+		if is_instance_valid(_rmb_close_all_tab_in_split_right):
+			remove_context_menu_plugin(_rmb_close_all_tab_in_split_right)
+		if is_instance_valid(_rmb_close_all_tab_in_split_left):
+			remove_context_menu_plugin(_rmb_close_all_tab_in_split_left)		
 		
 		if is_instance_valid(_rmb_editor_add_split):
 			remove_context_menu_plugin(_rmb_editor_add_split)
@@ -266,6 +290,24 @@ func _setup(input : int) -> void:
 				settings.set_setting(&"plugin/script_spliter/rows", _rows)
 				settings.set_setting(&"plugin/script_spliter/columns", _columns)
 
+func _can_close_tab_in_split(path : PackedStringArray) -> bool:
+	return _builder.has_other_tabs()
+	
+func _can_close_right_tab_in_split(path : PackedStringArray) -> bool:
+	return _builder.has_right_tabs()
+	
+func _can_close_left_tab_in_split(path : PackedStringArray) -> bool:
+	return _builder.has_left_tabs()
+
+func _close_all_tabs_in_split(__ : Variant) -> void:
+	_builder.close_other_tabs()
+	
+func _close_all_tabs_in_split_right(__ : Variant) -> void:
+	_builder.close_right_tabs()
+	
+func _close_all_tabs_in_split_left(__ : Variant) -> void:
+	_builder.close_left_tabs()
+	
 func _can_add_split(path : PackedStringArray) -> bool:
 	if !is_instance_valid(_builder):
 		return false

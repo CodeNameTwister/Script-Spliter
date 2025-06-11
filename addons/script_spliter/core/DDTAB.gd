@@ -36,6 +36,14 @@ func _init() -> void:
 func _ready() -> void:
 	set_process(false)
 	setup()
+	
+func _enter_tree() -> void:
+	if !is_in_group(&"__SPLITER_TAB__"):
+		add_to_group(&"__SPLITER_TAB__")
+	
+func _exit_tree() -> void:
+	if is_in_group(&"__SPLITER_TAB__"):
+		remove_from_group(&"__SPLITER_TAB__")
 
 func _process(delta: float) -> void:
 	_fms += delta
@@ -52,6 +60,8 @@ func _process(delta: float) -> void:
 func setup() -> void:
 	if !gui_input.is_connected(_on_input):
 		gui_input.connect(_on_input)
+	if !is_in_group(&"__SPLITER_TAB__"):
+		add_to_group(&"__SPLITER_TAB__")
 
 func _on_input(e : InputEvent) -> void:
 	if e is InputEventMouseButton:
