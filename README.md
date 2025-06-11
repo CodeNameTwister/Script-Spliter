@@ -82,6 +82,7 @@ This has been done to maintain compatibility when using shorteners like Ctrl + [
 * Swap between windows by double-clicking the draggable button. (Suggestion: [#8](https://github.com/CodeNameTwister/Script-Spliter/issues/8]))
 * Back and Forward between script opened by the window splited. (Suggestion: [#9](https://github.com/CodeNameTwister/Script-Spliter/issues/9]))
 * Drag and Drop tabs between windows.
+* Tabs close options in using (RMB) context menu.
   
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
