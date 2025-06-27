@@ -626,7 +626,7 @@ class Mickeytools extends Object:
 						if index > -1 and index < root.get_child_count():
 							root.current_tab = index
 						break
-					
+		
 		if should_grab_focus:
 			if is_instance_valid(_gui) and _gui.is_inside_tree():
 				var control : Control = _gui
@@ -1132,7 +1132,6 @@ func _on_tab_change(tb : int = 0) -> void:
 	if !_chaser_enabled:
 		_grab_focus_by_tab(tb)
 		
-	
 	process_update_queue(tb)
 
 func _setup(editor : TabContainer, setup : bool) -> void:	

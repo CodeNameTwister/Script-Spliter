@@ -33,12 +33,19 @@ func update_index() -> int:
 	index = callback.call(index, true)
 	return index
 	
+func dispose() -> void:
+	set_process(false)
+	_back()
+	if end_callback.is_valid():
+		end_callback.call(buffer)
+		buffer = {}
+	
 func _process(__: float) -> void:
-	if !callback.is_valid() or 0 > update_index():
-		set_process(false)
-		_back()
-		if end_callback.is_valid():
-			end_callback.call(buffer)
-			buffer = {}
+	var root : SceneTree = get_tree()
+	if !root or !root.root.has_focus():
+		dispose()
+		return
+	elif !callback.is_valid() or 0 > update_index():
+		dispose()
 		return
 	index += 1

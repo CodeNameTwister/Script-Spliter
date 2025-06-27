@@ -87,16 +87,18 @@ func _on_save(res : Resource) -> void:
 	
 func _save_external_data() -> void:
 	if _d_chase == true:
-		return
+		return#
 	_d_chase = true
 	if _refresh_warnings_on_save and is_instance_valid(_builder):
-		if _daemon_chaser == null:
-			_daemon_chaser = ResourceLoader.load("res://addons/script_spliter/core/DaemonChaser.gd").new()
-			add_child(_daemon_chaser)
-		_daemon_chaser.set_current_index(_builder.get_current_focus_index())
-		_daemon_chaser.buffer = _builder.get_focus_config()
-		_builder.enable_focus_highlight(false)
-		_daemon_chaser.run(_builder.focus_by_index, _builder.set_focus_config)
+		var root : SceneTree = get_tree()
+		if root and root.root.has_focus():
+			if _daemon_chaser == null:
+				_daemon_chaser = ResourceLoader.load("res://addons/script_spliter/core/DaemonChaser.gd").new()
+				add_child(_daemon_chaser)
+			_daemon_chaser.set_current_index(_builder.get_current_focus_index())
+			_daemon_chaser.buffer = _builder.get_focus_config()
+			_builder.enable_focus_highlight(false)
+			_daemon_chaser.run(_builder.focus_by_index, _builder.set_focus_config)
 	set_deferred(&"_d_chase", false)
 
 func _process(__: float) -> void:
