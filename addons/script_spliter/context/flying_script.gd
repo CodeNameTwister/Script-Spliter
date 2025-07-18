@@ -80,10 +80,7 @@ func _on_tabity(__ : int) -> void:
 func _on_always_top() -> void:
 	if transient:
 		return
-	always_on_top = !always_on_top
-	
-func __input(event: InputEvent) -> void:
-	print(event)
+	always_on_top = !always_on_top	
 	
 func _shortcut_input(event: InputEvent) -> void:
 	if is_instance_valid(proxy):
@@ -91,9 +88,6 @@ func _shortcut_input(event: InputEvent) -> void:
 		if vp and vp != get_viewport():
 			vp.push_input(event)
 			return
-	#if event is InputEventMouseButton:
-		#event.position = Vector2.ZERO
-	#Engine.get_main_loop().root.push_input(event)
 			
 func _ready() -> void:
 	set_process_shortcut_input(true)
