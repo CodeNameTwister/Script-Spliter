@@ -541,6 +541,10 @@ func _get_editor_root() -> Node:
 
 func get_last_tool() -> Mickeytools:
 	return _last_tool
+
+func update_all_info() -> void:
+	for x : Mickeytools in _code_editors:
+		x.update()
 	
 func update_info(root : TabContainer, index : int , src : String) -> void:
 	if !is_instance_valid(root):

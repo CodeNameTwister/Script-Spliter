@@ -436,6 +436,12 @@ func _ready() -> void:
 	for __ : int in range(2):
 		await get_tree().process_frame
 	_run()
+	
+	for __ : int in range(4):
+		var scene : SceneTree = get_tree()
+		if is_instance_valid(scene):
+			await scene.process_frame
+	_builder.update_all_info()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
