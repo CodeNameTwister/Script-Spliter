@@ -139,4 +139,4 @@ func _on_start_drag(tab : TabBar) -> void:
 
 func _init() -> void:
 	child_entered_tree.connect(_on_child)
-	#child_exiting_tree.connect(_out_child)
+	child_exiting_tree.connect(_out_child)

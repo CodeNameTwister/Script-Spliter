@@ -543,7 +543,6 @@ func get_last_tool() -> Mickeytools:
 	return _last_tool
 	
 func update_info(root : TabContainer, index : int , src : String) -> void:
-	await _plugin.get_tree().process_frame
 	if !is_instance_valid(root):
 		return
 	var item_list : Control = _item_list
