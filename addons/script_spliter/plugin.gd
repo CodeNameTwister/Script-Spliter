@@ -431,17 +431,19 @@ func _on_tool_command() -> void:
 func _ready() -> void:
 	set_process(false)
 	set_process_input(false)
+	set_physics_process(true)
 	if !get_tree().root.is_node_ready():
 		await get_tree().root.ready
 	for __ : int in range(2):
 		await get_tree().process_frame
 	_run()
 	
-	for __ : int in range(4):
-		var scene : SceneTree = get_tree()
-		if is_instance_valid(scene):
-			await scene.process_frame
-	_builder.update_all_info()
+	
+func _physics_process(delta: float) -> void:
+	if is_instance_valid(_item_list):
+		if (_item_list as ItemList).item_count > 0:
+			set_physics_process(false)
+			get_tree().create_timer(1.0).timeout.connect(_builder.update_all_info)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:

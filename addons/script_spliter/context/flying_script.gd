@@ -82,11 +82,18 @@ func _on_always_top() -> void:
 		return
 	always_on_top = !always_on_top
 	
+func __input(event: InputEvent) -> void:
+	print(event)
+	
 func _shortcut_input(event: InputEvent) -> void:
 	if is_instance_valid(proxy):
 		var vp : Viewport = proxy.get_viewport()
 		if vp and vp != get_viewport():
 			vp.push_input(event)
+			return
+	#if event is InputEventMouseButton:
+		#event.position = Vector2.ZERO
+	#Engine.get_main_loop().root.push_input(event)
 			
 func _ready() -> void:
 	set_process_shortcut_input(true)

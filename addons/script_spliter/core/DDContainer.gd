@@ -123,7 +123,6 @@ func _on_child(n : Node) -> void:
 			
 func _out_child(n : Node) -> void:
 	if n is TabBar:
-
 		if n.on_start_drag.is_connected(_on_start_drag):
 			n.on_start_drag.disconnect(_on_start_drag)
 		if n.on_stop_drag.is_connected(_on_stop_drag):

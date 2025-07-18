@@ -12,6 +12,8 @@ const EditorContainer : Script = preload("res://addons/script_spliter/core/Edito
 const DD : Script = preload("res://addons/script_spliter/core/DDContainer.gd")
 const DDO : PackedScene = preload("res://addons/script_spliter/core/ui/dd.tscn")
 const DDITEM : Script = preload("res://addons/script_spliter/core/DDItem.gd")
+const TOOL_ICON : Texture2D = preload("res://addons/script_spliter/assets/tab_icon.svg")
+
 
 #region POPSC	
 const FLYING_SCRIPT : PackedScene = preload("res://addons/script_spliter/context/flying_script.tscn")
@@ -42,7 +44,6 @@ var _last_tool : Mickeytools = null:
 var _tweener : ReTweener = null
 var _item_list : ItemList = null:
 	set(e):
-		
 		if e == null and is_instance_valid(_item_list):
 			if _item_list.has_signal(&"on_start_drag") and  _item_list.is_connected(&"on_start_drag", _on_drag):
 				_item_list.disconnect(&"on_start_drag", _on_drag)
@@ -544,7 +545,8 @@ func get_last_tool() -> Mickeytools:
 
 func update_all_info() -> void:
 	for x : Mickeytools in _code_editors:
-		x.update()
+		if is_instance_valid(x):
+			x.update()
 	
 func update_info(root : TabContainer, index : int , src : String) -> void:
 	if !is_instance_valid(root):
@@ -553,7 +555,20 @@ func update_info(root : TabContainer, index : int , src : String) -> void:
 	if !src.is_empty():
 		if root.get_tab_count() <= index:
 			return
+		var as_tool : bool = false
 		root.set_tab_tooltip(index, src)
+		
+		var editor : ScriptEditor = EditorInterface.get_script_editor()
+		if editor:
+			for sc : Script in editor.get_open_scripts():
+				if sc.resource_path == src:
+					if sc.is_tool():
+						as_tool = true
+						break
+						
+		if as_tool:
+			root.set_tab_icon(index, TOOL_ICON)
+		
 		if is_instance_valid(item_list):
 			var indx : int = -1
 			for x : int in item_list.item_count:
@@ -567,7 +582,8 @@ func update_info(root : TabContainer, index : int , src : String) -> void:
 				text = text.trim_suffix("(*)")
 				if !text.is_empty():
 					root.set_tab_title(index, text)
-					root.set_tab_icon(index, item_list.get_item_icon(indx))
+					if !as_tool:
+						root.set_tab_icon(index, item_list.get_item_icon(indx))
 				return
 		var ct : String = root.get_tab_title(index)
 		if ct.is_empty() or ct.begins_with("@") or "/" in ct:
@@ -1554,7 +1570,6 @@ func _get_container_edit() -> Control:
 	rtab.get_tab_bar().tab_close_display_policy = TabBar.CLOSE_BUTTON_SHOW_ALWAYS
 
 	rtab.drag_to_rearrange_enabled = true
-
 
 	rtab.child_entered_tree.connect(_on_enter.bind(rtab))
 	rtab.child_exiting_tree.connect(_on_exit.bind(rtab))
