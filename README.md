@@ -146,6 +146,8 @@ It still has some issues related to the editor focus, which means that if you sw
 This section lists users who have contributed to improving the quality of this project.
 
 [@adancau](https://github.com/adancau)
+[@Sam-Online](https://github.com/Sam-Online)
+
 
 #
 Copyrights (c) CodeNameTwister. See [LICENSE](LICENSE) for details.
