@@ -1902,7 +1902,7 @@ func _on_container_exit() -> void:
 #endregion
 
 func remove_split(node : Node) -> void:
-	if _code_editors.size() > 1:
+	if can_remove_split(node):
 		if node is CodeEdit:
 			for it : int in range(_code_editors.size() - 1, -1, -1):
 				var x : Mickeytools = _code_editors[it]
@@ -2056,29 +2056,21 @@ func find_editor(node : Node) -> Control:
 				return x
 	return null
 
-func can_remove_split(node : Node) -> bool:
+func can_remove_split(_node : Node) -> bool:
 	if !is_instance_valid(_main):
 		return false
 		
-	if node == null:
-		return _code_editors.size() > 1
-		
-	if _code_editors.size() > 1:
-		if node is CodeEdit:
-			var main : bool = false
-			for x : Mickeytools in _code_editors:
-				if x.is_floating():
-					continue
-				var item_list : Node = _item_list
-				if item_list:
-					var reference : Node = x.get_reference()
-					if reference.get_parent() != null:
-						if get_control_item_name(reference.get_index()).begins_with(_POP_SCRIPT_PLACEHOLDER):
-							continue
-				if main:
-					return true
-				main = true
-	return false
+	var nds : Array[Node] = []
+	for x : Mickeytools in _code_editors:
+		if x.is_floating():
+			continue
+		var root : Node = x.get_root()
+		if !is_instance_valid(root):
+			continue
+		if nds.has(root):
+			continue
+		nds.append(root)
+	return nds.size() > 1
 
 func get_control_item_name(index : int) -> String:
 	var item_list : Node = _item_list
@@ -2103,47 +2095,76 @@ func get_editor_item_text(c : int) -> String:
 				text = text.trim_suffix("(*)")
 	return text
 
-func can_add_split(_node : Node) -> bool:
+func can_add_split(node : Node) -> bool:
 	if !is_instance_valid(_main):
 		return false
-			
-	if _node == null:
-		return _code_editors.size() < _editor.get_child_count()
-			
-	for o : int in _editor.get_child_count():
-		if get_editor_item_text(o).begins_with(_POP_SCRIPT_PLACEHOLDER):
-			continue
-		var x : Node = _editor.get_child(o)
-		var created : bool = false
-		if x.has_method(&"get_base_editor"):
-			x = x.call(&"get_base_editor")
-			for m : Mickeytools in _code_editors:
-				if m.get_gui() == x:
-					created = true
-					break
-		else:
-			if x.get_child_count() > 0:
-				var child : Node = x.get_child(0)
-				for m : Mickeytools in _code_editors:
-					var gui : Node = m.get_gui()
-					if gui == x or child == gui:
-						created = true
-						break
-			else:
-				for m : Mickeytools in _code_editors:
-					var gui : Node = m.get_gui()
-					if gui == x :
-						created = true
-						break
-		if !created:
-			return true
-	return false
+	
+	var split : bool = false
+	
+	if node == null:
+		var nds : Array[Node] = []
+		var av : Array[Mickeytools] = []
+		for x : Mickeytools in _code_editors:
+			if x.is_floating():
+				continue
+			var root : Node = x.get_root()
+			if !is_instance_valid(root):
+				continue
+			if root.get_child_count() > 0:
+				av.append(x)
+				if nds.has(root):
+					continue
+				nds.append(root)
+		split = av.size() > nds.size()
+	else:
+		for x : Mickeytools in _code_editors:
+			if x.is_floating():
+				continue
+			var gui : Variant = x.get_gui()
+			if is_instance_valid(gui) and gui == node:
+				var root : Node = x.get_root()
+				if !is_instance_valid(root):
+					continue
+				split = root.get_child_count() > 1
+				break
+	if !split:
+		split = _code_editors.size() < _editor.get_child_count()
+	return split
 
 func add_split(control : Node) -> void:
+	if !can_add_split(control):
+		return
+	
 	var unused : Array[Node] = _get_unused_editor_control()
 	if unused.size() == 0:
-		print("[INFO] Not aviable split!")
-		return
+		var root : Node = null
+		var ctool : Mickeytools = null
+		for x : Mickeytools in _code_editors:
+			if x.is_floating():
+				continue
+			var gui : Variant = x.get_gui()
+			if is_instance_valid(gui) and gui == control:
+				var _root : Variant = x.get_root()
+				if !is_instance_valid(_root):
+					continue
+				root = _root
+				ctool = x
+				break
+		if root:
+			var tls : Array[Mickeytools] = []
+			for x : Mickeytools in _code_editors:
+				if x.is_floating():
+					continue
+				var _root : Variant = x.get_root()
+				if is_instance_valid(_root) and _root == root:
+					var gui : Variant = x.get_gui()
+					if is_instance_valid(gui) and x != ctool:
+						ctool.reset()
+						unused = _get_unused_editor_control()
+						break
+		if unused.size() < 1:
+			print("[INFO] Not aviable split!")
+			return
 
 	var current_unused : Node = control
 
