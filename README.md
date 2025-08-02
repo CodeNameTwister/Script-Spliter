@@ -83,6 +83,7 @@ This has been done to maintain compatibility when using shorteners like Ctrl + [
 * Back and Forward between script opened by the window splited. (Suggestion: [#9](https://github.com/CodeNameTwister/Script-Spliter/issues/9]))
 * Drag and Drop tabs between windows.
 * Tabs close options using (RMB) context menu.
+* Show All current active splited Scripts in Script List. (Feature: [#9](https://github.com/CodeNameTwister/Script-Spliter/issues/15]))
   
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
