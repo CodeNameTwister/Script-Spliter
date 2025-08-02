@@ -107,6 +107,7 @@ var _SWAP_BY_BUTTON : bool = true
 
 var _LIST_VISIBLE_SELECTED_COLOR : Color = Color.from_string("7b68ee", Color.CORNFLOWER_BLUE)
 var _LIST_VISIBLE_OTHERS_COLOR : Color = Color.from_string("4835bb", Color.DARK_BLUE)
+var _LIST_VISIBLE_SHOW_ACTIVES : bool = false
 
 #region _9_
 var HANDLE_BACK_FORWARD_BUTTONS : bool = true
@@ -169,8 +170,9 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path", &"_HANDLE_BACKWARD_MOUSE_BUTTON_PATH"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path", &"_HANDLE_FORWARD_MOUSE_BUTTON_PATH"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/use_native_handler_when_there_are_no_more_tabs", &"USE_NATIVE_ON_NOT_TABS"]
-		,[&"plugin/script_spliter/editor/split/selected_color", &"_LIST_VISIBLE_SELECTED_COLOR"]
-		,[&"plugin/script_spliter/editor/split/others_color", &"_LIST_VISIBLE_OTHERS_COLOR"]
+		,[&"plugin/script_spliter/editor/list/selected_color", &"_LIST_VISIBLE_SELECTED_COLOR"]
+		,[&"plugin/script_spliter/editor/list/others_color", &"_LIST_VISIBLE_OTHERS_COLOR"]
+		,[&"plugin/script_spliter/editor/list/colorize_actives", &"_LIST_VISIBLE_SHOW_ACTIVES"]
 		]
 	return CFG
 	
@@ -365,6 +367,10 @@ func _update_list_selection() -> void:
 		
 	var packed : PackedStringArray = []
 	var selected : String = ""
+	var others_selected : PackedStringArray = []
+	
+	var root : Node = _last_tool.get_root()
+	
 	for x : Mickeytools in _code_editors:
 		if !is_instance_valid(x):
 			continue
@@ -379,12 +385,17 @@ func _update_list_selection() -> void:
 			if v is Control:
 				if v.is_visible_in_tree():
 					packed.append(src)
+				elif x.get_root() == root:
+					others_selected.append(src)
 	
 	var color : Color = _LIST_VISIBLE_SELECTED_COLOR
+	var color_ctn : Color = _LIST_VISIBLE_SELECTED_COLOR
 	var others : Color = _LIST_VISIBLE_OTHERS_COLOR
-	color.a = 0.325
-	others.a = 0.325
+	color.a = 0.5
+	others.a = 0.5
+	color_ctn.a = 0.25
 	var item_list : ItemList = _item_list
+	
 	if is_instance_valid(item_list):
 		for x : int in _script_list.item_count:
 			var mt : String = _script_list.get_item_tooltip(x)
@@ -393,9 +404,19 @@ func _update_list_selection() -> void:
 					_script_list.set_item_custom_bg_color(x, color)
 					_script_list.set_item_custom_fg_color(x, Color.WHITE)
 				else:
+					if _LIST_VISIBLE_SHOW_ACTIVES:
+						_script_list.set_item_custom_fg_color(x, Color.DARK_GRAY)
 					_script_list.set_item_custom_bg_color(x, others)
 			else:
-				_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
+				if _LIST_VISIBLE_SHOW_ACTIVES:
+				
+					if others_selected.has(mt):
+						_script_list.set_item_custom_bg_color(x, color_ctn)
+						_script_list.set_item_custom_fg_color(x, Color.GRAY)
+					else:
+						_script_list.set_item_custom_fg_color(x, Color.GRAY)
+				else:
+					_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
 	
 	else:
 		for x : int in _script_list.item_count:
@@ -405,10 +426,19 @@ func _update_list_selection() -> void:
 					_script_list.set_item_custom_bg_color(x, color)
 					_script_list.set_item_custom_fg_color(x, Color.WHITE)
 				else:
+					if _LIST_VISIBLE_SHOW_ACTIVES:
+						_script_list.set_item_custom_fg_color(x, Color.DARK_GRAY)
 					_script_list.set_item_custom_bg_color(x, others)
 			else:
-				_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
-				#_script_list.set_item_custom_fg_color(x, _script_list.get_item_custom_fg_color(x).darkened(0.2))
+				if _LIST_VISIBLE_SHOW_ACTIVES:
+				
+					if others_selected.has(mt):
+						_script_list.set_item_custom_bg_color(x, color_ctn)
+						_script_list.set_item_custom_fg_color(x, Color.GRAY)
+					else:
+						_script_list.set_item_custom_fg_color(x, Color.GRAY)
+				else:
+					_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
 	
 	set_deferred(&"_script_list_selection", false)
 	
