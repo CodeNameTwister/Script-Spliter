@@ -1939,15 +1939,29 @@ func _get_unused_editor_control() -> Array[Node]:
 			out.append(x)
 	return out
 
-func _free_editor_container(control : Control) -> bool:
+func _free_editor_container(control : Control, expected : int) -> bool:
 	if control.get_parent() == _main:
 		for x : int in range(_code_editors.size() - 1, -1 , -1):
 			var c : Mickeytools = _code_editors[x]
+			
 			var cc : Variant = c.get_control()
 			if is_instance_valid(cc):
 				var _a : Node = cc.get_parent()
 				var _b : Node = control
 				if _a == _b or _a.get_parent() == _b:
+					if c == _last_tool and expected >= 0:
+						var index : int = control.get_index()
+						if index > 0 and index >= expected:
+							var child : Node = control.get_parent().get_child(maxi(0, expected - 1))
+							if child != control:
+								if !(child is TabContainer):
+									for z : Node in child.get_children():
+										if z is TabContainer:
+											child = z
+											break
+								if child is TabContainer:
+									queue_swap(c, child)
+									continue
 					remove_tool(c)
 			else:
 				remove_tool(c)
@@ -2181,7 +2195,7 @@ func update_build(columns : int, rows : int) -> void:
 	_main.max_columns = current_columns
 
 	while _main.get_child_count() > totals:
-		if !_free_editor_container(_main.get_child(_main.get_child_count() - 1)):
+		if !_free_editor_container(_main.get_child(_main.get_child_count() - 1), totals):
 			break
 
 	while _main.get_child_count() < totals:
@@ -2202,7 +2216,6 @@ func update_build(columns : int, rows : int) -> void:
 		if null == create_code_editor(aviable, unused[0]):
 			break
 		aviable = get_aviable()
-	
 	process_update_queue()
 	
 
