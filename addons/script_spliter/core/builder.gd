@@ -74,6 +74,11 @@ var _item_list : ItemList = null:
 				push_warning("[Script-Spliter] Can not find item list!")
 		return _item_list
 
+#region __FLAGS__
+var _update_list_queue : bool = false
+var _script_list_selection : bool = false
+#endregion
+
 #region __CONFIG__
 var _SPLIT_USE_HIGHLIGHT_SELECTED : bool = true
 var _MINIMAP_4_UNFOCUS_WINDOW : bool = false
@@ -99,6 +104,9 @@ var _OUT_FOCUS_COLORED : bool = true
 var _UNFOCUS_COLOR : Color = Color.GRAY
 
 var _SWAP_BY_BUTTON : bool = true
+
+var _LIST_VISIBLE_SELECTED_COLOR : Color = Color.CORNFLOWER_BLUE
+var _LIST_VISIBLE_OTHERS_COLOR : Color = Color.DARK_BLUE
 
 #region _9_
 var HANDLE_BACK_FORWARD_BUTTONS : bool = true
@@ -161,6 +169,8 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path", &"_HANDLE_BACKWARD_MOUSE_BUTTON_PATH"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path", &"_HANDLE_FORWARD_MOUSE_BUTTON_PATH"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/use_native_handler_when_there_are_no_more_tabs", &"USE_NATIVE_ON_NOT_TABS"]
+		,[&"plugin/script_spliter/editor/split/selected_color", &"_LIST_VISIBLE_SELECTED_COLOR"]
+		,[&"plugin/script_spliter/editor/split/others_color", &"_LIST_VISIBLE_OTHERS_COLOR"]
 		]
 	return CFG
 	
@@ -342,14 +352,78 @@ func _on_update_list_search(txt : String) -> void:
 			_script_list.set_item_metadata(indx, item_list.get_item_metadata(x))
 			_script_list.set_item_tooltip(indx, item_list.get_item_tooltip(x))
 			_script_list.set_item_icon_modulate(indx, item_list.get_item_icon_modulate(x))
+			_script_list.set_item_custom_fg_color(indx, item_list.get_item_custom_fg_color(x))
+	_update_list_selection()
+	
+func _update_list_selection() -> void:
+	_script_list_selection = true
+	var nd : Object = self
+	
+	if !is_instance_valid(nd):
+		_script_list_selection = false
+		return
+		
+	var packed : PackedStringArray = []
+	var selected : String = ""
+	for x : Mickeytools in _code_editors:
+		if !is_instance_valid(x):
+			continue
+			
+		var src : String = x.get_src()
+		
+		if x == _last_tool:
+			selected = src
+			
+		var v : Variant = x.get_control()
+		if is_instance_valid(v):
+			if v is Control:
+				if v.is_visible_in_tree():
+					packed.append(src)
+	
+	var color : Color = _LIST_VISIBLE_SELECTED_COLOR
+	var others : Color = _LIST_VISIBLE_OTHERS_COLOR
+	color.a = 0.325
+	others.a = 0.325
+	var item_list : ItemList = _item_list
+	if is_instance_valid(item_list):
+		for x : int in _script_list.item_count:
+			var mt : String = _script_list.get_item_tooltip(x)
+			if packed.has(mt):
+				if selected == mt:
+					_script_list.set_item_custom_bg_color(x, color)
+					_script_list.set_item_custom_fg_color(x, Color.WHITE)
+				else:
+					_script_list.set_item_custom_bg_color(x, others)
+			else:
+				_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
+	
+	else:
+		for x : int in _script_list.item_count:
+			var mt : String = _script_list.get_item_tooltip(x)
+			if packed.has(mt):
+				if selected == mt:
+					_script_list.set_item_custom_bg_color(x, color)
+					_script_list.set_item_custom_fg_color(x, Color.WHITE)
+				else:
+					_script_list.set_item_custom_bg_color(x, others)
+			else:
+				_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
+				#_script_list.set_item_custom_fg_color(x, _script_list.get_item_custom_fg_color(x).darkened(0.2))
+	
+	set_deferred(&"_script_list_selection", false)
 	
 func _on_update_list() -> void:
 	if !is_instance_valid(_script_list):
 		return
 		
+	if _update_list_queue:
+		return
+	_update_list_queue = true
+		
 	if is_instance_valid(_filesearch):
 		if !_filesearch.text.is_empty():
 			_on_update_list_search(_filesearch.text)
+			set_deferred(&"_update_list_queue", false)
 			return
 			
 	_script_list.clear()
@@ -360,7 +434,9 @@ func _on_update_list() -> void:
 		_script_list.set_item_metadata(indx, item_list.get_item_metadata(x))
 		_script_list.set_item_tooltip(indx, item_list.get_item_tooltip(x))
 		_script_list.set_item_icon_modulate(indx, item_list.get_item_icon_modulate(x))
-	
+		_script_list.set_item_custom_fg_color(indx, item_list.get_item_custom_fg_color(x))
+	_update_list_selection()
+	set_deferred(&"_update_list_queue", false)
 #endregion
 
 func update_config() -> void:
@@ -1269,7 +1345,7 @@ func _on_tab_change(tb : int = 0) -> void:
 		_grab_focus_by_tab(tb)
 		
 	process_update_queue(tb)
-
+	
 func _setup(editor : TabContainer, setup : bool) -> void:	
 	const INIT_2 : Array[StringName] = [&"connect", &"disconnect"]
 	const INIT_3 : Array[Array] = [[&"tab_changed", &"_on_tab_change"],[&"child_entered_tree", &"_on_it"], [&"child_exiting_tree", &"_out_it"]]
