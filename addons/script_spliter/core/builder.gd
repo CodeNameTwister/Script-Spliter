@@ -105,8 +105,8 @@ var _UNFOCUS_COLOR : Color = Color.GRAY
 
 var _SWAP_BY_BUTTON : bool = true
 
-var _LIST_VISIBLE_SELECTED_COLOR : Color = Color.CORNFLOWER_BLUE
-var _LIST_VISIBLE_OTHERS_COLOR : Color = Color.DARK_BLUE
+var _LIST_VISIBLE_SELECTED_COLOR : Color = Color.from_string("7b68ee", Color.CORNFLOWER_BLUE)
+var _LIST_VISIBLE_OTHERS_COLOR : Color = Color.from_string("4835bb", Color.DARK_BLUE)
 
 #region _9_
 var HANDLE_BACK_FORWARD_BUTTONS : bool = true
