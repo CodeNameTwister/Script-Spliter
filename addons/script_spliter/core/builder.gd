@@ -114,10 +114,6 @@ var HANDLE_BACK_FORWARD_BUTTONS : bool = true
 var HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB : bool = false
 var HANDLE_BACK_FORWARD_BUFFER : int = 20
 var USE_NATIVE_ON_NOT_TABS : bool = true
-var _HANDLE_BACKWARD_KEY_PATH : String = "res://addons/script_spliter/io/backward_key_button.tres"
-var _HANDLE_FORWARD_KEY_PATH : String  = "res://addons/script_spliter/io/forward_key_button.tres"
-var _HANDLE_BACKWARD_MOUSE_BUTTON_PATH : String = "res://addons/script_spliter/io/backward_mouse_button.tres"
-var _HANDLE_FORWARD_MOUSE_BUTTON_PATH : String  = "res://addons/script_spliter/io/forward_mouse_button.tres"
 #endregion
 
 # CURRENT CONFIG
@@ -165,10 +161,6 @@ func _get_data_cfg() -> Array[Array]:
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/handle_back_and_forward", &"HANDLE_BACK_FORWARD_BUTTONS"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/history_size", &"HANDLE_BACK_FORWARD_BUFFER"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/using_as_next_and_back_tab", &"HANDLE_BACKWARD_FORWARD_AS_NEXT_BACK_TAB"]
-		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_path", &"_HANDLE_BACKWARD_KEY_PATH"]
-		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_path", &"_HANDLE_FORWARD_KEY_PATH"]
-		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path", &"_HANDLE_BACKWARD_MOUSE_BUTTON_PATH"]
-		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path", &"_HANDLE_FORWARD_MOUSE_BUTTON_PATH"]
 		,[&"plugin/script_spliter/editor/behaviour/back_and_forward/use_native_handler_when_there_are_no_more_tabs", &"USE_NATIVE_ON_NOT_TABS"]
 		,[&"plugin/script_spliter/editor/list/selected_color", &"_LIST_VISIBLE_SELECTED_COLOR"]
 		,[&"plugin/script_spliter/editor/list/others_color", &"_LIST_VISIBLE_OTHERS_COLOR"]
@@ -486,29 +478,6 @@ func update_config() -> void:
 			var gui : Node = x.get_control()
 			if is_instance_valid(gui) and gui is Control:
 				gui.modulate = Color.WHITE
-	
-	for x : String in changes:
-		if "button_path" in x:
-			if !InputMap.has_action(&"ui_script_spliter_forward"):
-				InputMap.add_action(&"ui_script_spliter_forward")
-			else:
-				InputMap.action_erase_events(&"ui_script_spliter_forward")
-			
-			var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
-			var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
-			InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
-			InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
-			
-			if !InputMap.has_action(&"ui_script_spliter_backward"):
-				InputMap.add_action(&"ui_script_spliter_backward")
-			else:
-				InputMap.action_erase_events(&"ui_script_spliter_backward")
-				
-			key_0 = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
-			key_1 = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
-			InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
-			InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
-			break
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -1375,7 +1344,59 @@ func _on_tab_change(tb : int = 0) -> void:
 		_grab_focus_by_tab(tb)
 		
 	process_update_queue(tb)
+
+
+func _clear_backward_settings() -> void:
+	var editor : EditorSettings = EditorInterface.get_editor_settings()
+	if editor:
+		if editor.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_path"):
+			var setting : Variant = editor.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_path")
+			if setting is String:
+				if ResourceLoader.exists(setting):
+					var res : Resource = ResourceLoader.load(setting)
+					if res is InputEvent:
+						res = res.duplicate()
+						if FileAccess.file_exists(setting) and DirAccess.remove_absolute(setting) == OK:
+							print("Deprecated: ", setting)
+						editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_input", res)
+			editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_path", null)
+		
+		if editor.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_path"):
+			var setting : Variant = editor.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_path")
+			if setting is String:
+				if ResourceLoader.exists(setting):
+					var res : Resource = ResourceLoader.load(setting)
+					if res is InputEvent:
+						res = res.duplicate()
+						if FileAccess.file_exists(setting) and DirAccess.remove_absolute(setting) == OK:
+							print("Deprecated: ", setting)
+						editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_input", res)
+			editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_path", null)
+		
+		if editor.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path"):
+			var setting : Variant = editor.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path")
+			if setting is String:
+				if ResourceLoader.exists(setting):
+					var res : Resource = ResourceLoader.load(setting)
+					if res is InputEvent:
+						res = res.duplicate()
+						if FileAccess.file_exists(setting) and DirAccess.remove_absolute(setting) == OK:
+							print("Deprecated: ", setting)
+						editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_input", res)
+			editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_path", null)
 	
+		if editor.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path"):
+			var setting : Variant = editor.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path")
+			if setting is String:
+				if ResourceLoader.exists(setting):
+					var res : Resource = ResourceLoader.load(setting)
+					if res is InputEvent:
+						res = res.duplicate()
+						if DirAccess.remove_absolute(setting) == OK:
+							print("Deprecated: ", setting)
+						editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_input", res)
+			editor.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_path", null)
+			
 func _setup(editor : TabContainer, setup : bool) -> void:	
 	const INIT_2 : Array[StringName] = [&"connect", &"disconnect"]
 	const INIT_3 : Array[Array] = [[&"tab_changed", &"_on_tab_change"],[&"child_entered_tree", &"_on_it"], [&"child_exiting_tree", &"_out_it"]]
@@ -1421,84 +1442,80 @@ func _setup(editor : TabContainer, setup : bool) -> void:
 		parent.move_child(_filesearch, 0)
 		
 		_set_callback()
-				
-		if !FileAccess.file_exists("res://addons/script_spliter/io/backward_key_button.tres"):
-			if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
-				var input : InputEventKey = InputEventKey.new()
-				input.keycode = KEY_LEFT
-				input.alt_pressed = true
-				input.pressed = true
-				ResourceSaver.save(input, "res://addons/script_spliter/io/backward_key_button.tres")
-				input = null
-		if !FileAccess.file_exists("res://addons/script_spliter/io/forward_key_button.tres"):
-				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
-					var input : InputEventKey = InputEventKey.new()
-					input.keycode = KEY_RIGHT
-					input.alt_pressed = true
-					input.pressed = true
-					ResourceSaver.save(input, "res://addons/script_spliter/io/forward_key_button.tres")
-					input = null
-		if !FileAccess.file_exists("res://addons/script_spliter/io/backward_mouse_button.tres"):
-				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
-					var input : InputEventMouseButton = InputEventMouseButton.new()
-					input.button_index = MOUSE_BUTTON_XBUTTON1
-					input.pressed = true
-					ResourceSaver.save(input, "res://addons/script_spliter/io/backward_mouse_button.tres")
-					input = null
-		if !FileAccess.file_exists("res://addons/script_spliter/io/forward_mouse_button.tres"):
-				if DirAccess.dir_exists_absolute("res://addons/script_spliter/io"):
-					var input : InputEventMouseButton = InputEventMouseButton.new()
-					input.button_index = MOUSE_BUTTON_XBUTTON2
-					input.pressed = true
-					ResourceSaver.save(input, "res://addons/script_spliter/io/forward_mouse_button.tres")
-					input = null
 		
+		_clear_backward_settings()		
+					
 		if !InputMap.has_action(&"ui_script_spliter_forward"):
 			InputMap.add_action(&"ui_script_spliter_forward")
 		else:
 			InputMap.action_erase_events(&"ui_script_spliter_forward")
 		
-		if FileAccess.file_exists(_HANDLE_FORWARD_KEY_PATH):
-			var key_0 : InputEventKey = ResourceLoader.load(_HANDLE_FORWARD_KEY_PATH)
-			if key_0 is InputEvent:
-				InputMap.action_add_event(&"ui_script_spliter_forward", key_0)
-			else:
-				printerr("Not type InputEvent: ", key_0)
-		else:
-			printerr("Not exist file", _HANDLE_FORWARD_KEY_PATH)
-		
-		if FileAccess.file_exists(_HANDLE_FORWARD_MOUSE_BUTTON_PATH):
-			var key_1 : Variant = ResourceLoader.load(_HANDLE_FORWARD_MOUSE_BUTTON_PATH)
-			if key_1 is InputEvent:
-				InputMap.action_add_event(&"ui_script_spliter_forward", key_1)
-			else:
-				printerr("Not type InputEvent: ", key_1)
-		else:
-			printerr("Not exist file", _HANDLE_FORWARD_MOUSE_BUTTON_PATH)
-		
 		if !InputMap.has_action(&"ui_script_spliter_backward"):
 			InputMap.add_action(&"ui_script_spliter_backward")
 		else:
 			InputMap.action_erase_events(&"ui_script_spliter_backward")
-			
-		if FileAccess.file_exists(_HANDLE_BACKWARD_KEY_PATH):
-			var key_0 : Variant = ResourceLoader.load(_HANDLE_BACKWARD_KEY_PATH)
-			if key_0 is InputEvent:
-				InputMap.action_add_event(&"ui_script_spliter_backward", key_0)
-			else:
-				printerr("Not type InputEvent: ", key_0)
-		else:
-			printerr("Not exist file", _HANDLE_BACKWARD_KEY_PATH)
 		
-		if FileAccess.file_exists(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH):
-			var key_1 : InputEventMouseButton = ResourceLoader.load(_HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
-			if key_1 is InputEvent:
-				InputMap.action_add_event(&"ui_script_spliter_backward", key_1)
+		var editor_settings : EditorSettings = EditorInterface.get_editor_settings()
+		if editor_settings:
+			var input_event : Variant = null
+			if !editor_settings.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_input"):
+				var input : InputEventKey = InputEventKey.new()
+				input.keycode = KEY_LEFT
+				input.alt_pressed = true
+				input.pressed = true
+				editor_settings.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_input", input)
+				
+			input_event = editor_settings.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_key_button_input")
+			
+			if input_event is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_backward", input_event)
 			else:
-				printerr("Not type InputEvent: ", key_1)
-		else:
-			printerr("Not exist file", _HANDLE_BACKWARD_MOUSE_BUTTON_PATH)
+				printerr("Not type InputEvent backward_key_button_input ", input_event)
 
+				
+			if !editor_settings.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_input"):
+				var input : InputEventKey = InputEventKey.new()
+				input.keycode = KEY_RIGHT
+				input.alt_pressed = true
+				input.pressed = true
+				editor_settings.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_input", input)
+			
+			input_event = editor_settings.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_key_button_input")
+			
+			if input_event is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_forward", input_event)
+			else:
+				printerr("Not type InputEvent forward_key_button_input ", input_event)
+	
+				
+			if !editor_settings.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_input"):
+				var input : InputEventMouseButton = InputEventMouseButton.new()
+				input.button_index = MOUSE_BUTTON_XBUTTON1
+				input.pressed = true
+				editor_settings.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_input", input)
+			
+			input_event = editor_settings.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/backward_mouse_button_input")
+			
+			if input_event is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_backward", input_event)
+			else:
+				printerr("Not type InputEvent backward_mouse_button_input ", input_event)
+	
+			if !editor_settings.has_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_input"):
+				var input : InputEventMouseButton = InputEventMouseButton.new()
+				input.button_index = MOUSE_BUTTON_XBUTTON2
+				input.pressed = true
+				editor_settings.set_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_input", input)
+			
+			input_event = editor_settings.get_setting(&"plugin/script_spliter/editor/behaviour/back_and_forward/forward_mouse_button_input")
+			
+			if input_event is InputEvent:
+				InputMap.action_add_event(&"ui_script_spliter_forward", input_event)
+			else:
+				printerr("Not type InputEvent forward_mouse_button_input ", input_event)
+	
+			
+				
 func _on_sub_change(__ : int, tab : TabContainer) -> void:
 	if _chaser_enabled:
 		return
