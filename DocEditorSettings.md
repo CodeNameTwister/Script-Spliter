@@ -72,5 +72,23 @@ in old versions < 0.3 was more useful.
 | Size | Button width  |
 | Modulate | Modulate Button Color  |
 | Icon Path | Texture path for the button  |
+
+### Input
+|  Setting  | Description  |
+| ------------ | ------------ |
+| split type {1, 2, 3, ...} | Button for define type split Example: split of 2 columns and 2 rows |
+
+### List
+|  Setting  | Description  |
+| ------------ | ------------ |
+| selected color | Visible color in script list of the current script focused |
+| selected others_color | Visible color in script list of others scripts in others split |
+| colorize actives | Visible color in script list of the scripts in same split of the current script focused |
+
+### Tabs
+|  Setting  | Description  |
+| ------------ | ------------ |
+| use old behaviour | Use native behaviour of tabs |
+
 # 
 Script Spliter Tool Plugin For Community Of Godot 4, Created By Twister.
