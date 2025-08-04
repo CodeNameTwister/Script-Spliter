@@ -42,10 +42,10 @@ Each plugin configuration parameter is documented here.
 | Handle Back And Forward | Enable handler event of back and forward by internal function addon |
 | History Size | Max buffer size history of scripts/documents recent opened by the window split (Are stored independently by window)
 | Using As Next And Back Tab| Change Behaviour and use back and forward as next or back aviable tab |
-| Backward Key Button Path| Path of resource setting of backward key button |
-| Forward Key Button Path| Path of resource setting of forward key button |
-| Backward Mouse Button Path| Path of resource setting of backward mouse button |
-| Forward Mouse Button Path| Path of resource setting of forward mouse button |
+| Backward Key Button Input| Customizable input resource setting of backward key button |
+| Forward Key Button Input| Customizable input resource setting of forward key button |
+| Backward Mouse Button Input| Customizable input resource setting of backward mouse button |
+| Forward Mouse Button Input| Customizable input resource setting of forward mouse button |
 | Use Native Handler When There Are No More Tabs| Enable leave to godot handle the back and forward when not exist more tabs in the focused window |
 
 ### Editor/Split
@@ -72,5 +72,23 @@ in old versions < 0.3 was more useful.
 | Size | Button width  |
 | Modulate | Modulate Button Color  |
 | Icon Path | Texture path for the button  |
+
+### Input
+|  Setting  | Description  |
+| ------------ | ------------ |
+| split type {1, 2, 3, ...} | Button for define type split Example: split of 2 columns and 2 rows |
+
+### List
+|  Setting  | Description  |
+| ------------ | ------------ |
+| selected color | Visible color in script list of the current script focused |
+| selected others_color | Visible color in script list of others scripts in others split |
+| colorize actives | Visible color in script list of the scripts in same split of the current script focused |
+
+### Tabs
+|  Setting  | Description  |
+| ------------ | ------------ |
+| use old behaviour | Use native behaviour of tabs |
+
 # 
-Script Spliter tool plugin for Community Of Godot 4, created by Twister.
+Script Spliter Tool Plugin For Community Of Godot 4, Created By Twister.
