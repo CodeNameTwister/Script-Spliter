@@ -399,6 +399,7 @@ func _update_list_selection() -> void:
 				if selected == mt:
 					_script_list.set_item_custom_bg_color(x, color)
 					_script_list.set_item_custom_fg_color(x, Color.WHITE)
+					_script_list.select(x, true)
 				else:
 					if _LIST_VISIBLE_SHOW_ACTIVES:
 						_script_list.set_item_custom_fg_color(x, Color.DARK_GRAY)
@@ -413,7 +414,6 @@ func _update_list_selection() -> void:
 						_script_list.set_item_custom_fg_color(x, Color.GRAY)
 				else:
 					_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
-	
 	else:
 		for x : int in _script_list.item_count:
 			var mt : String = _script_list.get_item_tooltip(x)
@@ -435,7 +435,7 @@ func _update_list_selection() -> void:
 						_script_list.set_item_custom_fg_color(x, Color.GRAY)
 				else:
 					_script_list.set_item_custom_bg_color(x, Color.TRANSPARENT)
-	
+	_script_list.ensure_current_is_visible()
 	set_deferred(&"_script_list_selection", false)
 	
 func _on_update_list() -> void:
