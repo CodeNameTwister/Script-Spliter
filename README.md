@@ -27,7 +27,7 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 
 ### V0.3
 <p align="center">
-  <img width="128" height="128" src="addons/script_spliter/assets/github_CodeNameTwister.png">
+  <img width="128" height="128" src="https://github.com/CodeNameTwister/Misc/blob/main/media/ico_gdsp3.png?raw=true">
 </p>
 Introduction to using tabs
 

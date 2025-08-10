@@ -122,6 +122,10 @@ func _process(__: float) -> void:
 		_frm += 1
 		return
 	_frm = 0
+	var fs : EditorFileSystem = EditorInterface.get_resource_filesystem()
+	if fs:
+		if fs.is_scanning():
+			return
 	set_process(false)
 	if is_instance_valid(_builder):
 		_builder.update()
@@ -138,20 +142,36 @@ func _on_change_settings() -> void:
 func _init() -> void:
 	var editor : EditorSettings = EditorInterface.get_editor_settings()
 	if editor:
+		
+		if editor.has_setting(&"plugin/script_spliter/line/button/icon_path"):
+			editor.set_setting(&"plugin/script_spliter/line/button/icon_path", null)
+		
 		var KEYS : PackedInt64Array = [
 			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0
 		]
-		var key : String = "plugin/script_spliter/input/spliy_type_"
+		var key : String = "plugin/script_spliter/input/split_type_"
+		
+		var back_key : String = "plugin/script_spliter/input/spliy_type_" #FIXING
 		
 		for x : int in range(0, mini(SPLIT_TYPES.size(), KEYS.size()), 1):
-			var key_token : String = str(key, x + 1)
+			var back_token : String = str(back_key, x + 1)
 			var __input : InputEvent = null
+			if editor.has_setting(back_token):  #FIXING
+				var variant : Variant = editor.get_setting(back_token)
+				if variant is InputEvent:
+					__input = variant
+					_inputs.append(__input)
+					editor.set_setting(back_token, null)
+					continue
+			
+			var key_token : String = str(key, x + 1)
 			if editor.has_setting(key_token):
 				var variant : Variant = editor.get_setting(key_token)
 				if variant is InputEvent:
 					__input = variant
 					_inputs.append(__input)
 					continue
+					
 			__input = InputEventKey.new()
 			__input.pressed = true
 			__input.ctrl_pressed = true
