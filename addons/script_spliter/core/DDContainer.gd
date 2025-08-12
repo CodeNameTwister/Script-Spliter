@@ -176,8 +176,8 @@ func update(color : Color) -> void:
 	tab.set_select_color(color)
 	tab.update()
 			
-func _on_stop_drag(tab : TabBar) -> void:
-	out_dragging.emit(tab)
+func _on_stop_drag(_tab : TabBar) -> void:
+	out_dragging.emit(_tab)
 
-func _on_start_drag(tab : TabBar) -> void:
-	on_dragging.emit(tab)
+func _on_start_drag(_tab : TabBar) -> void:
+	on_dragging.emit(_tab)

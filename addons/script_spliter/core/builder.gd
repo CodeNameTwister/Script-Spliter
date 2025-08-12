@@ -317,6 +317,8 @@ func _set_callback() -> void:
 		_filesearch.text_changed.connect(_on_update_list_search)
 	
 func _on_item_activate(index : int) -> void:
+	if index > _script_list.item_count:
+		return
 	var mt : Variant = _script_list.get_item_tooltip(index)
 	if mt is String:
 		for x : int in _item_list.item_count:
@@ -326,6 +328,8 @@ func _on_item_activate(index : int) -> void:
 				return
 	
 func _on_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
+	if index > _script_list.item_count:
+		return
 	var mt : Variant = _script_list.get_item_tooltip(index)
 	if mt is String:
 		for x : int in _item_list.item_count:
@@ -335,6 +339,8 @@ func _on_item_clicked(index: int, at_position: Vector2, mouse_button_index: int)
 				return
 
 func _on_item_selected(index : int) -> void:
+	if index > _script_list.item_count:
+		return
 	var mt : Variant = _script_list.get_item_tooltip(index)
 	if mt is String:
 		for x : int in _item_list.item_count:
@@ -643,6 +649,7 @@ func update_all_info() -> void:
 	for x : Mickeytools in _code_editors:
 		if is_instance_valid(x):
 			x.update()
+	update_queue()
 	
 func update_info(root : TabContainer, index : int , src : String) -> void:
 	if !is_instance_valid(root):
@@ -682,7 +689,10 @@ func update_info(root : TabContainer, index : int , src : String) -> void:
 						root.set_tab_icon(index, item_list.get_item_icon(indx))
 				return
 		var ct : String = root.get_tab_title(index)
-		if ct.is_empty() or ct.begins_with("@") or "/" in ct:
+		if ct.is_empty() or ct.begins_with("@VSplitContainer") or ct.begins_with("@VBoxContainer") or "/" in ct:
+			if src.is_empty():
+				root.set_tab_title(index, "FileEditor")
+				return
 			var sc : int = src.get_slice_count("/")
 			var txt : String = src.get_file()
 			var dirty = false
@@ -707,7 +717,6 @@ func update_info(root : TabContainer, index : int , src : String) -> void:
 					txt = str(src.get_slice("/", x) , "/", txt)
 			if !txt.is_empty():
 				root.set_tab_title(index, txt)
-		
 
 class Root extends MarginContainer:
 	var _helper : Object = null
@@ -1088,7 +1097,7 @@ class Mickeytools extends Object:
 			var root : TabContainer = _root
 			if is_instance_valid(root):
 				if _control.get_parent() == root and _reference.get_parent() != null:
-					_helper.update_info.call_deferred(root, _control.get_index(), _src)
+					_helper.update_info(root, _control.get_index(), _src)
 
 	func kill() -> void:
 		for x : Node in [_gui, _reference]:
@@ -1316,7 +1325,9 @@ func _update_path() -> void:
 			if is_instance_valid(ref):
 				var index : int = ref.get_index()
 				if index > -1 and _item_list.item_count > index:
-					x.set_src(_item_list.get_item_tooltip(index))
+					var src : String = _item_list.get_item_tooltip(index)
+					x.set_src(src)
+					update_info(_editor, index, src)
 		
 func _on_focus(tool : Mickeytools, refresh_history : bool = true) -> void:
 	if _focus_queue:
@@ -1774,6 +1785,9 @@ func update() -> void:
 		return
 	
 	_clear()
+	
+	#update_all_info()
+	
 	if _editor.get_child_count() > 0:
 		var root : Node = _get_editor_root()
 		if null != root and _editor.current_tab > -1:
@@ -1897,15 +1911,19 @@ func is_valid_code_editor(root : Node, editor : Node, fallback : bool = true) ->
 	if !editor.is_node_ready():
 		return false
 			
+	var _item : ItemList = _item_list
+	var index : int = editor.get_index()
 	if editor.get_child_count() == 0:
 		if fallback and editor.is_inside_tree():
-			var index : int = editor.get_index()
-			if index > -1 and _item_list.item_count > index:
-				_item_list.item_selected.emit(index)
+			if index > -1 and _item.item_count > index:
+				_item.item_selected.emit(index)
 				return is_valid_code_editor(root, editor, false)
 		return false
-			
-	return true
+		
+	if index > -1 and _item.item_count > index:
+		return !_item.get_item_tooltip(index).is_empty()
+	
+	return false
 	
 
 func is_valid_doc(editor : Control) -> bool:
@@ -2771,7 +2789,6 @@ func swap_by_src(l : String, r : String, as_left : bool = true) -> void:
 			var ctrlb : Variant = tb.get_control()
 			if is_instance_valid(ctrla) and is_instance_valid(ctrlb):
 				if ctrla.get_parent() == ra and ctrlb.get_parent() == ra:
-					var x : int = ctrla.get_index()
 					if as_left:
 						ra.move_child(ctrla, maxi(ctrlb.get_index() , 0))
 					else:

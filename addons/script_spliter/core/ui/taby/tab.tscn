@@ -48,6 +48,7 @@ script = ExtResource("1_uwq2h")
 [node name="Pin" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
 focus_mode = 0
+theme_override_colors/icon_normal_color = Color(1, 1, 1, 0.25)
 shortcut_feedback = false
 shortcut_in_tooltip = false
 icon = ExtResource("3_hvct0")
@@ -57,6 +58,7 @@ icon_alignment = 1
 [node name="Close" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
 focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.25)
 shortcut_feedback = false
 shortcut_in_tooltip = false
 text = "x"

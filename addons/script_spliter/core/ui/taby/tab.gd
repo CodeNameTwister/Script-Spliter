@@ -1,9 +1,10 @@
 @tool
 extends Button
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#	https://github.com/CodeNameTwister/Multi-Split-Container
+#	Script Spliter
+#	https://github.com/CodeNameTwister/Script-Spliter
 #
-#	Multi-Split-Container addon for godot 4
+#	Script Spliter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -19,11 +20,13 @@ func _ready() -> void:
 	setup()
 
 func _get_drag_data(__ : Vector2) -> Variant:
-	set_drag_preview(duplicate(0))
+	var c : Control = duplicate(0)
+	c.z_index = RenderingServer.CANVAS_ITEM_Z_MAX 
+	set_drag_preview(c)
 	pressed.emit()
 	return self
 	
-func _drop_data(at_position: Vector2, data: Variant) -> void:
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	if is_instance_valid(line):
 		line.delete()
 	if data is Node:

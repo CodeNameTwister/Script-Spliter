@@ -1,11 +1,13 @@
 @tool
 extends PanelContainer
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#	https://github.com/CodeNameTwister/Multi-Split-Container
+#	Script Spliter
+#	https://github.com/CodeNameTwister/Script-Spliter
 #
-#	Multi-Split-Container addon for godot 4
+#	Script Spliter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 const TAB = preload("res://addons/script_spliter/core/ui/taby/tab.tscn")
 
 @export var container : Control = null
@@ -123,7 +125,7 @@ func _on_pin(btn : Object) -> void:
 				_on_rect_change()
 				update()
 			
-func update() -> void:
+func update(fllbck : bool = true) -> void:
 	if !_enable_update:
 		return
 	if _updating:
@@ -178,7 +180,7 @@ func update() -> void:
 						indx += 1
 	
 	var alpha_pin : Color = Color.WHITE
-	var normal_pin : Color = _select_color.lightened(0.4)
+	var errors : bool = false
 	alpha_pin.a = 0.25
 		
 	for x : int in range(tab.tab_count):
@@ -188,6 +190,11 @@ func update() -> void:
 		btn.tooltip_text = tab.get_tab_tooltip(x)
 		btn.text = tab.get_tab_title(x)
 		btn.icon = tab.get_tab_icon(x)
+		
+		if fllbck and (btn.tooltip_text.is_empty() or btn.text.begins_with("@VSplitContainer") or btn.text.begins_with("@VBoxContainer")):
+			if btn.text.begins_with("@VSplitContainer") or btn.text.begins_with("@VBoxContainer"):
+				btn.text = "File"
+			errors = true
 		
 		if pin:
 			if pins.has(btn.tooltip_text):
@@ -213,7 +220,11 @@ func update() -> void:
 		c.visible = true
 		c.color = _select_color
 		
-	_on_rect_change()	
+	_on_rect_change()
+	
+	if fllbck and errors:
+		Engine.get_main_loop().create_timer(3.0).timeout.connect(update.bind(false))
+	
 	set_deferred(&"_updating", false)
 
 func _on_close(btn : Button) -> void:

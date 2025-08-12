@@ -81,6 +81,7 @@ var _refresh_warnings_on_save : bool = true
 
 var _frm : int = 0
 var _d_chase : bool = false
+var _started : bool = false
 
 func get_builder() -> Object:
 	return _builder
@@ -118,7 +119,7 @@ func _save_external_data() -> void:
 	set_deferred(&"_d_chase", false)
 
 func _process(__: float) -> void:
-	if _frm < 2:
+	if _frm < 5:
 		_frm += 1
 		return
 	_frm = 0
@@ -126,9 +127,16 @@ func _process(__: float) -> void:
 	if fs:
 		if fs.is_scanning():
 			return
+			
 	set_process(false)
 	if is_instance_valid(_builder):
-		_builder.update()
+		if !_started:
+			_started = true
+			var scripts_tab_container : Node = _tab_container
+			_builder.build(scripts_tab_container, _columns, _rows)
+			set_process.call_deferred(true)
+		else:
+			_builder.update()
 
 func _on_change_settings() -> void:
 	if is_instance_valid(_builder):
@@ -178,8 +186,6 @@ func _init() -> void:
 			__input.keycode = KEYS[x]
 			editor.set_setting(key_token, __input)
 			_inputs.append(__input)
-			
-	set_process_input(_inputs.size() > 0)
 	
 	var o : Object = _tab_container
 	if o == null:
@@ -215,8 +221,9 @@ func _run() -> void:
 		settings.settings_changed.connect(_on_change_settings)
 
 		_builder.init_1()
-		_builder.build(scripts_tab_container, _columns, _rows)
-		set_process_input(true)
+		
+		set_process.call_deferred(true)
+		set_process_input.call_deferred(_inputs.size() > 0)
 
 func set_type_split(columns : int, rows : int) -> void:
 	_columns = columns

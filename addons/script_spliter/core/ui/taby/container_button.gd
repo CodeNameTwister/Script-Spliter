@@ -1,9 +1,10 @@
 @tool
 extends Control
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#	https://github.com/CodeNameTwister/Multi-Split-Container
+#	Script Spliter
+#	https://github.com/CodeNameTwister/Script-Spliter
 #
-#	Multi-Split-Container addon for godot 4
+#	Script Spliter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
