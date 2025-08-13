@@ -16,7 +16,7 @@ var _delta : float = 0.0
 func _ready() -> void:
 	set_process(false)
 	add_to_group(&"SP_TAB_BUTTON")
-
+	auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	setup()
 
 func _get_drag_data(__ : Vector2) -> Variant:

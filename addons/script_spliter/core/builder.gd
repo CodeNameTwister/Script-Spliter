@@ -510,7 +510,9 @@ func update_config() -> void:
 		for x : Mickeytools in _code_editors:
 			var gui : Node = x.get_control()
 			if is_instance_valid(gui) and gui is Control:
-				gui.modulate = Color.WHITE
+				var parent : Node = gui.get_parent()
+				if parent:
+					parent.modulate = Color.WHITE
 
 func _update_container() -> void:
 	if !is_instance_valid(_main):
@@ -1117,7 +1119,10 @@ class Mickeytools extends Object:
 				if gui is CodeEdit:
 					if gui.symbol_lookup.is_connected(_on_symb):
 						gui.symbol_lookup.disconnect(_on_symb)
-			_gui.modulate = Color.WHITE
+						
+			var parent : Node = _gui.get_parent()
+			if parent:
+				parent.modulate = Color.WHITE
 			
 			if _gui is VBoxContainer:
 				if _gui.is_inside_tree() and _reference.is_inside_tree():
@@ -1188,13 +1193,15 @@ class ReTweener extends RefCounted:
 	func create_tween(control : Control) -> void:
 		if !is_instance_valid(control) or control.is_queued_for_deletion() or !control.is_inside_tree():
 			return
+		var parent : Node = control.get_parent()
 
-		if _ref == control:
-			return
-		clear()
-		_tween = control.get_tree().create_tween()
-		_ref = control
-		_tween.tween_method(_callback, color, Color.WHITE, 0.35)
+		if parent:
+			if _ref == control:
+				return
+			clear()
+			_tween = parent.get_tree().create_tween()
+			_ref = parent
+			_tween.tween_method(_callback, color, Color.WHITE, 0.35)
 
 	func _callback(c : Color) -> void:
 		if is_instance_valid(_ref) and _ref.is_inside_tree():
@@ -1202,7 +1209,7 @@ class ReTweener extends RefCounted:
 			return
 		clear()
 
-	func secure_clear(ref : Object) -> void:
+	func secure_clear(ref : Variant) -> void:
 		if !is_instance_valid(_ref) or _ref == ref:
 			clear()
 
@@ -1267,11 +1274,15 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 				if is_instance_valid(x):
 					var _gui : Variant = x.get_gui()
 					if is_instance_valid(_gui) and _gui is CodeEdit:
-						_gui.modulate = _UNFOCUS_COLOR
+						var parent : Node = _gui.get_parent()
+						if parent:
+							parent.modulate = _UNFOCUS_COLOR
 						_gui.minimap_draw = false
 					
 			if gui is CodeEdit:
-				gui.modulate = Color.WHITE
+				var parent : Node = gui.get_parent()
+				if parent:
+					parent.modulate = Color.WHITE
 				gui.minimap_draw = true
 		
 		elif !_MINIMAP_4_UNFOCUS_WINDOW:
@@ -1288,9 +1299,13 @@ func _set_focus(tool : Mickeytools, txt : String = "", items : PackedStringArray
 				if is_instance_valid(x):
 					var _gui : Variant = x.get_gui()
 					if is_instance_valid(gui) and gui is CodeEdit:
-						_gui.modulate = _UNFOCUS_COLOR
+						var parent : Node = _gui.get_parent()
+						if parent:
+							parent.modulate = _UNFOCUS_COLOR
 			if gui is CodeEdit:
-				gui.modulate = Color.WHITE
+				var parent : Node = gui.get_parent()
+				if parent:
+					parent.modulate = Color.WHITE
 		
 		var vp : Viewport = gui.get_viewport()
 		if is_instance_valid(vp):
@@ -2107,6 +2122,11 @@ func build(editor : TabContainer, columns : int = 0, rows : int = 0) -> void:
 			_editor.tree_exiting.disconnect(_on_container_exit)
 
 	_editor = editor
+	
+	_editor.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	var tb : TabBar = _editor.get_tab_bar()
+	if tb:
+		tb.auto_translate_mode = _editor.auto_translate_mode
 
 	if !_editor.tree_entered.is_connected(_on_container_entered):
 		_editor.tree_entered.connect(_on_container_entered)

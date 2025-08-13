@@ -49,6 +49,10 @@ func _init() -> void:
 	_tab_container = TabContainer.new()
 	_tab_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tab_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_tab_container.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	var tb : TabBar = _tab_container.get_tab_bar()
+	if tb:
+		tb.auto_translate_mode = _tab_container.auto_translate_mode
 	
 	tab = CONTAINER.instantiate()
 	tab.set_ref(_tab_container.get_tab_bar())

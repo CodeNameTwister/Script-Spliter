@@ -10,6 +10,7 @@ extends EditorPlugin
 
 const BUILDER : Script = preload("res://addons/script_spliter/core/builder.gd")
 const CONTEXT : Script = preload("res://addons/script_spliter/context/context_window.gd")
+const SSP_CONTEXT = preload("res://addons/script_spliter/context/ssp_ctx.gd")
 
 const CMD_MENU_TOOL : String = "Script Spliter"
 
@@ -47,6 +48,8 @@ var _rmb_editor_code_pop_script : EditorContextMenuPlugin = null
 var _rmb_close_all_tab_in_split : EditorContextMenuPlugin = null
 var _rmb_close_all_tab_in_split_right : EditorContextMenuPlugin = null
 var _rmb_close_all_tab_in_split_left : EditorContextMenuPlugin = null
+
+var _ssp_ctx : EditorContextMenuPlugin = null
 
 var _menu_split_selector : Window = null
 var _builder : Object = null
@@ -299,6 +302,8 @@ func _setup(input : int) -> void:
 		_rmb_close_all_tab_in_split_left = CONTEXT.new(ctx_close_tabs_left, _close_all_tabs_in_split_left, _can_close_left_tab_in_split, ICON_TAB)
 		_rmb_close_all_tab_in_split_right = CONTEXT.new(ctx_close_tabs_right, _close_all_tabs_in_split_right, _can_close_right_tab_in_split, ICON_TAB)
 		
+		_ssp_ctx = SSP_CONTEXT.new()
+		
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_close_all_tab_in_split)
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_close_all_tab_in_split_left)
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_close_all_tab_in_split_right)
@@ -313,6 +318,8 @@ func _setup(input : int) -> void:
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR, _rmb_editor_pop_script)
 		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR_CODE, _rmb_editor_code_pop_script)
 
+		add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR_CODE, _ssp_ctx)
+		
 		if !settings.has_setting(&"plugin/script_spliter/rows"):
 			settings.set_setting(&"plugin/script_spliter/rows", _rows)
 		else:
@@ -353,7 +360,8 @@ func _setup(input : int) -> void:
 			remove_context_menu_plugin(_rmb_editor_pop_script)
 		if is_instance_valid(_rmb_editor_code_pop_script):
 			remove_context_menu_plugin(_rmb_editor_code_pop_script)
-
+		if is_instance_valid(_ssp_ctx):
+			remove_context_menu_plugin(_ssp_ctx)
 
 		if settings.has_setting(&"plugin/script_spliter/save_rows_columns_count_on_exit"):
 			if settings.get_setting(&"plugin/script_spliter/save_rows_columns_count_on_exit") == true:
