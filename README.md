@@ -31,8 +31,8 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 </p>
 
 Introduction to new behaviours
-* Better Tabs #17 (Can be change in editor settings)
-* Sub-Split #20
+* Better Tabs [#17](https://github.com/CodeNameTwister/Script-Spliter/issues/17 (Can be change in editor settings)
+* Sub-Split [#20](https://github.com/CodeNameTwister/Script-Spliter/issues/20
 > Getting close to the end of the road: This release is focused on fixing bugs in the embedded editors, while the floating editors remain a challenge to deliver acceptable functionality in my opinion, but I'm sure it won't be impossible to achieve while maintaining compatibility.
 
 ### V0.3
@@ -94,6 +94,8 @@ This has been done to maintain compatibility when using shorteners like Ctrl + [
 * Drag and Drop tabs between windows.
 * Tabs close options using (RMB) context menu.
 * Show All current active splited Scripts in Script List. (Feature: [#15](https://github.com/CodeNameTwister/Script-Spliter/issues/15))
+* Better Tabs (Feature: [#17](https://github.com/CodeNameTwister/Script-Spliter/issues/17))
+* Sub-Split (Feature: [#20](https://github.com/CodeNameTwister/Script-Spliter/issues/20))
   
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
