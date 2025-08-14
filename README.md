@@ -91,6 +91,7 @@ This has been done to maintain compatibility when using shorteners like Ctrl + [
 * Reopen recently closed/changed scripts when adding a split. (Suggestion: [#5](https://github.com/CodeNameTwister/Script-Spliter/issues/5))
 * Swap between windows by double-clicking the draggable button. (Suggestion: [#8](https://github.com/CodeNameTwister/Script-Spliter/issues/8))
 * Back and Forward between script opened by the window splited. (Suggestion: [#9](https://github.com/CodeNameTwister/Script-Spliter/issues/9))
+  * This functionality can be disabled in **Editor Settings**: `plugin/script_spliter/editor/behaviour/back_and_forward/handle_back_and_forward`
 * Drag and Drop tabs between windows.
 * Tabs close options using (RMB) context menu.
 * Show All current active splited Scripts in Script List. (Feature: [#15](https://github.com/CodeNameTwister/Script-Spliter/issues/15))
