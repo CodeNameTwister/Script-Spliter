@@ -11,6 +11,7 @@ extends Button
 const SEPARATOR = preload("./../../../../core/ui/multi_split_container/taby/separator.tscn")
 const DRAG_TIME : float = 0.15
 static var line : VSeparator = null
+static var _drag_icon : Control = null
 
 
 var _delta : float = 0.0
@@ -57,6 +58,8 @@ func _get_drag_data(__ : Vector2) -> Variant:
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	c.z_index = RenderingServer.CANVAS_ITEM_Z_MAX - 2
 	set_drag_preview(c)
+	
+	_drag_icon = c
 	
 	return self
 	
@@ -177,19 +180,21 @@ func _process(delta: float) -> void:
 			if !Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 				set_process(false)
 				return
-			is_drag = true
-			var parent : Node = self
-			for __ : int in range(10):
-				parent = parent.get_parent()
-				if parent.has_signal(&"on_dragging"):
-					break
-				if !is_instance_valid(parent):
-					return
-			if parent.has_signal(&"on_dragging"):
-				for x : Node in parent.get_children():
-					if x is TabContainer:
-						parent.emit_signal(&"on_dragging",x.get_tab_bar())
+			if is_instance_valid(_drag_icon):
+				is_drag = true
+				var parent : Node = self
+				pressed.emit()
+				for __ : int in range(10):
+					parent = parent.get_parent()
+					if parent.has_signal(&"on_dragging"):
+						break
+					if !is_instance_valid(parent):
 						return
+				if parent.has_signal(&"on_dragging"):
+					for x : Node in parent.get_children():
+						if x is TabContainer:
+							parent.emit_signal(&"on_dragging",x.get_tab_bar())
+							return
 
 func setup() -> void:
 	if !gui_input.is_connected(_on_input):
@@ -224,3 +229,13 @@ func _on_input(e : InputEvent) -> void:
 
 func get_selected_color() -> Color:
 	return owner.get_selected_color()
+
+func _on_gui(e : InputEvent) -> void:
+	if e is InputEventMouseButton:
+		if e.button_index == MOUSE_BUTTON_LEFT and  e.is_pressed():
+			var _self : Variant = self
+			if _self is Button:
+				if !_self.button_pressed:
+					_self.pressed.emit()
+					get_viewport().set_input_as_handled()
+	

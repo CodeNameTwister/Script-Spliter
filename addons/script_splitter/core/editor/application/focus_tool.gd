@@ -70,6 +70,7 @@ func execute(value : Variant = null) -> bool:
 	if value is MickeyTool:
 		var index : int = value.get_index()
 		var editor_list : BaseList = _manager.get_editor_list()
+			
 		if editor_list.item_count() > index and index > -1:
 			var control : Node = value.get_control()
 			var root : Node = value.get_root()
@@ -105,6 +106,12 @@ func execute(value : Variant = null) -> bool:
 					var parent : Node = grant_conainer.get_parent()
 					if is_instance_valid(parent) and parent.has_method(&"expand_splited_container"):
 						parent.call(&"expand_splited_container", base.get_editor_root_container(new_container))
+					
+				var gui : Node = value.get_gui()
+				if gui is Control:
+					if gui.focus_mode != Control.FOCUS_NONE:
+						if !gui.has_focus():
+							gui.grab_focus.call_deferred()
 					
 			if !editor_list.is_selected(index):
 				editor_list.select(index)

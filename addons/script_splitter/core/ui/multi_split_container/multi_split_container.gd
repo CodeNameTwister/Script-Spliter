@@ -401,7 +401,7 @@ class DragButton extends Button:
 		for h : bool in _hover:
 			if h != false:
 				return
-
+	
 		_frm = 0.0
 		modulate.a = 1.0
 		is_hover = false

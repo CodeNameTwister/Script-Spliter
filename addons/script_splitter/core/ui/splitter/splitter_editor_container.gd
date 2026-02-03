@@ -48,7 +48,7 @@ func _setup() -> void:
 func _ready() -> void:
 	_editor = Editor.new()
 	
-	var iscale : int = -8
+	var iscale : int = -6
 	set(&"theme_override_constants/separation", iscale)
 	
 	tab = CONTAINER.instantiate()

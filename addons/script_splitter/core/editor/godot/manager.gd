@@ -226,6 +226,7 @@ func update() -> bool:
 	
 	_base_container.update_split_container()
 	_base_list.update_list()
+	
 	return !update_required
 
 # API
