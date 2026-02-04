@@ -196,6 +196,9 @@ func _process(delta: float) -> void:
 							parent.emit_signal(&"on_dragging",x.get_tab_bar())
 							return
 
+func set_drag_icon_reference(dd : Variant) -> void:
+	_drag_icon = dd
+
 func setup() -> void:
 	if !gui_input.is_connected(_on_input):
 		gui_input.connect(_on_input)
