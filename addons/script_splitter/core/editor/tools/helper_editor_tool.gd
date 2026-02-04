@@ -7,39 +7,6 @@ extends "./../../../core/editor/tools/editor_tool.gd"
 #	Script Splitter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-const Richy = preload("res://addons/script_splitter/core/util/richy.gd")
-
-#func _fallback(ctrl : Control, expt : int = 200) -> void:
-	#if !is_instance_valid(ctrl) or !is_instance_valid(ctrl.get_parent()) or expt < 1:
-		#if expt == 0:
-			#var n : Node = ctrl.get_parent()
-			#while is_instance_valid(n) and n is Control:
-				#ctrl.size = n.size
-				#if ctrl.size.x >= 50.0 or ctrl.size.y >= 50.0:
-					#ctrl.visible = false
-					#ctrl.set_deferred(&"visible", true)
-					#ctrl.item_rect_changed.emit.call_deferred()
-					#return
-				#n = n.get_parent()
-		#return
-	#
-	#if ctrl.size.x < 50.0 or ctrl.size.y < 50.0:
-		#ctrl.set_deferred(&"size_flags_vertical", _get_h_size_flag())
-		#var pnode : Node = ctrl.get_parent()
-		#
-		#ctrl.visible = false
-		#ctrl.set_deferred(&"visible", true)
-		#
-		#if pnode is Control:
-			#ctrl.set_deferred(&"size", pnode.size)
-			#ctrl.set_deferred(&"visible", true)
-			#ctrl.item_rect_changed.emit.call_deferred()
-			#ctrl.queue_redraw()
-		#else:
-			#ctrl.set_deferred(&"visible", true)
-		#
-		#_fallback.call_deferred(ctrl, expt - 1)
 				
 func _build_tool(control : Node) -> MickeyTool:
 	if control is ScriptEditorBase:
@@ -62,18 +29,19 @@ func _build_tool(control : Node) -> MickeyTool:
 				if n is RichTextLabel :
 					n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					n.size_flags_vertical = Control.SIZE_EXPAND_FILL
+					n.autowrap_mode = TextServer.AUTOWRAP_OFF
+					n.custom_minimum_size.x = 1000.0 * maxf(EditorInterface.get_editor_scale(), 1.0)
+					n.size = canvas.size
 				
-				if n is RichTextLabel and EditorInterface.get_editor_scale() < 0.75:
-					var c : Control = Control.new()
+					var c : ScrollContainer = ScrollContainer.new()
 					canvas.add_child(c)
-					
-					if is_instance_valid(Richy):
-						n.set_script(Richy)
-					
-					if n.has_method(&"set_reference"):
-						n.call(&"set_reference", canvas)
+					c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+					c.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+					c.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 					
 					c.add_child(n)
+					_on_load.call_deferred(c)
 					continue
 					
 				canvas.add_child(n)
@@ -81,6 +49,17 @@ func _build_tool(control : Node) -> MickeyTool:
 			mickey = MickeyToolRoute.new(control, canvas, canvas)
 			break
 	return mickey
+	
+func _on_load(sc : ScrollContainer) -> void:
+	var bar : HScrollBar = sc.get_h_scroll_bar()
+	for __ : int in range(50):
+		await Engine.get_main_loop().process_frame
+		if !is_instance_valid(bar):
+			return
+		if bar.max_value > 10.0:
+			break
+	if sc.scroll_horizontal < 1.0:
+		sc.scroll_horizontal = int((bar.max_value - bar.page) * 0.5)
 
 func _handler(control : Node) -> MickeyTool:
 	var mickey : MickeyTool = null
@@ -97,25 +76,24 @@ func _handler(control : Node) -> MickeyTool:
 			
 			for n : Node in childs:
 				control.remove_child(n)
+				
 				if n is RichTextLabel :
 					n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					n.size_flags_vertical = Control.SIZE_EXPAND_FILL
+					n.autowrap_mode = TextServer.AUTOWRAP_OFF
+					n.custom_minimum_size.x = 1000.0 * maxf(EditorInterface.get_editor_scale(), 1.0)
+					n.size = canvas.size
 				
-				if n is RichTextLabel and EditorInterface.get_editor_scale() < 0.75:
-					var c : Control = Control.new()
+					var c : ScrollContainer = ScrollContainer.new()
 					canvas.add_child(c)
-					
-					if is_instance_valid(Richy):
-						n.set_script(Richy)
-					
-					if n.has_method(&"set_reference"):
-						n.call(&"set_reference", canvas)
+					c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+					c.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+					c.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 					
 					c.add_child(n)
+					_on_load.call_deferred(c)
 					continue
-					
-				canvas.add_child(n)
-					
 					
 				canvas.add_child(n)
 				
