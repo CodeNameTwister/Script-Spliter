@@ -11,9 +11,9 @@ Tool addon for Godot 4, this addon allow split the script editor window.
 - [Features](#features-)
 - [Roadmap](#roadmap)
 - [How-Work](#how-work)
+- [Troubleshooting](#troubleshooting-)
 - [Know Issues](#know-issues-)
 - [Special Thanks](#special-thanks-)
-
 
 # Preview [↑](#table-of-contents)
 
@@ -164,6 +164,24 @@ Once activated, you'll see a draggable line like the one in the image, indicatin
 The position of the line will vary depending on the selection of horizontal or vertical.
 
 ![image](images/img2.png)
+
+# Troubleshooting [↑](#table-of-contents)
+
+* Document helper with excesive padding:
+This error occurs due to an internal behavior added in Godot version 4.3 as part of the user experience (UX) in response to annoying document scrolling. This behavior causes problems when resizing the container and cannot currently be disabled.
+
+Solutions:
+1. Change manual editor scale.
+```
+#In Editor Settings:
+interface/editor/display_scale with a value that varies depending on the user's screen to be fixed
+```
+
+2. Alternative use unwrap mode:
+```
+#In Editor Settings:
+plugin/script_splitter/editor/document_helper_unwrapped # Default: False
+```
 
 # Know Issues [↑](#table-of-contents)
 ### Version 0.2.3
