@@ -7,12 +7,25 @@ extends "./../../../core/editor/tools/editor_tool.gd"
 #	Script Splitter addon for godot 4
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+		
+func _use_expand() -> bool:
+	var settings : EditorSettings = EditorInterface.get_editor_settings()
+	var setting : String = "plugin/script_splitter/editor/document_helper_unwrapped"
+	if settings:
+		if settings.has_setting(setting):
+			var variant : Variant = settings.get_setting(setting)
+			if variant is bool:
+				return variant
+		settings.set_setting(setting, false)
+	return false
 				
 func _build_tool(control : Node) -> MickeyTool:
 	if control is ScriptEditorBase:
 		return null
 	if control.name.begins_with("@"):
 		return null
+		
+	var expanded : bool = _use_expand()
 	
 	var mickey : MickeyTool = null
 	for x : Node in control.get_children():
@@ -26,11 +39,12 @@ func _build_tool(control : Node) -> MickeyTool:
 			
 			for n : Node in childs:
 				control.remove_child(n)
-				if n is RichTextLabel :
+				
+				if n is RichTextLabel and expanded:
 					n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					n.size_flags_vertical = Control.SIZE_EXPAND_FILL
 					n.autowrap_mode = TextServer.AUTOWRAP_OFF
-					n.custom_minimum_size.x = 1000.0 * maxf(EditorInterface.get_editor_scale(), 1.0)
+					n.custom_minimum_size.x = maxf(1000.0, DisplayServer.screen_get_size().x) * maxf(EditorInterface.get_editor_scale(), 1.0)
 					n.size = canvas.size
 				
 					var c : ScrollContainer = ScrollContainer.new()
@@ -65,6 +79,8 @@ func _handler(control : Node) -> MickeyTool:
 	var mickey : MickeyTool = null
 	if control is RichTextLabel:
 		var canvas : VBoxContainer = VBoxContainer.new()
+		var expanded : bool = _use_expand()
+		
 		canvas.size = control.size
 		canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -77,11 +93,11 @@ func _handler(control : Node) -> MickeyTool:
 			for n : Node in childs:
 				control.remove_child(n)
 				
-				if n is RichTextLabel :
+				if n is RichTextLabel and expanded:
 					n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					n.size_flags_vertical = Control.SIZE_EXPAND_FILL
 					n.autowrap_mode = TextServer.AUTOWRAP_OFF
-					n.custom_minimum_size.x = 1000.0 * maxf(EditorInterface.get_editor_scale(), 1.0)
+					n.custom_minimum_size.x = maxf(1000.0, DisplayServer.screen_get_size().x) * maxf(EditorInterface.get_editor_scale(), 1.0)
 					n.size = canvas.size
 				
 					var c : ScrollContainer = ScrollContainer.new()
