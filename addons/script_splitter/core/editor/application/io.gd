@@ -225,6 +225,7 @@ func execute(value : Variant = null) -> bool:
 						if x.has(container):
 							var y : Node = (_manager._base_container._editor_container.get_parent())
 							var new_window : Window = EDITOR.instantiate()
+							new_window.set_manager(_manager)
 							y.add_child(new_window)
 							
 							var root : Node = new_window.call(&"get_root")
@@ -251,6 +252,26 @@ func execute(value : Variant = null) -> bool:
 								
 							new_window.setup()
 							new_window.update()
-							_manager.update()
+							
+							_manager.queue_focus(x)
+							
+							_queue_window.call_deferred(x)
 							return false
 	return false
+
+func _queue_window(x : MickeyTool) -> void:
+	while null != _manager._queue_focus_tool:
+		await Engine.get_main_loop().process_frame
+		if !is_instance_valid(_manager):
+			return
+			
+	if !is_instance_valid(x):
+		return
+		
+	# FORCE 3RRN0 WIN ISSUE
+	#if is_instance_valid(x.get_gui()):
+	#	var c : Control = x.get_gui()
+	#	if c.has_focus():
+	#		return
+			
+	_manager.queue_focus(x)

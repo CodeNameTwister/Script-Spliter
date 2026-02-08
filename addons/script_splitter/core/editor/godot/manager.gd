@@ -64,6 +64,7 @@ var _tool_db : ToolDB = null
 var _base_container : BaseContainer = null
 var _base_list : BaseList = null
 var _task : Task = null
+var _queue_focus_tool : ToolDB.MickeyTool = null
 
 func _app_setup() -> void:
 	_task = Task.new()
@@ -227,6 +228,16 @@ func update() -> bool:
 	_base_container.update_split_container()
 	_base_list.update_list()
 	
+	if is_instance_valid(_queue_focus_tool):
+		_queue_focus_tool.trigger_focus()
+		
+		var control : Control = _queue_focus_tool.get_gui()
+		if is_instance_valid(control):
+			if control.focus_mode != Control.FOCUS_NONE and !control.has_focus():
+				control.grab_focus.call_deferred()
+				
+		_queue_focus_tool = null
+		
 	return !update_required
 
 # API
@@ -403,3 +414,28 @@ func move_item_container(container : TabContainer, from : int, to : int) -> void
 		return
 		
 	_base_container.move_container(vfrom, vto)
+
+func queue_focus(mk : ToolDB.MickeyTool = null) -> void:
+	_queue_focus_tool = mk
+	if is_instance_valid(mk):
+		update_request.emit()
+	else:
+		var _self : Object = self
+		for __ : int in range(5):
+			await Engine.get_main_loop().process_frame
+			if !is_instance_valid(_self) or !is_instance_valid(merge_tool):
+				return
+		recover_focus()
+
+func recover_focus() -> void:
+	var base : BaseContainer = get_base_container()
+	
+	if !is_instance_valid(base):
+		return
+	
+	var current : Control = base._current_container
+	for t : ToolDB.MickeyTool in _tool_db.get_tools():
+		if is_instance_valid(t) and t.is_valid():
+			if t.get_root() == current:
+				queue_focus(t)	
+				return
