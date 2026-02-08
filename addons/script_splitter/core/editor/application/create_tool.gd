@@ -63,8 +63,6 @@ func execute(value : Variant = null) -> bool:
 			_manager.tool_created()
 			_manager.update_metadata(mt)
 			
-			mt.trigger_focus()
-			
 			_manager.queue_focus(mt)
 			return false
 	

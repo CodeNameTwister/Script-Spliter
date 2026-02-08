@@ -67,6 +67,7 @@ func execute(value : Variant = null) -> bool:
 			if x.has(control):
 				value = x
 				break
+				
 	if value is MickeyTool:
 		var index : int = value.get_index()
 		var editor_list : BaseList = _manager.get_editor_list()
@@ -118,4 +119,13 @@ func execute(value : Variant = null) -> bool:
 				
 			_manager.io.update()
 			_manager.get_editor_list().updated.emit()
+			
+			if is_instance_valid(control):
+				if control.focus_mode != Control.FOCUS_NONE and !control.has_focus():
+					var tree : SceneTree = control.get_tree()
+					var grab : bool = is_instance_valid(tree)
+					if grab and tree.has_method(&"is_accessibility_enabled"):
+						grab = tree.call(&"is_accessibility_enabled")
+					control.grab_focus()
+				
 	return false

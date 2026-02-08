@@ -230,12 +230,6 @@ func update() -> bool:
 	
 	if is_instance_valid(_queue_focus_tool):
 		_queue_focus_tool.trigger_focus()
-		
-		var control : Control = _queue_focus_tool.get_gui()
-		if is_instance_valid(control):
-			if control.focus_mode != Control.FOCUS_NONE and !control.has_focus():
-				control.grab_focus.call_deferred()
-				
 		_queue_focus_tool = null
 		
 	return !update_required

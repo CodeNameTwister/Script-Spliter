@@ -91,8 +91,8 @@ func _focus(n : Node, focus : bool = false) -> void:
 			var c : Control = n
 			if c.focus_mode != Control.FOCUS_NONE:
 				var tree : SceneTree = c.get_tree()
-				var grab : bool = true
-				if tree and tree.has_method(&"is_accessibility_enabled"):
+				var grab : bool = is_instance_valid(tree)
+				if grab and tree.has_method(&"is_accessibility_enabled"):
 					grab = tree.call(&"is_accessibility_enabled")
 				if grab:
 					c.grab_focus.call_deferred()
