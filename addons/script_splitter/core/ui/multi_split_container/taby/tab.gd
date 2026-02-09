@@ -9,9 +9,11 @@ extends Button
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 const SEPARATOR = preload("./../../../../core/ui/multi_split_container/taby/separator.tscn")
+const DRAG_FRAME : float = 0.15
 static var line : VSeparator = null
 static var _drag_icon : Control = null
 
+var _fms : float = 0.0
 
 var _delta : float = 0.0
 var _last_control : Control = null
@@ -56,7 +58,7 @@ func _get_drag_data(__ : Vector2) -> Variant:
 	set_drag_preview(c)
 	
 	_drag_icon = c
-	
+	set_process(true)
 	return self
 	
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
@@ -156,6 +158,7 @@ func _process(delta: float) -> void:
 	if is_drag:
 		if !Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			set_process(false)
+			_fms = 0.0
 			is_drag = false
 			var parent : Node = self
 			
@@ -174,6 +177,7 @@ func _process(delta: float) -> void:
 		if !Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			pressed.emit()
 			set_process(false)
+			_fms = 0.0
 			return
 		if is_instance_valid(_drag_icon):
 			is_drag = true
@@ -189,6 +193,15 @@ func _process(delta: float) -> void:
 					if x is TabContainer:
 						parent.emit_signal(&"on_dragging",x.get_tab_bar())
 						return
+		else:
+			_fms += delta
+			if _fms > DRAG_FRAME:
+				_fms = 0.0
+				var c : Control = duplicate(0)
+				c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				c.z_index = RenderingServer.CANVAS_ITEM_Z_MAX - 2
+				_drag_icon = c
+				force_drag(self, c)
 
 func set_drag_icon_reference(dd : Variant) -> void:
 	_drag_icon = dd
@@ -202,11 +215,9 @@ func setup() -> void:
 func _on_input(e : InputEvent) -> void:
 	if e is InputEventMouseButton:
 		if e.button_index == MOUSE_BUTTON_LEFT:
-			is_drag = false
 			if e.pressed:
-				set_process(true)
-			else:
-				set_process(false)
+				_fms = 0.0
+				set_process.call_deferred(true)
 		#elif e.button_index == MOUSE_BUTTON_RIGHT:
 			#pressed.emit()
 
