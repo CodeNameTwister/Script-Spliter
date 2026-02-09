@@ -103,4 +103,4 @@ The ection where you can see the editors' names as tab button.
 | use old behaviour | Use native behaviour of tabs |
 
 # 
-Script Spliter Tool Plugin For Community Of Godot 4, Created By Twister.
+Script Splitter Tool Plugin For Community Of Godot 4, Created By Twister.
