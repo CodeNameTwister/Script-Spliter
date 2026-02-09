@@ -178,6 +178,7 @@ func _process(delta: float) -> void:
 							return
 		else:
 			if !Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+				pressed.emit()
 				set_process(false)
 				return
 			if is_instance_valid(_drag_icon):
@@ -238,7 +239,8 @@ func _on_gui(e : InputEvent) -> void:
 		if e.button_index == MOUSE_BUTTON_LEFT and  e.is_pressed():
 			var _self : Variant = self
 			if _self is Button:
-				if !_self.button_pressed:
-					_self.pressed.emit()
-					get_viewport().set_input_as_handled()
+				if _self.button_pressed:
+					return
+				_self.pressed.emit()
+				get_viewport().set_input_as_handled()
 	
