@@ -73,7 +73,7 @@ func _on_load(sc : ScrollContainer) -> void:
 		if bar.max_value > 10.0:
 			break
 	if sc.scroll_horizontal < 1.0:
-		sc.scroll_horizontal = int((bar.max_value - bar.page) * 0.5)
+		sc.scroll_horizontal = int((bar.max_value - bar.page) * 0.25)
 
 func _handler(control : Node) -> MickeyTool:
 	var mickey : MickeyTool = null
