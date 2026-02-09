@@ -111,6 +111,7 @@ This has been done to maintain compatibility when using shorteners like Ctrl + [
 * Show All current active splited Scripts in Script List. (Feature: [#15](https://github.com/CodeNameTwister/Script-Splitter/issues/15))
 * Better Tabs (Feature: [#17](https://github.com/CodeNameTwister/Script-Splitter/issues/17))
 * Sub-Split (Feature: [#20](https://github.com/CodeNameTwister/Script-Splitter/issues/20))
+* Expand document editor helper in editor settings using `plugin/script_splitter/editor/document_helper_unwrapped # default false` 
   
 >[!WARNING]
 >Experimental Refresh Warnings *(This option can be disabled on Editor Settings)*
