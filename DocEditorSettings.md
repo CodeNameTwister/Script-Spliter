@@ -1,7 +1,10 @@
-# Script Spliter in Editor Settings
+# Script Splitter in Editor Settings
 Each plugin configuration parameter is documented here.
 
-**Root of EditorSettings**: *plugin/script_spliter/**
+**Root of EditorSettings**: *plugin/script_splitter/**
+
+> [!NOTE]
+> Some settings may be missing in versions >= 0.5 because is a new system and removes settings that have become obsolete.
 
 |  Setting  | Description  |
 | ------------ | ------------ |
@@ -10,9 +13,11 @@ Each plugin configuration parameter is documented here.
 | Save Rows Columns Count on exit  |  Save the current columns and rows you split before exiting to open them on next startup |
 
 ### Behaviour
+General behaviours
 |  Setting  | Description  |
 | ------------ | ------------ |
 | Refresh Warnings On Save | Check on save if all scripts has new errors/warnings|
+| Document Helper Unwrapped | It allows new editor helpers that you open to open in an expanded format, avoiding compression errors on large screens. |
 
 ### Window
 |  Setting  | Description  |
@@ -28,6 +33,7 @@ Each plugin configuration parameter is documented here.
 | Out Focus Color Value | Modulate color when focus another window |
 
 ### Editor/Behaviour
+Behaviour for splitted editors
 |  Setting  | Description  |
 | ------------ | ------------ |
 | Expand on focus | Enable expand when focus a split window shrunk |
@@ -37,6 +43,7 @@ Each plugin configuration parameter is documented here.
 | Swap by double click separator button | Enable swap between windows when double click in separator button |
 
 ### Editor/Behaviour/Back And Forward
+Deprecated in version >= 0.5
 |  Setting  | Description  |
 | ------------ | ------------ |
 | Handle Back And Forward | Enable handler event of back and forward by internal function addon |
@@ -50,7 +57,7 @@ Each plugin configuration parameter is documented here.
 
 ### Editor/Split
 This section work only when you add new split/s.
-in old versions < 0.3 was more useful.
+in old versions < 0.3 was more useful, deprecated in Versions >= 0.5.
 
 |  Setting  | Description  |
 | ------------ | ------------ |
@@ -59,6 +66,7 @@ in old versions < 0.3 was more useful.
 
 
 ### Line
+Line separator between code/document editors.
 |  Setting  | Description  |
 | ------------ | ------------ |
 | Size | Line width  |
@@ -67,6 +75,7 @@ in old versions < 0.3 was more useful.
 | Expand by Double Click | When you press with mouse (double click) the line back to initial position |
 
 ### Button
+Visible button when drag line separator.
 |  Setting  | Description  |
 | ------------ | ------------ |
 | Size | Button width  |
@@ -74,11 +83,13 @@ in old versions < 0.3 was more useful.
 | Icon Path | Texture path for the button  |
 
 ### Input
+Input events for split and it can be trigger with `[ctrl + number]` (current not implemented in v0.5)
 |  Setting  | Description  |
 | ------------ | ------------ |
 | split type {1, 2, 3, ...} | Button for define type split Example: split of 2 columns and 2 rows |
 
 ### List
+The container has the list with all the scripts/documents open for work.
 |  Setting  | Description  |
 | ------------ | ------------ |
 | selected color | Visible color in script list of the current script focused |
@@ -86,6 +97,7 @@ in old versions < 0.3 was more useful.
 | colorize actives | Visible color in script list of the scripts in same split of the current script focused |
 
 ### Tabs
+The ection where you can see the editors' names as tab button.
 |  Setting  | Description  |
 | ------------ | ------------ |
 | use old behaviour | Use native behaviour of tabs |
