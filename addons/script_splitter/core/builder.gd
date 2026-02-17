@@ -258,7 +258,16 @@ func _info_settings() -> void:
 		,"plugin/script_splitter/line/button/size" : "Size of the embedded button in the line separator."
 		,"plugin/script_splitter/line/button/modulate" : "Modulate color of the embedded button in the line separator."
 		,"plugin/script_splitter/line/button/always_visible" : "Make always visible for the embedded button in the line separator."
-		,"plugin/script_splitter/editor/minimap_for_unfocus_window" : "Disable code minimap for editos has not focus."
+		,"plugin/script_splitter/editor/minimap_for_unfocus_window" : "Disable code minimap for editor has not focus."
+		
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/handle_back_and_forward": "NO IMPLEMENTED (IN EVALUATION)"
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/history_size": "NO IMPLEMENTED (IN EVALUATION)"
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/using_as_next_and_back_tab": "NO IMPLEMENTED (IN EVALUATION)"
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/use_native_handler_when_there_are_no_more_tabs": "NO IMPLEMENTED (IN EVALUATION)"
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/backward_key_button_input": "NO IMPLEMENTED (IN EVALUATION)"
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/forward_key_button_input": "NO IMPLEMENTED (IN EVALUATION)"
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/backward_mouse_button_input": "NO IMPLEMENTED (IN EVALUATION)"
+		,"plugin/script_splitter/editor/behaviour/back_and_forward/forward_mouse_button_input": "NO IMPLEMENTED (IN EVALUATION)"
 		}
 	for k : Variant in data.keys():
 		Info.set_editor_setting_tooltip(k, data[k])

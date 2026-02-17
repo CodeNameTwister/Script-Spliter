@@ -129,7 +129,7 @@ func _physics_process(delta: float) -> void:
 			var property_path : String = editor_property.tooltip_text.split("|")[-1]
 			if _project_settings.has(property_path):
 				if !editor_property.child_entered_tree.is_connected(_update_editor):
-					editor_property.child_entered_tree.connect(_update_editor.bind(property_path, _project_changes))
+					editor_property.child_entered_tree.connect(_update_editor.bind(property_path, _project_settings))
 
 func _on_tooltip(tooltip : Node, new_tooltip_text : String) -> void:
 	for x : int in range(tooltip.get_child_count() - 1, -1, -1):
