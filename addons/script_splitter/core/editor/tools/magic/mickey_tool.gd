@@ -78,8 +78,14 @@ func ochorus(root : Node) -> void:
 					
 			_root_control.visible = true
 			
-func trigger_focus() -> void:
+func trigger_focus(force : bool = false) -> void:
 	focus.emit(self)
+	
+	if !force:
+		return
+		
+	if _control.focus_mode != Control.FOCUS_NONE and !_control.has_focus():
+		_control.grab_focus.call_deferred()
 			
 func get_owner() -> Node:
 	return _owner

@@ -229,7 +229,7 @@ func update() -> bool:
 	_base_list.update_list()
 	
 	if is_instance_valid(_queue_focus_tool):
-		_queue_focus_tool.trigger_focus()
+		_queue_focus_tool.trigger_focus(true)
 		_queue_focus_tool = null
 		
 	return !update_required
