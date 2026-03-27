@@ -31,6 +31,8 @@ var _updating : bool = false
 
 var style : StyleBox = null
 
+var _lsize : Vector2 = Vector2.ZERO
+
 var _behaviour_collapsed : int = MAX_COLLAPSED:
 	set(e):
 		_behaviour_collapsed = mini(maxi(0, e), MAX_COLLAPSED)
@@ -395,9 +397,14 @@ func get_reference() -> TabBar:
 	return _reference
 	
 func _resize_required() -> bool:
-	return true
+	#if (get_global_rect().has_point(get_global_mouse_position())):
+		#return false
+	
 	var rsize : Vector2 = get_parent().get_parent().size
 	if rsize.x > 10.0:
+		if _lsize != rsize:
+			return true
+			
 		var current : HBoxContainer = null
 			
 		var index : int = 0
@@ -433,46 +440,47 @@ func _physics_process(delta: float) -> void:
 		return
 		
 	var rsize : Vector2 = get_parent().get_parent().size
-	if rsize.x > 10.0:
-		for x : Node in container.get_children():
-			container.remove_child(x)
-			
-		for x : Control in buttons:
-			var p : Node = x.get_parent()
-			if p:
-				p.remove_child(x)
-			
-		var current : HBoxContainer = null
-		
-		var index : int = 0
-		
-		var min_size : float = 0.0
-		var btn_size : float = 0.0
-		for x : Control in buttons:
-			if !x.visible:
-				continue
-			var bsize : float = x.get_rect().size.x
-			if current == null or (bsize > 0.0 and rsize.x < current.get_minimum_size().x + bsize + 12):
-				if hbox.size() > index:
-					current = hbox[index]
-				else:
-					current = HBoxContainer.new()
-					current.set(&"theme_override_constants/separation", 4)
-					hbox.append(current)
-				index += 1
-				container.add_child(current)
-			current.add_child(x)
-			btn_size = maxf(btn_size, x.size.y)
-		if current:
-			var indx : int = current.get_index() + 1
-			min_size = indx * (btn_size) #+ 12.5
-		
-		if custom_minimum_size.y != min_size:
-			_try = 0
-			set_physics_process(true)
-			custom_minimum_size.y = min_size
-			return
+	_lsize = rsize
 	
+	for x : Node in container.get_children():
+		container.remove_child(x)
+		
+	for x : Control in buttons:
+		var p : Node = x.get_parent()
+		if p:
+			p.remove_child(x)
+		
+	var current : HBoxContainer = null
+	
+	var index : int = 0
+	
+	var min_size : float = 0.0
+	var btn_size : float = 0.0
+	for x : Control in buttons:
+		if !x.visible:
+			continue
+		var bsize : float = x.get_rect().size.x
+		if current == null or (bsize > 0.0 and rsize.x < current.get_minimum_size().x + bsize + 12):
+			if hbox.size() > index:
+				current = hbox[index]
+			else:
+				current = HBoxContainer.new()
+				current.set(&"theme_override_constants/separation", 4)
+				hbox.append(current)
+			index += 1
+			container.add_child(current)
+		current.add_child(x)
+		btn_size = maxf(btn_size, x.size.y)
+	if current:
+		var indx : int = current.get_index() + 1
+		min_size = indx * (btn_size) #+ 12.5
+	
+	if custom_minimum_size.y != min_size:
+		_try = 0
+		set_physics_process(true)
+		custom_minimum_size.y = min_size
+		return
+
 	_try += 1
 	if _try % 5 == 0:
 		set_physics_process(false)
