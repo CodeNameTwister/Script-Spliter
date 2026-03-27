@@ -356,7 +356,7 @@ func get_control_tool_by_current(current : Variant) -> Node:
 		current = get_base_container().get_current_container()
 		if current is TabContainer:
 			var i : int = current.current_tab
-			if i > -1:
+			if i > -1 and current.get_tab_count() > i:
 				current = current.get_child(i)
 	if current:
 		if current is String:

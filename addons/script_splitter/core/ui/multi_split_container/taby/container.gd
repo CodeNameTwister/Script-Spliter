@@ -88,9 +88,10 @@ func _on_pressed(btn : Button) -> void:
 	if is_instance_valid(_reference):
 		for x : int in _reference.tab_count:
 			if _reference.get_tab_tooltip(x) == btn.tooltip_text:
-				_reference.current_tab = x
-				#_reference.tab_clicked.emit(x)
-				_reference.tab_clicked.emit(x)
+				if _reference.tab_count > x and x > -1:
+					_reference.current_tab = x
+					#_reference.tab_clicked.emit(x)
+					_reference.tab_clicked.emit(x)
 				
 func _on_gui_pressed(input : InputEvent, btn : Button) -> void:
 	if input.is_pressed():
@@ -165,15 +166,73 @@ func _on_pin(btn : Object) -> void:
 							pins.remove_at(y)
 				_on_rect_change()
 				update()
+
+func _update_required() -> bool:
+	var tab : TabBar = _reference
+	
+	if buttons.size() != tab.tab_count:
+		return true
+			
+	if pins.size() > 0:
+		var indx : int = 0
+		var control : Node = tab.get_parent_control()
+		if control:
+			for x : int in range(control.get_child_count()):
+				if x > -1 and tab.tab_count > x:
+					if pins.has(tab.get_tab_tooltip(x)):
+						if x != indx:
+							if x < control.get_child_count():
+								return true
+								
+	for x : int in range(tab.tab_count):
+		var _container : Control = buttons[x]
+		var btn : Button = _container.get_button()
+		
+		if btn.tooltip_text != tab.get_tab_tooltip(x) or \
+			_container.get_text() != tab.get_tab_title(x) or \
+			btn.icon != tab.get_tab_icon(x) or \
+			_container.is_pinned != pins.has(btn.tooltip_text):
+			return true
+		
+	if tab.current_tab > -1 and tab.current_tab < buttons.size():
+		var _container : Control = buttons[tab.current_tab]
+		var btn : Button = _container.get_button()
+		
+		if _select_color != btn.get(&"theme_override_colors/icon_normal_color"):
+			for x : Node in buttons:
+				var cc : ColorRect = x.color_rect
+				cc.visible = false
+				x.get_button().set(&"theme_override_colors/icon_normal_color", Color.GRAY)
+		
+			btn.set(&"theme_override_colors/icon_normal_color", _select_color)
+			_container.modulate.a = 1.0
+			
+			var c : ColorRect = _container.color_rect
+			c.visible = true
+			c.color = _select_color
+	
+		if _behaviour_collapsed < MAX_COLLAPSED:
+			var iminor : int = tab.current_tab - _behaviour_collapsed
+			var isup : int = tab.current_tab + _behaviour_collapsed
+			for x : int in range(tab.tab_count):
+				var _btn : Control = buttons[x]
+				if x < iminor or x > isup:
+					if _btn.visible:
+						return true
+				elif !_btn.visible:
+					return true
+				
+	return false
 			
 func update(fllbck : bool = true) -> void:
 	if !_enable_update:
 		return
 	if _updating:
 		return
+		
 	_updating = true
 	var tab : TabBar = _reference
-	if !is_instance_valid(tab):
+	if !is_instance_valid(tab) or !_update_required():
 		set_deferred(&"_updating", false)
 		return
 		
@@ -228,6 +287,7 @@ func update(fllbck : bool = true) -> void:
 		var _container : Control = buttons[x]
 		var btn : Button = _container.get_button()
 		var pin : Button = _container.get_button_pin()
+		
 		_container.visible = true
 		btn.tooltip_text = tab.get_tab_tooltip(x)
 		_container.set_text(tab.get_tab_title(x))
@@ -334,11 +394,43 @@ func _on_rect_change() -> void:
 func get_reference() -> TabBar:
 	return _reference
 	
+func _resize_required() -> bool:
+	return true
+	var rsize : Vector2 = get_parent().get_parent().size
+	if rsize.x > 10.0:
+		var current : HBoxContainer = null
+			
+		var index : int = 0
+		
+		var min_size : float = 0.0
+		var btn_size : float = 0.0
+		for x : Control in buttons:
+			if !x.visible:
+				continue
+			var bsize : float = x.get_rect().size.x
+			if current == null or (bsize > 0.0 and rsize.x < current.get_minimum_size().x + bsize + 12):
+				if hbox.size() > index:
+					current = hbox[index]
+				else:
+					return true
+				index += 1
+			btn_size = maxf(btn_size, x.size.y)
+		if current:
+			var indx : int = current.get_index() + 1
+			min_size = indx * (btn_size) #+ 12.5
+		if custom_minimum_size.y != min_size:
+			return true
+	return false
+		
 func _physics_process(delta: float) -> void:
 	_dlt += delta
 	if _dlt < TIME_WAIT:
 		return
 	_dlt = 0.0
+	
+	if !_resize_required():
+		set_physics_process(false)
+		return
 		
 	var rsize : Vector2 = get_parent().get_parent().size
 	if rsize.x > 10.0:

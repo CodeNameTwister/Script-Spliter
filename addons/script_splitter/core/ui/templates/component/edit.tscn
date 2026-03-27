@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://da36gbvb15eew"]
+
+[ext_resource type="Script" uid="uid://cadmmlgspagm1" path="res://addons/script_splitter/core/ui/templates/component/edit.gd" id="1_7pakk"]
+[ext_resource type="Script" uid="uid://bhoy2si4obnmn" path="res://addons/script_splitter/core/ui/templates/component/editor_slot.gd" id="2_7fngf"]
+
+[node name="Edit" type="Popup" unique_id=709076074]
+oversampling_override = 1.0
+title = "Edit Template"
+size = Vector2i(306, 751)
+visible = true
+script = ExtResource("1_7pakk")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1214972058]
+custom_minimum_size = Vector2(300, 0)
+offset_right = 132.0
+offset_bottom = 171.0
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=2133635193]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=141330140]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=221843928]
+layout_mode = 2
+text = "Edit Menu"
+horizontal_alignment = 1
+vertical_alignment = 1
+uppercase = true
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=42481430]
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1770311441]
+layout_mode = 2
+size_flags_vertical = 6
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer" unique_id=1243779368]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AutoSizeLineEdit" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer" unique_id=770874347]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "New Name"
+alignment = 1
+
+[node name="Label2" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer" unique_id=996974239]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Color"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer" unique_id=1220002556]
+layout_mode = 2
+text = "Color"
+color = Color(1, 1, 1, 1)
+
+[node name="Label3" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer" unique_id=781166450]
+layout_mode = 2
+text = "Editors"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer" unique_id=800635965]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer/ScrollContainer" unique_id=76720512]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer/ScrollContainer/PanelContainer" unique_id=14968240]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="EditorSlot" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer/ScrollContainer/PanelContainer/VBoxContainer" unique_id=766968239]
+layout_mode = 2
+script = ExtResource("2_7fngf")
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer/ScrollContainer/PanelContainer/VBoxContainer/EditorSlot" unique_id=918590517]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/GridContainer/ScrollContainer/PanelContainer/VBoxContainer/EditorSlot" unique_id=1469201323]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "X"
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=345671796]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=794064137]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer" unique_id=208402593]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Accept"
+
+[node name="Button2" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer" unique_id=664543438]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"

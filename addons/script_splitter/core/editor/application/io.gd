@@ -257,6 +257,17 @@ func execute(value : Variant = null) -> bool:
 						
 						_queue_window.call_deferred(x)
 						return false
+			
+			&"_T_EDITOR":
+				if (container.get_parent() is VBoxContainer):
+					EditorInterface.get_editor_toaster().push_toast("[Script Splitter 0.5-DEV-4] Hey not implemented!, yet...", EditorToaster.SEVERITY_INFO, "Wait to the next version dude.")
+					#var x : MickeyTool = _tool_db.get_by_reference(container)
+					#if is_instance_valid(x):
+						#
+							#
+							#
+							#
+							#
 	return false
 
 func _queue_window(x : MickeyTool) -> void:

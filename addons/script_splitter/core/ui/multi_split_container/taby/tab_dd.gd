@@ -24,7 +24,6 @@ func _on_gui(e : InputEvent) -> void:
 					_self.pressed.emit()
 					get_viewport().set_input_as_handled()
 			
-	
 func _on_mouse() -> void:
 	modulate = new_color
 	
