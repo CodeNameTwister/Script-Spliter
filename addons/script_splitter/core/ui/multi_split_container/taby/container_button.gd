@@ -18,8 +18,10 @@ signal on_pin(button : Object)
 
 var is_pinned : bool = false
 var _text : String = ""
+var hover : bool = false
 
 func _ready() -> void:
+	set_process(false)
 	add_to_group(&"SP_TAB_BUTTON")
 	mouse_entered.connect(_on_enter)
 	mouse_exited.connect(_on_exit)
@@ -61,7 +63,6 @@ func _on_enter() -> void:
 
 func _on_exit() -> void:
 	remove_from_group(&"__SPLITER_BUTTON_TAB__")
-	
 
 func get_reference() -> TabBar:
 	return get_parent().get_parent().get_parent().get_reference()
@@ -130,3 +131,9 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 func get_selected_color() -> Color:
 	return color_rect.color
+
+func _process(__: float) -> void:
+	if !get_global_rect().has_point(get_global_mouse_position()):
+		set_process(false)
+		hover = false
+		mouse_exited.emit()

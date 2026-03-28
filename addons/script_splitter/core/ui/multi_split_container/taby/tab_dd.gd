@@ -26,9 +26,12 @@ func _on_gui(e : InputEvent) -> void:
 			
 func _on_mouse() -> void:
 	modulate = new_color
+	owner.mouse_entered.emit()
 	
 func _out_mouse() -> void:
-	modulate = _default
+	if is_instance_valid(owner) and !owner.is_queued_for_deletion():
+		modulate = _default
+		owner.mouse_exited.emit()
 
 func _get_drag_data(__ : Vector2) -> Variant:
 	return owner.button_main._get_drag_data(__)

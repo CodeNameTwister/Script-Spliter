@@ -30,8 +30,11 @@ var _select_color : Color = Color.CADET_BLUE:
 var _updating : bool = false
 
 var style : StyleBox = null
+var style_hover : StyleBox = null
 
+var _lcollapsed : int = -1
 var _lsize : Vector2 = Vector2.ZERO
+var _ltabs : int = -1
 
 var _behaviour_collapsed : int = MAX_COLLAPSED:
 	set(e):
@@ -172,7 +175,8 @@ func _on_pin(btn : Object) -> void:
 func _update_required() -> bool:
 	var tab : TabBar = _reference
 	
-	if buttons.size() != tab.tab_count:
+	if buttons.size() != tab.tab_count or _ltabs != tab.tab_count:
+		_ltabs = -1
 		return true
 			
 	if pins.size() > 0:
@@ -225,6 +229,17 @@ func _update_required() -> bool:
 					return true
 				
 	return false
+	
+func _on_mouse(btn : Control) -> void:
+	if style_hover:
+		btn.set(&"theme_override_styles/panel", style_hover)
+	btn.hover = true
+	
+func out_mouse(btn : Control) -> void:
+	if !btn.hover:
+		btn.set(&"theme_override_styles/panel", style)
+		return
+	btn.set_process(true)
 			
 func update(fllbck : bool = true) -> void:
 	if !_enable_update:
@@ -237,7 +252,7 @@ func update(fllbck : bool = true) -> void:
 	if !is_instance_valid(tab) or !_update_required():
 		set_deferred(&"_updating", false)
 		return
-		
+	
 	for x : int in range(buttons.size() -1, -1, -1):
 		var _container : Variant = buttons[x]
 		if is_instance_valid(_container):
@@ -259,6 +274,10 @@ func update(fllbck : bool = true) -> void:
 			cls.pressed.connect(_on_close.bind(control))
 		if !btn.on_pin.is_connected(_on_pin):
 			btn.on_pin.connect(_on_pin)
+		if !btn.mouse_entered.is_connected(_on_mouse):
+			btn.mouse_entered.connect(_on_mouse.bind(btn))
+		if !btn.mouse_exited.is_connected(out_mouse):
+			btn.mouse_exited.connect(out_mouse.bind(btn))
 		buttons.append(btn)
 		
 	while buttons.size() > tab.tab_count:
@@ -371,20 +390,34 @@ func _ready() -> void:
 	
 	var bd : Control = EditorInterface.get_base_control()
 	if bd:
-		style = bd.get_theme_stylebox("panel", "")
+		style = bd.get_theme_stylebox("tab_unselected", "TabBar")
+		#style_selected = bd.get_theme_stylebox("tab_selected", "TabBar")
+		#style_hover = bd.get_theme_stylebox("tab_hovered", "TabBar")
 		if is_instance_valid(style):
 			style = style.duplicate()
-			if style is StyleBoxFlat:
-				style.border_width_top = 0.0
-				style.border_width_left = 0.0
-				style.border_width_right = 0.0
-				style.border_width_bottom = 0.0
-				style.expand_margin_left = 2.0
-			style.content_margin_bottom = 0.0
-			style.content_margin_top = 0.0
-			style.content_margin_left = 0.0
-			style.content_margin_right = 0.0
-	
+			
+		if is_instance_valid(style_hover):
+			style_hover = style_hover.duplicate()
+		else:
+			style_hover = style
+			if style_hover is StyleBoxFlat:
+				style_hover = style.duplicate()
+				style_hover.bg_color = _select_color.darkened(0.5)
+		
+		for x : StyleBox in [style, style_hover]:
+			if !is_instance_valid(x):
+				continue
+				
+			if x is StyleBoxFlat:
+				x.border_width_top = 0.0
+				x.border_width_left = 0.0
+				x.border_width_right = 0.0
+				x.border_width_bottom = 0.0
+				x.expand_margin_left = 2.0
+			x.content_margin_bottom = 0.0
+			x.content_margin_top = 0.0
+			x.content_margin_left = 0.0
+			x.content_margin_right = 0.0
 	
 func _on_rect_change() -> void:
 	if !_enable_update:
@@ -399,6 +432,13 @@ func get_reference() -> TabBar:
 func _resize_required() -> bool:
 	#if (get_global_rect().has_point(get_global_mouse_position())):
 		#return false
+	
+	var tab : TabBar = _reference	
+	if _ltabs != tab.tab_count:
+		return true
+		
+	if _lcollapsed != _behaviour_collapsed:
+		return true
 	
 	var rsize : Vector2 = get_parent().get_parent().size
 	if rsize.x > 10.0:
@@ -439,8 +479,11 @@ func _physics_process(delta: float) -> void:
 		set_physics_process(false)
 		return
 		
+	var tab : TabBar = _reference	
 	var rsize : Vector2 = get_parent().get_parent().size
 	_lsize = rsize
+	_ltabs = tab.tab_count
+	_lcollapsed = _behaviour_collapsed
 	
 	for x : Node in container.get_children():
 		container.remove_child(x)

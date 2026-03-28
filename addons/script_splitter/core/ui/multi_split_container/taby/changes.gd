@@ -1,7 +1,15 @@
 @tool
 extends Label
 
+func _on_mouse() -> void:
+	owner.mouse_entered.emit()
+	
+func _out_mouse() -> void:
+	owner.mouse_exited.emit()
+
 func _ready() -> void:
+	mouse_entered.connect(_on_mouse)
+	mouse_exited.connect(_out_mouse)
 	add_to_group(&"SP_TAB_BUTTON")
 
 func _gui_input(event: InputEvent) -> void:

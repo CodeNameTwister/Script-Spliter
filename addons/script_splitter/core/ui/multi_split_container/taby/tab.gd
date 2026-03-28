@@ -29,7 +29,15 @@ var is_drag : bool = false:
 			if Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
 				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
+func _on_mouse() -> void:
+	owner.mouse_entered.emit()
+	
+func _out_mouse() -> void:
+	owner.mouse_exited.emit()
+
 func _ready() -> void:
+	mouse_entered.connect(_on_mouse)
+	mouse_exited.connect(_out_mouse)
 	auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	set_process(false)
 	add_to_group(&"SP_TAB_BUTTON")
