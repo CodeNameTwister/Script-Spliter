@@ -30,8 +30,7 @@ func _enter_tree() -> void:
 func valid_changes() -> void:
 	_has_changes = true
 	
-	if serialize():
-		_has_changes = false
+	serialize.call_deferred()
 	
 func create_template(tname : String, files : PackedStringArray, tcolor : Color) -> void:
 	var node : Node = TEMPLATE_CONTAINER.instantiate()
@@ -78,6 +77,8 @@ func serialize() -> bool:
 	var cfg : ConfigFile = ConfigFile.new()
 	
 	for x : Node in get_children():
+		if x.is_queued_for_deletion():
+			continue
 		var k : String = x.get_tittle()
 		var d : Dictionary = x.get_items()
 		
@@ -100,7 +101,8 @@ func serialize() -> bool:
 			continue
 	
 		cfg.set_value("setting", x, din)
-		
+	
+	_has_changes = false
 	return cfg.save(path) == OK
 	
 func clear() -> void:
