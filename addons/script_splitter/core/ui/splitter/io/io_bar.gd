@@ -98,9 +98,8 @@ func _setup() -> void:
 	if enable_pop_script:
 		make_function(&"MAKE_FLOATING", ATOP, _tr("Make separate window"))
 	if enable_templates:
-		make_function(&"_T_EDITOR", TEMPLATE_EDITOR, _tr("Not implemented yet!"))
-		
-		#_root.add_child(TEMPLATE.instantiate())
+		make_function(&"_T_EDITOR", TEMPLATE_EDITOR, _tr("Make new split template"))
+		_root.add_child(TEMPLATE.instantiate())
 	
 func enable(id : StringName, e : bool) -> void:
 	for x : Node in _root.get_children():

@@ -130,5 +130,18 @@ func _io_call(id : StringName) -> void:
 	if builder:
 		builder.handle(id)
 
+func get_current_editor() -> String:
+	var o : Object = get_builder()
+	if o is TWISTER_script_splitter:
+		return o.get_editor_manager().get_current_editor_path()
+	return ""
+	
+func create_custom_container(split : PackedStringArray) -> void:
+	if builder:
+		var manager : Object = builder.get_editor_manager()
+		if !manager:
+			return
+		manager.make_custom_container(split)
+
 func move_item_container(container : TabContainer, from : int, to : int) -> void:
 	builder.get_editor_manager().move_item_container(container, from, to)

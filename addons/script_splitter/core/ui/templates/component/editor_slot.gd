@@ -8,19 +8,7 @@ extends HBoxContainer
 #	author:		"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-const CONFIRM = preload("uid://d08g07ma7o1n0")
-
-var remove : Button
-
-func _ready() -> void:
-	remove.pressed.connect(_on_remove)
-	
-func _on_accept() -> void:
-	
-	pass
-	
-func _on_remove() -> void:
-	var o : Node = CONFIRM.instantiate()
-	add_child(o)
-	
-	o.accepted.connect(_on_accept)
+const CONFIRM = preload("confirm.tscn")
+var id : String = ""
+@export var label : Label
+@export var del_button : Button

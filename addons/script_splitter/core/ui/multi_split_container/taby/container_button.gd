@@ -20,6 +20,9 @@ var is_pinned : bool = false
 var _text : String = ""
 var hover : bool = false
 
+var color_override : Color = Color.WHITE
+var color_override_enabled : bool = false
+
 func _ready() -> void:
 	set_process(false)
 	add_to_group(&"SP_TAB_BUTTON")

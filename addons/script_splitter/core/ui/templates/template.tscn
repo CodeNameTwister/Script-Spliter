@@ -1,19 +1,9 @@
 [gd_scene format=3 uid="uid://bxog36traeick"]
 
 [ext_resource type="Script" uid="uid://yfpuqjraw6vl" path="res://addons/script_splitter/core/ui/templates/template_box.gd" id="1_2sphi"]
-[ext_resource type="PackedScene" uid="uid://j3y3a8pwnait" path="res://addons/script_splitter/core/ui/templates/template_container.tscn" id="1_e4ogr"]
 
 [node name="TemplateBox" type="VBoxContainer" unique_id=1263431576]
 offset_right = 40.0
 offset_bottom = 40.0
 theme_override_constants/separation = 0
 script = ExtResource("1_2sphi")
-
-[node name="TemplateContainer" parent="." unique_id=598336637 instance=ExtResource("1_e4ogr")]
-layout_mode = 2
-
-[node name="TemplateContainer2" parent="." unique_id=1369790785 instance=ExtResource("1_e4ogr")]
-layout_mode = 2
-
-[node name="TemplateContainer3" parent="." unique_id=515976815 instance=ExtResource("1_e4ogr")]
-layout_mode = 2

@@ -9,5 +9,5 @@ extends Button
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 func _pressed() -> void:
-	if owner and owner.get_parent():
-		owner.emit_signal(name, owner)
+	if owner:
+		owner.call(name)

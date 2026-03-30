@@ -25,6 +25,7 @@ const RmbMenu = preload("./../../../core/editor/application/rmb_menu.gd")
 const UserTabClose = preload("./../../../core/editor/application/user_tab_close.gd")
 const Io = preload("./../../../core/editor/application/io.gd")
 const CustomSplit = preload("./../../../core/editor/application/custom_split.gd")
+const TemplateContainer = preload("./../../../core/editor/application/template_container.gd")
 
 const ToolDB = preload("./../../../core/editor/database/tool_db.gd")
 const Task = preload("./../../../core/editor/coroutine/task.gd")
@@ -53,6 +54,7 @@ var _update_list_selection : UpdateListSelection = null
 var _rmb_menu : RmbMenu = null
 var _user_tab_close : UserTabClose = null
 var _custom_split : CustomSplit = null
+var _custom_template_container : TemplateContainer = null
 
 var io : Io = null
 var swap_tab : SwapTab = null
@@ -83,6 +85,7 @@ func _app_setup() -> void:
 	_rmb_menu = RmbMenu.new(self, _tool_db)
 	_user_tab_close = UserTabClose.new(self, _tool_db)
 	_custom_split = CustomSplit.new(self, _tool_db)
+	_custom_template_container = TemplateContainer.new(self, _tool_db)
 	
 	io = Io.new(self, _tool_db)
 	
@@ -539,6 +542,13 @@ func dump() -> Dictionary:
 				
 	return data
 
+func get_current_editor_path() -> String:
+	var container : Node = get_base_container().get_current_container()
+	var x : ToolDB.MickeyTool = _tool_db.get_by_reference(container)
+	if is_instance_valid(x):
+		return get_editor_list().get_item_tooltip(x.get_index())
+	return ""
+
 func recover_focus() -> void:
 	var base : BaseContainer = get_base_container()
 	
@@ -551,3 +561,6 @@ func recover_focus() -> void:
 			if t.get_root() == current:
 				queue_focus(t)	
 				return
+
+func make_custom_container(res : PackedStringArray) -> bool:
+	return _custom_template_container.execute(res)

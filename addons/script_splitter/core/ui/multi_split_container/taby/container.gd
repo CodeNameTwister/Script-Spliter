@@ -172,13 +172,27 @@ func _on_pin(btn : Object) -> void:
 				_on_rect_change()
 				update()
 
-func _update_required() -> bool:
+func _has_changes() -> bool:
+	if !is_instance_valid(_reference):
+		return false
+	
 	var tab : TabBar = _reference
 	
 	if buttons.size() != tab.tab_count or _ltabs != tab.tab_count:
 		_ltabs = -1
 		return true
-			
+		
+	elif _lcollapsed != _behaviour_collapsed:
+		return true
+		
+	return false
+
+func _update_required() -> bool:
+	if _has_changes():
+		return true
+	
+	var tab : TabBar = _reference
+	
 	if pins.size() > 0:
 		var indx : int = 0
 		var control : Node = tab.get_parent_control()
@@ -188,6 +202,7 @@ func _update_required() -> bool:
 					if pins.has(tab.get_tab_tooltip(x)):
 						if x != indx:
 							if x < control.get_child_count():
+								_ltabs = -1
 								return true
 								
 	for x : int in range(tab.tab_count):
@@ -198,11 +213,24 @@ func _update_required() -> bool:
 			_container.get_text() != tab.get_tab_title(x) or \
 			btn.icon != tab.get_tab_icon(x) or \
 			_container.is_pinned != pins.has(btn.tooltip_text):
+			_ltabs = -1
 			return true
 		
 	if tab.current_tab > -1 and tab.current_tab < buttons.size():
 		var _container : Control = buttons[tab.current_tab]
 		var btn : Button = _container.get_button()
+	
+		if _behaviour_collapsed < MAX_COLLAPSED:
+			if !buttons[tab.current_tab].visible:
+				_ltabs = -1
+				return true
+				
+			var z : int = buttons.size()
+			
+			for x : int in range(1, _behaviour_collapsed, 1):
+				if !buttons[wrapi(tab.current_tab + x,0, z)].visible:
+					_ltabs = -1
+					return true
 		
 		if _select_color != btn.get(&"theme_override_colors/icon_normal_color"):
 			for x : Node in buttons:
@@ -216,17 +244,6 @@ func _update_required() -> bool:
 			var c : ColorRect = _container.color_rect
 			c.visible = true
 			c.color = _select_color
-	
-		if _behaviour_collapsed < MAX_COLLAPSED:
-			var iminor : int = tab.current_tab - _behaviour_collapsed
-			var isup : int = tab.current_tab + _behaviour_collapsed
-			for x : int in range(tab.tab_count):
-				var _btn : Control = buttons[x]
-				if x < iminor or x > isup:
-					if _btn.visible:
-						return true
-				elif !_btn.visible:
-					return true
 				
 	return false
 	
@@ -344,13 +361,16 @@ func update(fllbck : bool = true) -> void:
 		
 	
 		if _behaviour_collapsed < MAX_COLLAPSED:
-			var iminor : int = tab.current_tab - _behaviour_collapsed
-			var isup : int = tab.current_tab + _behaviour_collapsed
-			for x : int in range(tab.tab_count):
-				if x < iminor or x > isup:
-					var _btn : Control = buttons[x]
-					_btn.visible = false
-		
+			var z : int = buttons.size()
+			for x : int in z:
+				buttons[x].visible = false
+				
+			buttons[tab.current_tab].visible = true
+			
+			for x : int in range(1, _behaviour_collapsed, 1):
+				buttons[wrapi(tab.current_tab + x,0, z)].visible = true
+				buttons[wrapi(tab.current_tab - x,0, z)].visible = true
+				
 	_on_rect_change()
 	
 	if fllbck and errors:
@@ -375,7 +395,10 @@ func _on_gui(event : InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				if _behaviour_collapsed > 0:
-					_behaviour_collapsed -= 1
+					if _behaviour_collapsed > buttons.size():
+						_behaviour_collapsed = buttons.size() - 2
+					else:
+						_behaviour_collapsed -= 1
 					update()
 				get_viewport().set_input_as_handled()
 
@@ -432,12 +455,7 @@ func get_reference() -> TabBar:
 func _resize_required() -> bool:
 	#if (get_global_rect().has_point(get_global_mouse_position())):
 		#return false
-	
-	var tab : TabBar = _reference	
-	if _ltabs != tab.tab_count:
-		return true
-		
-	if _lcollapsed != _behaviour_collapsed:
+	if _has_changes():
 		return true
 	
 	var rsize : Vector2 = get_parent().get_parent().size
@@ -480,6 +498,11 @@ func _physics_process(delta: float) -> void:
 		return
 		
 	var tab : TabBar = _reference	
+	
+	if !is_instance_valid(tab):
+		set_physics_process(false)
+		return
+	
 	var rsize : Vector2 = get_parent().get_parent().size
 	_lsize = rsize
 	_ltabs = tab.tab_count
