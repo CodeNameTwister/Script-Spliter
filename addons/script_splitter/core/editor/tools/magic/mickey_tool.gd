@@ -82,7 +82,7 @@ func trigger_focus(force : bool = false) -> void:
 	if !is_instance_valid(_control) or _control.is_queued_for_deletion():
 		return
 		
-	if !is_instance_valid(_owner) or _owner.is_queued_for_deletion():
+	elif !is_instance_valid(_owner) or _owner.is_queued_for_deletion():
 		return
 		
 	focus.emit(self)
@@ -90,10 +90,7 @@ func trigger_focus(force : bool = false) -> void:
 	if !force:
 		return
 		
-	if !is_instance_valid(_control) or _control.is_queued_for_deletion():
-		return
-		
-	if _control.focus_mode != Control.FOCUS_NONE and !_control.has_focus():
+	if _control.is_inside_tree() and _control.focus_mode != Control.FOCUS_NONE and !_control.has_focus():
 		_control.grab_focus.call_deferred()
 			
 func get_owner() -> Node:
