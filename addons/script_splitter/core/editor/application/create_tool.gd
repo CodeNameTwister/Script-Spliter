@@ -42,8 +42,18 @@ func execute(value : Variant = null) -> bool:
 		
 	if is_instance_valid(root):
 		var mt : MickeyTool = _tools[0].build(control)
-		var is_editor : bool = _is_editor(mt, control)
 		var doc : bool = false
+
+		if mt == null:
+			for z : int in range(1, _tools.size(), 1):
+				var x : EditorTool = _tools[z]
+				mt = x.build(control)
+
+				if mt != null:
+					doc = x is HelperEditorTool
+					break
+
+		var is_editor : bool = _is_editor(mt, control)
 		
 		if !is_editor:
 			for z : int in range(1, _tools.size(), 1):
